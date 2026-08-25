@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="hero">
+  <h1>Krypto-Signale.<br>Transparent statt Blackbox.</h1>
+  <p class="lead">{{ APP_NAME }} scannt die wichtigsten Binance-Paare rund um die Uhr und bewertet sie
+  mit einem offenen Multi-Indikator-Score aus RSI, MACD, EMA-Trendfilter und Bollinger-Bändern.
+  Jedes Signal zeigt dir <em>warum</em> – nicht nur <em>was</em>.</p>
+  <div class="cta-row">
+    <a href="/register" class="btn btn-primary btn-lg">Kostenlos starten</a>
+    <a href="/pricing" class="btn btn-ghost btn-lg">Preise ansehen</a>
+  </div>
+</section>
+<section class="features">
+  <div class="card"><h3>📊 Offener Score</h3><p>RSI, MACD, EMA50 und Bollinger fließen in einen nachvollziehbaren Score von −6 bis +6. Ab +3: BUY. Ab −3: SELL. Jede Begründung steht dabei.</p></div>
+  <div class="card"><h3>⏱️ 24/7-Scanner</h3><p>Alle konfigurierten Paare werden in festen Intervallen neu bewertet. Signalwechsel landen sofort in deiner Historie.</p></div>
+  <div class="card"><h3>📈 Live-Charts</h3><p>Candlestick-Charts mit den aktuellen Indikator-Werten direkt im Dashboard – keine zweite App nötig.</p></div>
+  <div class="card"><h3>🔓 Fair &amp; kündbar</h3><p>Free-Tarif für den Einstieg, Pro als Monats- oder Jahresabo. Kündigung jederzeit im Kundenportal.</p></div>
+</section>
+{% endblock %}

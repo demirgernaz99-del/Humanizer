@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% block title %}Preise – {{ APP_NAME }}{% endblock %}
+{% block content %}
+<h1>Preise</h1>
+<div class="pricing-grid">
+  <div class="card plan">
+    <h2>Free</h2>
+    <p class="price">0 €</p>
+    <ul>
+      <li>✅ {{ FREE_PAIRS|join(' & ') }}</li>
+      <li>✅ Signal-Historie ({{ FREE_DELAY_MIN }} Min. verzögert)</li>
+      <li>✅ Dashboard &amp; Charts</li>
+      <li>❌ Alle Paare</li>
+      <li>❌ Echtzeit-Signale</li>
+    </ul>
+    {% if not user %}<a href="/register" class="btn btn-ghost">Registrieren</a>{% endif %}
+  </div>
+  <div class="card plan plan-highlight">
+    <h2>Pro <span class="badge badge-pro">Beliebt</span></h2>
+    <p class="price">{{ PRICE_MONTHLY }}<span class="per">/Monat</span></p>
+    <ul>
+      <li>✅ Alle gescannten Paare</li>
+      <li>✅ Signale in Echtzeit</li>
+      <li>✅ Vollständige Historie</li>
+      <li>✅ Jederzeit kündbar</li>
+    </ul>
+    {% if user %}
+      {% if user.is_pro %}
+        <p class="muted">Du hast bereits Pro. 🎉</p>
+      {% elif STRIPE_ENABLED %}
+        <form method="post" action="/billing/checkout">
+          <input type="hidden" name="interval" value="monthly">
+          <button class="btn btn-primary">Monatlich abonnieren</button>
+        </form>
+        <form method="post" action="/billing/checkout">
+          <input type="hidden" name="interval" value="yearly">
+          <button class="btn btn-ghost">Jährlich ({{ PRICE_YEARLY }})</button>
+        </form>
+      {% elif DEV_MODE %}
+        <form method="post" action="/billing/dev-upgrade">
+          <button class="btn btn-primary">Dev-Upgrade (Stripe nicht konfiguriert)</button>
+        </form>
+      {% else %}
+        <p class="muted">Zahlung derzeit nicht verfügbar.</p>
+      {% endif %}
+    {% else %}
+      <a href="/register" class="btn btn-primary">Erst registrieren</a>
+    {% endif %}
+  </div>
+</div>
+<p class="muted">Preise inkl. USt. Abwicklung über Stripe. Kündigung jederzeit zum Ende der Laufzeit im Kundenportal.</p>
+{% endblock %}

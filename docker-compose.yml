@@ -1,0 +1,14 @@
+services:
+  signalbot:
+    build: .
+    ports:
+      - "8000:8000"
+    env_file: .env
+    volumes:
+      - signalbot-data:/srv/data
+    environment:
+      - DATABASE_URL=sqlite:////srv/data/signalbot.db
+    restart: unless-stopped
+
+volumes:
+  signalbot-data:

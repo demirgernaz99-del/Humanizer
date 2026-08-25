@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block title %}Dashboard – {{ APP_NAME }}{% endblock %}
+{% block content %}
+<div class="dash-head">
+  <h1>Dashboard</h1>
+  <span class="muted" id="updated"></span>
+</div>
+{% if not user.is_pro %}
+<div class="upsell card">
+  <p>Du nutzt den <strong>Free-Tarif</strong>: nur {{ FREE_PAIRS|join(' & ') }}, Signale {{ FREE_DELAY_MIN }} Min. verzögert.
+  <a href="/pricing">Jetzt auf Pro upgraden →</a></p>
+</div>
+{% endif %}
+
+<div id="pair-cards" class="pair-grid"><p class="muted">Lade Analysen… (der erste Scan kann bis zu einer Minute dauern)</p></div>
+
+<div class="card chart-card">
+  <div class="chart-head">
+    <h2>Chart</h2>
+    <select id="chart-pair"></select>
+  </div>
+  <div id="chart"></div>
+</div>
+
+<h2>Signal-Historie</h2>
+<div class="card">
+  <table class="signal-table">
+    <thead><tr><th>Zeit</th><th>Paar</th><th>Signal</th><th>Score</th><th>Preis</th><th>Begründung</th></tr></thead>
+    <tbody id="signal-rows"><tr><td colspan="6" class="muted">Noch keine Signale.</td></tr></tbody>
+  </table>
+</div>
+{% endblock %}
+{% block scripts %}
+<script src="https://unpkg.com/lightweight-charts@4.2.0/dist/lightweight-charts.standalone.production.js"></script>
+<script src="/static/app.js"></script>
+{% endblock %}

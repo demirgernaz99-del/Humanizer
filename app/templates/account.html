@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block title %}Account – {{ APP_NAME }}{% endblock %}
+{% block content %}
+<h1>Dein Account</h1>
+<div class="card">
+  <p><strong>E-Mail:</strong> {{ user.email }}</p>
+  <p><strong>Tarif:</strong> {% if user.is_pro %}<span class="badge badge-pro">PRO</span>{% else %}Free{% endif %}
+     {% if user.subscription_status %}<span class="muted">({{ user.subscription_status }})</span>{% endif %}</p>
+  {% if user.is_pro and user.stripe_customer_id %}
+    <a href="/billing/portal" class="btn btn-ghost">Abo verwalten / kündigen (Stripe-Portal)</a>
+  {% elif not user.is_pro %}
+    <a href="/pricing" class="btn btn-primary">Auf Pro upgraden</a>
+  {% endif %}
+  {% if DEV_MODE %}
+    <form method="post" action="/billing/dev-upgrade" class="inline">
+      <button class="btn btn-ghost">Dev: Plan umschalten</button>
+    </form>
+  {% endif %}
+</div>
+{% endblock %}

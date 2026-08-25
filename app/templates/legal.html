@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block title %}Rechtliches – {{ APP_NAME }}{% endblock %}
+{% block content %}
+<h1>Rechtliches</h1>
+
+<div class="card">
+  <h2>Risikohinweis</h2>
+  <p>{{ APP_NAME }} stellt ausschließlich automatisch berechnete, regelbasierte Marktanalysen zu
+  Informations- und Bildungszwecken bereit. Die angezeigten Bewertungen („BUY“/„SELL“/„NEUTRAL“)
+  sind <strong>keine Anlageberatung, keine Anlagevermittlung und keine individuelle Empfehlung</strong>
+  im Sinne der einschlägigen Finanzmarktregulierung. Sie berücksichtigen weder deine finanzielle
+  Situation noch deine Anlageziele.</p>
+  <p>Der Handel mit Kryptowährungen ist mit erheblichen Risiken verbunden und kann zum
+  <strong>Totalverlust</strong> des eingesetzten Kapitals führen. Vergangene Wertentwicklungen und
+  Backtest-Ergebnisse sind kein Indikator für zukünftige Ergebnisse. Jede Handelsentscheidung
+  triffst du eigenverantwortlich.</p>
+</div>
+
+<div class="card">
+  <h2>Impressum</h2>
+  <p class="todo">TODO: Vollständiges Impressum nach § 5 DDG ergänzen (Name, Anschrift, Kontakt,
+  ggf. USt-IdNr.). <strong>Vor dem Launch zwingend ausfüllen.</strong></p>
+</div>
+
+<div class="card">
+  <h2>AGB</h2>
+  <p class="todo">TODO: AGB ergänzen (Vertragsgegenstand „Informationsdienst“, Laufzeit/Kündigung,
+  Widerrufsbelehrung für digitale Inhalte, Haftungsausschluss). <strong>Anwaltlich prüfen lassen –
+  insbesondere die Abgrenzung zur erlaubnispflichtigen Anlageberatung (BaFin/WpIG).</strong></p>
+</div>
+
+<div class="card">
+  <h2>Datenschutz</h2>
+  <p class="todo">TODO: Datenschutzerklärung nach DSGVO ergänzen (Konto-Daten, Stripe als
+  Auftragsverarbeiter/Verantwortlicher für Zahlungsdaten, Server-Logs, Cookies: nur technisch
+  notwendiges Session-Cookie).</p>
+</div>
+{% endblock %}

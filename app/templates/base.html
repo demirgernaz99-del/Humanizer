@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}{{ APP_NAME }}{% endblock %}</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+<nav class="nav">
+  <a class="brand" href="/">⚡ {{ APP_NAME }}</a>
+  <div class="nav-links">
+    <a href="/pricing">Preise</a>
+    {% if user %}
+      <a href="/dashboard">Dashboard</a>
+      <a href="/account">Account {% if user.is_pro %}<span class="badge badge-pro">PRO</span>{% endif %}</a>
+      <form method="post" action="/logout" class="inline"><button class="btn btn-ghost">Logout</button></form>
+    {% else %}
+      <a href="/login">Login</a>
+      <a href="/register" class="btn btn-primary">Kostenlos starten</a>
+    {% endif %}
+  </div>
+</nav>
+<main class="container">
+{% block content %}{% endblock %}
+</main>
+<footer class="footer">
+  <p><strong>Risikohinweis:</strong> {{ APP_NAME }} liefert automatisch berechnete Marktanalysen zu Informations- und Bildungszwecken.
+  Keine Anlageberatung, keine individuelle Empfehlung. Der Handel mit Kryptowährungen ist hochriskant und kann zum Totalverlust führen.</p>
+  <p><a href="/legal">Impressum · AGB · Datenschutz · Risikohinweis</a></p>
+</footer>
+{% block scripts %}{% endblock %}
+</body>
+</html>
