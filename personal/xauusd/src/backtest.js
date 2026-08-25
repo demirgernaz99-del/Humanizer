@@ -35,18 +35,19 @@
   function buildStats(trades) {
     var stats = emptyStats();
     if (!trades.length) return stats;
-    var rs = [], sumPos = 0, sumNeg = 0, total = 0, wins = 0;
+    var rs = [], sumPos = 0, sumNeg = 0, total = 0, wins = 0, losses = 0;
     for (var i = 0; i < trades.length; i++) {
       var r = trades[i].rMultiple;
       if (!num(r)) r = 0;
       rs.push(r);
       total += r;
       if (r > 0) { wins++; sumPos += r; }
-      else if (r < 0) { sumNeg += r; }
+      else if (r < 0) { losses++; sumNeg += r; }
+      // r === 0: Breakeven – weder Gewinn noch Verlust
     }
     stats.n = trades.length;
     stats.wins = wins;
-    stats.losses = trades.length - wins;
+    stats.losses = losses;
     stats.winrate = wins / trades.length;
     stats.totalR = total;
     stats.avgR = total / trades.length;
@@ -111,10 +112,15 @@
       // Offener Trade: erst Stop (konservativ), dann Target – intrabar
       if (open) {
         if (open.direction === "LONG") {
-          if (c.low <= open.stop) closeTrade(open.stop, c.time, "Stop-Loss");
+          // Gap-Eröffnung jenseits von Stop/Target: realistisch zum Open abrechnen
+          if (c.open <= open.stop) closeTrade(c.open, c.time, "Stop-Loss");
+          else if (c.open >= open.target) closeTrade(c.open, c.time, "Take-Profit");
+          else if (c.low <= open.stop) closeTrade(open.stop, c.time, "Stop-Loss");
           else if (c.high >= open.target) closeTrade(open.target, c.time, "Take-Profit");
         } else {
-          if (c.high >= open.stop) closeTrade(open.stop, c.time, "Stop-Loss");
+          if (c.open >= open.stop) closeTrade(c.open, c.time, "Stop-Loss");
+          else if (c.open <= open.target) closeTrade(c.open, c.time, "Take-Profit");
+          else if (c.high >= open.stop) closeTrade(open.stop, c.time, "Stop-Loss");
           else if (c.low <= open.target) closeTrade(open.target, c.time, "Take-Profit");
         }
       }
@@ -122,7 +128,7 @@
       // Signal zum Kerzenschluss (Fenster auf letzte 300 Kerzen begrenzt)
       var res = null;
       try {
-        res = engine.analyzeTF(candles.slice(Math.max(0, i - 299), i + 1));
+        res = engine.analyzeTF(candles.slice(Math.max(0, i - 359), i + 1));
       } catch (e) { res = null; }
       var sig = null;
       if (res && num(res.score)) {

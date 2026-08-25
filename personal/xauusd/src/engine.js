@@ -15,7 +15,8 @@
   function num(x) { return typeof x === 'number' && isFinite(x); }
   function last(a) { return (a && a.length) ? a[a.length - 1] : null; }
   function f1(x) { return num(x) ? x.toFixed(1) : '–'; }
-  function clamp10(s) { return Math.max(-10, Math.min(10, s)); }
+  var MAX_SCORE = 9; // Summe aller Regel-Maxima (2+2+1+1+1+1+1)
+  function clampScore(s) { return Math.max(-MAX_SCORE, Math.min(MAX_SCORE, s)); }
 
   function analyzeTF(candles) {
     var ind = getInd();
@@ -110,13 +111,13 @@
       reasons.push('Starker Trend (ADX ' + f1(adxNow) + ') bestätigt Richtung');
     }
 
-    score = clamp10(score);
+    score = clampScore(score);
     var action = score >= 4 ? 'BUY' : (score <= -4 ? 'SELL' : 'NEUTRAL');
     return {
       action: action,
       score: score,
-      maxScore: 10,
-      confidence: Math.round((Math.abs(score) / 10) * 100) / 100,
+      maxScore: MAX_SCORE,
+      confidence: Math.round((Math.abs(score) / MAX_SCORE) * 100) / 100,
       price: price,
       indicators: {
         rsi: num(rsiNow) ? rsiNow : null,
@@ -166,7 +167,9 @@
       action: action,
       agree: agree,
       total: total,
-      summary: action + '-Konfluenz: ' + agree + ' von ' + total + ' Timeframes ' + richtung,
+      summary: agree <= 1
+        ? action + ' nur auf 1h – ohne Bestätigung anderer Timeframes (schwache Konfluenz)'
+        : action + '-Konfluenz: ' + agree + ' von ' + total + ' Timeframes ' + richtung,
       perTF: perTF
     };
   }

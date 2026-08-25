@@ -198,8 +198,8 @@ assert(sellRes && sellRes.action === 'SELL' && sellRes.score <= -4,
   'SELL-Szenario liefert SELL (score=' + (sellRes && sellRes.score) + ')');
 assert(flatRes && flatRes.action === 'NEUTRAL',
   'Seitwärts-Szenario liefert NEUTRAL (score=' + (flatRes && flatRes.score) + ')');
-assert(buyRes.maxScore === 10 && Math.abs(buyRes.confidence - Math.round(Math.abs(buyRes.score) / 10 * 100) / 100) < 1e-12,
-  'confidence = |score|/10 (2 Dezimalen), maxScore = 10');
+assert(buyRes.maxScore === 9 && Math.abs(buyRes.confidence - Math.round(Math.abs(buyRes.score) / 9 * 100) / 100) < 1e-12,
+  'confidence = |score|/9 (2 Dezimalen), maxScore = 9 (Summe der Regel-Maxima)');
 assert(buyRes.reasons.length > 0 && buyRes.reasons.every(function (r) { return typeof r === 'string'; }),
   'reasons sind nicht-leere deutsche Strings');
 assert(buyRes.indicators && ['rsi', 'macd_hist', 'ema50', 'ema200', 'bb_lower', 'bb_mid', 'bb_upper',

@@ -1,0 +1,227 @@
+/* XAU/USD Gold Cockpit – Styles. Tokens wie im SignalBot-Dashboard, plus Gold. */
+:root {
+  color-scheme: light;
+  --surface-1: #fcfcfb; --surface-2: #f0efec; --border: #dddcd8;
+  --text-primary: #0b0b0b; --text-secondary: #52514e; --text-muted: #8a8984;
+  --accent: #2a78d6;
+  --gold: #c9971c;
+  --good: #0ca30c; --critical: #d03b3b; --neutral-status: #8a8984;
+  --good-wash: rgba(12,163,12,.12); --critical-wash: rgba(208,59,59,.12);
+  --gold-wash: rgba(201,151,28,.12);
+  --grid: #eceae6;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --surface-1: #1a1a19; --surface-2: #262624; --border: #383835;
+    --text-primary: #ffffff; --text-secondary: #c3c2b7; --text-muted: #8a897f;
+    --accent: #3987e5;
+    --gold: #e0aa2e;
+    --good: #0ca30c; --critical: #d03b3b; --neutral-status: #8a897f;
+    --good-wash: rgba(12,163,12,.16); --critical-wash: rgba(208,59,59,.16);
+    --gold-wash: rgba(224,170,46,.14);
+    --grid: #262624;
+  }
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --surface-1: #1a1a19; --surface-2: #262624; --border: #383835;
+  --text-primary: #ffffff; --text-secondary: #c3c2b7; --text-muted: #8a897f;
+  --accent: #3987e5;
+  --gold: #e0aa2e;
+  --good: #0ca30c; --critical: #d03b3b; --neutral-status: #8a897f;
+  --good-wash: rgba(12,163,12,.16); --critical-wash: rgba(208,59,59,.16);
+  --gold-wash: rgba(224,170,46,.14);
+  --grid: #262624;
+}
+
+* { box-sizing: border-box; margin: 0; }
+body {
+  background: var(--surface-1); color: var(--text-primary);
+  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+  line-height: 1.5; padding: 1.2rem;
+}
+.wrap { max-width: 1180px; margin: 0 auto; }
+h1 { font-size: 1.3rem; }
+h2 { font-size: 1.05rem; margin: 0 0 .6rem; color: var(--text-secondary); }
+h3 { font-size: .92rem; margin: .9rem 0 .4rem; color: var(--text-secondary); }
+section { margin-bottom: 1rem; }
+
+select, input[type=number], input[type=text], button {
+  font: inherit; font-size: .88rem; padding: .38rem .6rem; border-radius: 8px;
+  border: 1px solid var(--border); background: var(--surface-1); color: var(--text-primary);
+}
+input[type=number] { font-variant-numeric: tabular-nums; }
+input:focus-visible, select:focus-visible, button:focus-visible {
+  outline: 2px solid var(--accent); outline-offset: 1px;
+}
+button { cursor: pointer; }
+button:hover { border-color: var(--accent); }
+
+/* ---------- Topbar: Brand · Hero-Preis · Controls ---------- */
+.topbar {
+  display: flex; flex-wrap: wrap; gap: .8rem 1.4rem;
+  align-items: center; justify-content: space-between; margin-bottom: 1rem;
+}
+.brand-block { min-width: 0; }
+.status-line { font-size: .82rem; color: var(--text-muted); }
+.hero-block { text-align: center; }
+.hero-price {
+  font-size: clamp(44px, 5vw, 54px); font-weight: 600; line-height: 1.1;
+  font-variant-numeric: tabular-nums; color: var(--gold);
+}
+.hero-sub { font-size: .86rem; color: var(--text-secondary); }
+.hero-sub .up { color: var(--good); font-weight: 600; }
+.hero-sub .down { color: var(--critical); font-weight: 600; }
+.controls { display: flex; flex-wrap: wrap; gap: .5rem; align-items: center; }
+
+.banner {
+  display: none; background: var(--critical-wash); border: 1px solid var(--critical);
+  border-radius: 10px; padding: .6rem .9rem; margin-bottom: 1rem; font-size: .9rem;
+}
+
+/* ---------- Karten allgemein ---------- */
+.card { background: var(--surface-1); border: 1px solid var(--border); border-radius: 12px; padding: .85rem .95rem; }
+
+/* ---------- Timeframe-Karten ---------- */
+.tf-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: .8rem; }
+.tf-grid .card h3 { margin: 0 0 .3rem; }
+.badge {
+  display: inline-flex; gap: .3rem; align-items: center; font-size: .74rem; font-weight: 700;
+  padding: .12rem .5rem; border-radius: 6px;
+}
+.badge-BUY { background: var(--good-wash); color: var(--good); }
+.badge-SELL { background: var(--critical-wash); color: var(--critical); }
+.badge-NEUTRAL { background: var(--surface-2); color: var(--text-secondary); }
+.meter { height: 6px; border-radius: 3px; background: var(--surface-2); position: relative; margin: .45rem 0 .3rem; }
+.meter .mid { position: absolute; left: 50%; top: -2px; width: 1px; height: 10px; background: var(--border); }
+.meter .fill { position: absolute; top: 0; height: 6px; border-radius: 3px; }
+.stats { font-size: .78rem; color: var(--text-secondary); }
+.card details { margin-top: .4rem; font-size: .78rem; color: var(--text-secondary); }
+.card summary { cursor: pointer; color: var(--text-muted); }
+.card details li { margin-left: 1rem; }
+
+/* ---------- Konfluenz ---------- */
+.confluence { border-left: 3px solid var(--gold); background: var(--gold-wash); }
+
+/* ---------- Chart ---------- */
+.chart-card { padding-bottom: .5rem; }
+.chart-head { display: flex; flex-wrap: wrap; gap: .5rem 1rem; justify-content: space-between; align-items: center; margin-bottom: .4rem; }
+.chart-head h2 { margin: 0; }
+.chart-controls { display: flex; gap: .5rem; align-items: center; }
+.legend { display: flex; gap: 1rem; font-size: .78rem; color: var(--text-secondary); flex-wrap: wrap; }
+.key {
+  display: inline-block; width: 14px; height: 0; border-top: 2px solid;
+  vertical-align: middle; margin-right: .3rem; border-radius: 1px;
+}
+#chartwrap { position: relative; }
+#chart { width: 100%; height: 560px; display: block; }
+#tooltip {
+  position: absolute; pointer-events: none; display: none; background: var(--surface-1);
+  border: 1px solid var(--border); border-radius: 8px; padding: .45rem .6rem; font-size: .76rem;
+  box-shadow: 0 4px 14px rgba(0,0,0,.18); z-index: 5; min-width: 150px;
+}
+#tooltip .tt-time { color: var(--text-muted); margin-bottom: .2rem; }
+#tooltip .v { font-weight: 600; font-variant-numeric: tabular-nums; float: right; margin-left: .8rem; }
+
+/* ---------- Zwei Spalten: Setup + Alarme ---------- */
+.two-col { display: grid; grid-template-columns: 1fr; gap: .8rem; }
+@media (min-width: 800px) {
+  .two-col { grid-template-columns: 1fr 1fr; }
+}
+#setup-card { font-size: .88rem; color: var(--text-secondary); }
+.sizer label {
+  display: flex; flex-direction: column; gap: .2rem;
+  font-size: .82rem; color: var(--text-secondary); margin-bottom: .55rem;
+}
+.sizer input { max-width: 220px; }
+#size-result { font-size: .88rem; font-variant-numeric: tabular-nums; margin-top: .3rem; }
+
+/* ---------- Preis-Alarme ---------- */
+.alert-form { display: flex; flex-wrap: wrap; gap: .5rem; margin-bottom: .6rem; }
+.alert-form input { flex: 1 1 130px; min-width: 0; }
+#alert-list { list-style: none; padding: 0; margin: 0; }
+#alert-list li {
+  display: flex; align-items: center; gap: .6rem;
+  padding: .38rem .1rem; border-bottom: 1px solid var(--border);
+  font-size: .88rem; font-variant-numeric: tabular-nums;
+}
+#alert-list li:last-child { border-bottom: 0; }
+#alert-list .dir { font-size: .76rem; color: var(--text-muted); }
+#alert-list button {
+  margin-left: auto; border: 0; background: none; color: var(--text-muted);
+  font-size: .9rem; padding: .1rem .3rem;
+}
+#alert-list button:hover { color: var(--critical); }
+.hint { font-size: .76rem; color: var(--text-muted); margin-top: .5rem; }
+
+/* ---------- Backtest ---------- */
+.bt-head { display: flex; flex-wrap: wrap; gap: .5rem 1rem; justify-content: space-between; align-items: center; margin-bottom: .6rem; }
+.bt-head h2 { margin: 0; }
+.bt-head > div { display: flex; flex-wrap: wrap; gap: .5rem; align-items: center; }
+#bt-stats { display: flex; flex-wrap: wrap; gap: .6rem; margin-bottom: .8rem; }
+.stat-tile {
+  background: var(--surface-2); border-radius: 10px; padding: .5rem .8rem; min-width: 92px;
+}
+.stat-tile .label { font-size: .72rem; color: var(--text-muted); }
+.stat-tile .value { font-size: 1.15rem; font-weight: 600; font-variant-numeric: tabular-nums; }
+.bt-table-wrap { overflow-x: auto; }
+.bt-table-wrap table { min-width: 560px; }
+
+/* ---------- Tabellen ---------- */
+table { width: 100%; border-collapse: collapse; font-size: .84rem; }
+th, td { text-align: left; padding: .42rem .5rem; border-bottom: 1px solid var(--border); }
+th { color: var(--text-muted); font-weight: 600; font-size: .76rem; }
+td.num { font-variant-numeric: tabular-nums; }
+tr:last-child td { border-bottom: 0; }
+.hist-head { display: flex; flex-wrap: wrap; gap: .5rem; justify-content: space-between; align-items: baseline; margin-bottom: .5rem; }
+.hist-head h2 { margin: 0; }
+
+/* ---------- Info + Footer ---------- */
+.info-card p, .info-card li { font-size: .84rem; color: var(--text-secondary); margin: 0 0 .45rem; }
+.info-card ul { margin: 0 0 .45rem; padding-left: 1.2rem; }
+.footer { margin-top: 1.6rem; font-size: .74rem; color: var(--text-muted); border-top: 1px solid var(--border); padding-top: .8rem; }
+
+/* ---------- Schmal (bis 380px) ---------- */
+@media (max-width: 560px) {
+  body { padding: .7rem; }
+  .topbar { justify-content: center; text-align: center; }
+  .hero-block { width: 100%; order: -1; }
+  .hero-price { font-size: 44px; }
+  .chart-head, .bt-head { flex-direction: column; align-items: flex-start; }
+  #chart { height: 380px; }
+  .sizer input { max-width: 100%; }
+}
+
+/* --- Ergänzungen nach Review --- */
+
+/* Trade-Setup-Zeilen: Label links, Wert rechts */
+.setup-row { display: flex; justify-content: space-between; gap: 1rem; padding: .28rem 0; border-bottom: 1px solid var(--border); }
+.setup-row:last-of-type { border-bottom: 0; }
+.setup-label { color: var(--text-secondary); font-size: .88rem; }
+.setup-value { font-weight: 600; font-variant-numeric: tabular-nums; }
+
+/* TF-Karten: Kopfzeile mit Abstand, Auswahl sichtbar, Tastatur-Fokus */
+.pair-head { display: flex; align-items: center; gap: .5rem; font-weight: 600; flex-wrap: wrap; }
+.tf-card.selected { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent) inset; }
+.tf-card:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/* Konfluenz-Badge in groß */
+.badge-big { font-size: .95rem; padding: .3rem .7rem; }
+
+/* Kontrast im Light-Theme: dunklere Textfarben für kleine Schriftgrade
+   (Badges/Preisänderung); die Flächenfarben (Kerzen, Meter) bleiben unverändert */
+:root {
+  --good-text: #006300;
+  --critical-text: #b32424;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) { --good-text: #4cc94c; --critical-text: #ef6a6a; }
+}
+:root[data-theme="dark"] { --good-text: #4cc94c; --critical-text: #ef6a6a; }
+.badge-BUY { color: var(--good-text); }
+.badge-SELL { color: var(--critical-text); }
+.hero-sub .up { color: var(--good-text); }
+.hero-sub .down { color: var(--critical-text); }
+td .pos, .r-pos { color: var(--good-text); }
+td .neg, .r-neg { color: var(--critical-text); }
