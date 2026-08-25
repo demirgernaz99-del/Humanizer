@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>XAU/USD – Gold Signal-Dashboard</title>
+<style>
+@@STYLES@@
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="topbar">
+    <div class="brand-block">
+      <h1>🥇 XAU/USD – Gold Cockpit</h1>
+      <div class="status-line" id="status">Lade…</div>
+    </div>
+    <div class="hero-block">
+      <div class="hero-price" id="price-hero">–</div>
+      <div class="hero-sub"><span id="price-change">–</span> · <span id="session-badge">–</span></div>
+    </div>
+    <div class="controls">
+      <button id="refresh">Aktualisieren</button>
+      <button id="themetoggle" title="Hell/Dunkel">◐</button>
+    </div>
+  </header>
+
+  <div class="banner" id="banner"></div>
+
+  <section id="tf-cards" class="tf-grid"></section>
+  <section id="confluence-card" class="card confluence"></section>
+
+  <section class="card chart-card">
+    <div class="chart-head">
+      <h2 id="charttitle">Chart</h2>
+      <div class="chart-controls">
+        <select id="chart-tf">
+          <option value="15m">15 Min</option>
+          <option value="1h" selected>1 Std</option>
+          <option value="4h">4 Std</option>
+          <option value="1d">1 Tag</option>
+        </select>
+      </div>
+      <div class="legend" id="chart-legend"></div>
+    </div>
+    <div id="chartwrap">
+      <canvas id="chart"></canvas>
+      <div id="tooltip"></div>
+    </div>
+  </section>
+
+  <div class="two-col">
+    <section class="card" id="setup-section">
+      <h2>Trade-Setup</h2>
+      <div id="setup-card"></div>
+      <div class="sizer">
+        <h3>Positionsgröße</h3>
+        <label>Kontogröße ($) <input type="number" id="acct-size" value="10000" min="0" step="100"></label>
+        <label>Risiko pro Trade (%) <input type="number" id="risk-pct" value="1" min="0.1" max="100" step="0.1"></label>
+        <div id="size-result"></div>
+      </div>
+    </section>
+
+    <section class="card" id="alerts-section">
+      <h2>Preis-Alarme</h2>
+      <div class="alert-form">
+        <input type="number" id="alert-price" placeholder="Preis, z.B. 3300" step="0.1">
+        <button id="alert-add">Alarm setzen</button>
+      </div>
+      <ul id="alert-list"></ul>
+      <p class="hint" id="notify-hint"></p>
+    </section>
+  </div>
+
+  <section class="card" id="backtest-section">
+    <div class="bt-head">
+      <h2>Backtest der Strategie</h2>
+      <div>
+        <select id="bt-tf">
+          <option value="15m">15 Min</option>
+          <option value="1h" selected>1 Std</option>
+          <option value="4h">4 Std</option>
+          <option value="1d">1 Tag</option>
+        </select>
+        <button id="bt-run">Backtest starten</button>
+      </div>
+    </div>
+    <div id="bt-stats"></div>
+    <div class="bt-table-wrap"><table>
+      <thead><tr><th>Einstieg</th><th>Richtung</th><th>Entry</th><th>Exit</th><th>Ergebnis (R)</th><th>Grund</th></tr></thead>
+      <tbody id="bt-trades"></tbody>
+    </table></div>
+  </section>
+
+  <section>
+    <div class="hist-head">
+      <h2>Signal-Verlauf</h2>
+      <button id="clearhist">Verlauf löschen</button>
+    </div>
+    <div class="card"><table>
+      <thead><tr><th>Zeit</th><th>TF</th><th>Signal</th><th>Score</th><th>Preis</th><th>Begründung</th></tr></thead>
+      <tbody id="histrows"></tbody>
+    </table></div>
+  </section>
+
+  <section class="card info-card">
+    <h2>Gold-Wissen kompakt</h2>
+    <div id="gold-info"></div>
+  </section>
+
+  <footer class="footer">
+    Datenquelle: Binance PAXG/USDT – tokenisiertes Gold (1 PAXG = 1 Feinunze), läuft eng am XAU/USD-Spotpreis
+    (kleine Abweichungen/Premium möglich; handelt auch am Wochenende, während der Spot-Goldmarkt geschlossen ist).
+    Analyse läuft komplett lokal in deinem Browser. Automatisch berechnete Analysen zu Informationszwecken –
+    keine Anlageberatung. Gold-/CFD-Handel ist hochriskant.
+  </footer>
+</div>
+
+<script>
+@@INDICATORS@@
+</script>
+<script>
+@@ENGINE@@
+</script>
+<script>
+@@BACKTEST@@
+</script>
+<script>
+@@CHART@@
+</script>
+<script>
+@@APP@@
+</script>
+</body>
+</html>
