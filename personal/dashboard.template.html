@@ -1,0 +1,159 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SignalBot – Mein Dashboard</title>
+<style>
+:root {
+  color-scheme: light;
+  --surface-1: #fcfcfb; --surface-2: #f0efec; --border: #dddcd8;
+  --text-primary: #0b0b0b; --text-secondary: #52514e; --text-muted: #8a8984;
+  --accent: #2a78d6;
+  --good: #0ca30c; --critical: #d03b3b; --neutral-status: #8a8984;
+  --good-wash: rgba(12,163,12,.12); --critical-wash: rgba(208,59,59,.12);
+  --grid: #eceae6;
+}
+:root[data-theme="dark"], :root:not([data-theme="light"]) { }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --surface-1: #1a1a19; --surface-2: #262624; --border: #383835;
+    --text-primary: #ffffff; --text-secondary: #c3c2b7; --text-muted: #8a897f;
+    --accent: #3987e5;
+    --good: #0ca30c; --critical: #d03b3b; --neutral-status: #8a897f;
+    --grid: #262624;
+  }
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --surface-1: #1a1a19; --surface-2: #262624; --border: #383835;
+  --text-primary: #ffffff; --text-secondary: #c3c2b7; --text-muted: #8a897f;
+  --accent: #3987e5;
+  --good: #0ca30c; --critical: #d03b3b; --neutral-status: #8a897f;
+  --grid: #262624;
+}
+* { box-sizing: border-box; margin: 0; }
+body { background: var(--surface-1); color: var(--text-primary);
+  font-family: system-ui, -apple-system, "Segoe UI", sans-serif; line-height: 1.5; padding: 1.2rem; }
+.wrap { max-width: 1120px; margin: 0 auto; }
+h1 { font-size: 1.35rem; } h2 { font-size: 1.05rem; margin: 1.4rem 0 .6rem; color: var(--text-secondary); }
+
+.topbar { display: flex; flex-wrap: wrap; gap: .7rem; align-items: center; justify-content: space-between; margin-bottom: 1rem; }
+.controls { display: flex; flex-wrap: wrap; gap: .5rem; align-items: center; }
+select, input[type=text], button {
+  font: inherit; font-size: .88rem; padding: .38rem .6rem; border-radius: 8px;
+  border: 1px solid var(--border); background: var(--surface-1); color: var(--text-primary);
+}
+button { cursor: pointer; } button:hover { border-color: var(--accent); }
+.status-line { font-size: .82rem; color: var(--text-muted); }
+.banner { display: none; background: var(--critical-wash); border: 1px solid var(--critical);
+  border-radius: 10px; padding: .6rem .9rem; margin-bottom: 1rem; font-size: .9rem; }
+
+.cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(215px, 1fr)); gap: .8rem; }
+.card { background: var(--surface-1); border: 1px solid var(--border); border-radius: 12px; padding: .85rem .95rem; }
+.pair-card { cursor: pointer; position: relative; }
+.pair-card:hover, .pair-card.selected { border-color: var(--accent); }
+.pair-card .rm { position: absolute; top: .4rem; right: .55rem; border: 0; background: none;
+  color: var(--text-muted); font-size: .85rem; padding: .1rem .25rem; }
+.pair-card .rm:hover { color: var(--critical); }
+.pair-head { display: flex; gap: .5rem; align-items: center; font-weight: 600; }
+.price { font-size: 1.3rem; font-weight: 600; font-variant-numeric: tabular-nums; margin: .15rem 0 .3rem; }
+.badge { display: inline-flex; gap: .3rem; align-items: center; font-size: .74rem; font-weight: 700;
+  padding: .12rem .5rem; border-radius: 6px; }
+.badge-BUY  { background: var(--good-wash); color: var(--good); }
+.badge-SELL { background: var(--critical-wash); color: var(--critical); }
+.badge-NEUTRAL { background: var(--surface-2); color: var(--text-secondary); }
+.meter { height: 6px; border-radius: 3px; background: var(--surface-2); position: relative; margin: .45rem 0 .3rem; }
+.meter .mid { position: absolute; left: 50%; top: -2px; width: 1px; height: 10px; background: var(--border); }
+.meter .fill { position: absolute; top: 0; height: 6px; border-radius: 3px; }
+.stats { font-size: .78rem; color: var(--text-secondary); }
+.card details { margin-top: .4rem; font-size: .78rem; color: var(--text-secondary); }
+.card summary { cursor: pointer; color: var(--text-muted); }
+.card details li { margin-left: 1rem; }
+
+.chart-card { margin-top: 1rem; padding-bottom: .5rem; }
+.chart-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: .4rem; }
+.legend { display: flex; gap: 1rem; font-size: .78rem; color: var(--text-secondary); flex-wrap: wrap; }
+.key { display: inline-block; width: 14px; height: 0; border-top: 2px solid; vertical-align: middle; margin-right: .3rem; border-radius: 1px; }
+#chartwrap { position: relative; }
+#chart { width: 100%; height: 360px; display: block; }
+#tooltip { position: absolute; pointer-events: none; display: none; background: var(--surface-1);
+  border: 1px solid var(--border); border-radius: 8px; padding: .45rem .6rem; font-size: .76rem;
+  box-shadow: 0 4px 14px rgba(0,0,0,.18); z-index: 5; min-width: 150px; }
+#tooltip .tt-time { color: var(--text-muted); margin-bottom: .2rem; }
+#tooltip .v { font-weight: 600; font-variant-numeric: tabular-nums; float: right; margin-left: .8rem; }
+
+table { width: 100%; border-collapse: collapse; font-size: .84rem; }
+th, td { text-align: left; padding: .42rem .5rem; border-bottom: 1px solid var(--border); }
+th { color: var(--text-muted); font-weight: 600; font-size: .76rem; }
+td.num { font-variant-numeric: tabular-nums; }
+.hist-head { display: flex; justify-content: space-between; align-items: baseline; }
+.footer { margin-top: 1.6rem; font-size: .74rem; color: var(--text-muted); border-top: 1px solid var(--border); padding-top: .8rem; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="topbar">
+    <div>
+      <h1>⚡ SignalBot – Mein Dashboard</h1>
+      <div class="status-line" id="status">Lade…</div>
+    </div>
+    <div class="controls">
+      <select id="tf" title="Timeframe">
+        <option value="15m">15 Min</option>
+        <option value="1h" selected>1 Std</option>
+        <option value="4h">4 Std</option>
+        <option value="1d">1 Tag</option>
+      </select>
+      <input type="text" id="newpair" placeholder="Paar hinzufügen (z.B. DOGEUSDT)" size="22">
+      <button id="addpair">+</button>
+      <button id="refresh">Aktualisieren</button>
+      <button id="themetoggle" title="Hell/Dunkel">◐</button>
+    </div>
+  </div>
+
+  <div class="banner" id="banner"></div>
+
+  <div class="cards" id="cards"></div>
+
+  <div class="card chart-card">
+    <div class="chart-head">
+      <h2 style="margin:0" id="charttitle">Chart</h2>
+      <div class="legend">
+        <span><span class="key" style="border-color: var(--accent)"></span>EMA50</span>
+        <span><span class="key" style="border-color: var(--text-muted); border-top-style: dotted"></span>Bollinger (20, 2σ)</span>
+      </div>
+    </div>
+    <div id="chartwrap">
+      <canvas id="chart"></canvas>
+      <div id="tooltip"></div>
+    </div>
+  </div>
+
+  <div class="hist-head">
+    <h2>Signal-Verlauf <span class="status-line">(entsteht, während das Dashboard offen ist)</span></h2>
+    <button id="clearhist">Verlauf löschen</button>
+  </div>
+  <div class="card">
+    <table>
+      <thead><tr><th>Zeit</th><th>Paar</th><th>TF</th><th>Signal</th><th>Score</th><th>Preis</th><th>Begründung</th></tr></thead>
+      <tbody id="histrows"></tbody>
+    </table>
+  </div>
+
+  <div class="footer">
+    Datenquelle: öffentliche Binance-API, Analyse läuft komplett lokal in deinem Browser.
+    Automatisch berechnete Analysen zu Informationszwecken – keine Anlageberatung.
+    Krypto-Handel ist hochriskant und kann zum Totalverlust führen.
+  </div>
+</div>
+
+<script>
+@@ENGINE@@
+</script>
+<script>
+@@APP@@
+</script>
+</body>
+</html>

@@ -1,0 +1,635 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SignalBot – Mein Dashboard</title>
+<style>
+:root {
+  color-scheme: light;
+  --surface-1: #fcfcfb; --surface-2: #f0efec; --border: #dddcd8;
+  --text-primary: #0b0b0b; --text-secondary: #52514e; --text-muted: #8a8984;
+  --accent: #2a78d6;
+  --good: #0ca30c; --critical: #d03b3b; --neutral-status: #8a8984;
+  --good-wash: rgba(12,163,12,.12); --critical-wash: rgba(208,59,59,.12);
+  --grid: #eceae6;
+}
+:root[data-theme="dark"], :root:not([data-theme="light"]) { }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --surface-1: #1a1a19; --surface-2: #262624; --border: #383835;
+    --text-primary: #ffffff; --text-secondary: #c3c2b7; --text-muted: #8a897f;
+    --accent: #3987e5;
+    --good: #0ca30c; --critical: #d03b3b; --neutral-status: #8a897f;
+    --grid: #262624;
+  }
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --surface-1: #1a1a19; --surface-2: #262624; --border: #383835;
+  --text-primary: #ffffff; --text-secondary: #c3c2b7; --text-muted: #8a897f;
+  --accent: #3987e5;
+  --good: #0ca30c; --critical: #d03b3b; --neutral-status: #8a897f;
+  --grid: #262624;
+}
+* { box-sizing: border-box; margin: 0; }
+body { background: var(--surface-1); color: var(--text-primary);
+  font-family: system-ui, -apple-system, "Segoe UI", sans-serif; line-height: 1.5; padding: 1.2rem; }
+.wrap { max-width: 1120px; margin: 0 auto; }
+h1 { font-size: 1.35rem; } h2 { font-size: 1.05rem; margin: 1.4rem 0 .6rem; color: var(--text-secondary); }
+
+.topbar { display: flex; flex-wrap: wrap; gap: .7rem; align-items: center; justify-content: space-between; margin-bottom: 1rem; }
+.controls { display: flex; flex-wrap: wrap; gap: .5rem; align-items: center; }
+select, input[type=text], button {
+  font: inherit; font-size: .88rem; padding: .38rem .6rem; border-radius: 8px;
+  border: 1px solid var(--border); background: var(--surface-1); color: var(--text-primary);
+}
+button { cursor: pointer; } button:hover { border-color: var(--accent); }
+.status-line { font-size: .82rem; color: var(--text-muted); }
+.banner { display: none; background: var(--critical-wash); border: 1px solid var(--critical);
+  border-radius: 10px; padding: .6rem .9rem; margin-bottom: 1rem; font-size: .9rem; }
+
+.cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(215px, 1fr)); gap: .8rem; }
+.card { background: var(--surface-1); border: 1px solid var(--border); border-radius: 12px; padding: .85rem .95rem; }
+.pair-card { cursor: pointer; position: relative; }
+.pair-card:hover, .pair-card.selected { border-color: var(--accent); }
+.pair-card .rm { position: absolute; top: .4rem; right: .55rem; border: 0; background: none;
+  color: var(--text-muted); font-size: .85rem; padding: .1rem .25rem; }
+.pair-card .rm:hover { color: var(--critical); }
+.pair-head { display: flex; gap: .5rem; align-items: center; font-weight: 600; }
+.price { font-size: 1.3rem; font-weight: 600; font-variant-numeric: tabular-nums; margin: .15rem 0 .3rem; }
+.badge { display: inline-flex; gap: .3rem; align-items: center; font-size: .74rem; font-weight: 700;
+  padding: .12rem .5rem; border-radius: 6px; }
+.badge-BUY  { background: var(--good-wash); color: var(--good); }
+.badge-SELL { background: var(--critical-wash); color: var(--critical); }
+.badge-NEUTRAL { background: var(--surface-2); color: var(--text-secondary); }
+.meter { height: 6px; border-radius: 3px; background: var(--surface-2); position: relative; margin: .45rem 0 .3rem; }
+.meter .mid { position: absolute; left: 50%; top: -2px; width: 1px; height: 10px; background: var(--border); }
+.meter .fill { position: absolute; top: 0; height: 6px; border-radius: 3px; }
+.stats { font-size: .78rem; color: var(--text-secondary); }
+.card details { margin-top: .4rem; font-size: .78rem; color: var(--text-secondary); }
+.card summary { cursor: pointer; color: var(--text-muted); }
+.card details li { margin-left: 1rem; }
+
+.chart-card { margin-top: 1rem; padding-bottom: .5rem; }
+.chart-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: .4rem; }
+.legend { display: flex; gap: 1rem; font-size: .78rem; color: var(--text-secondary); flex-wrap: wrap; }
+.key { display: inline-block; width: 14px; height: 0; border-top: 2px solid; vertical-align: middle; margin-right: .3rem; border-radius: 1px; }
+#chartwrap { position: relative; }
+#chart { width: 100%; height: 360px; display: block; }
+#tooltip { position: absolute; pointer-events: none; display: none; background: var(--surface-1);
+  border: 1px solid var(--border); border-radius: 8px; padding: .45rem .6rem; font-size: .76rem;
+  box-shadow: 0 4px 14px rgba(0,0,0,.18); z-index: 5; min-width: 150px; }
+#tooltip .tt-time { color: var(--text-muted); margin-bottom: .2rem; }
+#tooltip .v { font-weight: 600; font-variant-numeric: tabular-nums; float: right; margin-left: .8rem; }
+
+table { width: 100%; border-collapse: collapse; font-size: .84rem; }
+th, td { text-align: left; padding: .42rem .5rem; border-bottom: 1px solid var(--border); }
+th { color: var(--text-muted); font-weight: 600; font-size: .76rem; }
+td.num { font-variant-numeric: tabular-nums; }
+.hist-head { display: flex; justify-content: space-between; align-items: baseline; }
+.footer { margin-top: 1.6rem; font-size: .74rem; color: var(--text-muted); border-top: 1px solid var(--border); padding-top: .8rem; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="topbar">
+    <div>
+      <h1>⚡ SignalBot – Mein Dashboard</h1>
+      <div class="status-line" id="status">Lade…</div>
+    </div>
+    <div class="controls">
+      <select id="tf" title="Timeframe">
+        <option value="15m">15 Min</option>
+        <option value="1h" selected>1 Std</option>
+        <option value="4h">4 Std</option>
+        <option value="1d">1 Tag</option>
+      </select>
+      <input type="text" id="newpair" placeholder="Paar hinzufügen (z.B. DOGEUSDT)" size="22">
+      <button id="addpair">+</button>
+      <button id="refresh">Aktualisieren</button>
+      <button id="themetoggle" title="Hell/Dunkel">◐</button>
+    </div>
+  </div>
+
+  <div class="banner" id="banner"></div>
+
+  <div class="cards" id="cards"></div>
+
+  <div class="card chart-card">
+    <div class="chart-head">
+      <h2 style="margin:0" id="charttitle">Chart</h2>
+      <div class="legend">
+        <span><span class="key" style="border-color: var(--accent)"></span>EMA50</span>
+        <span><span class="key" style="border-color: var(--text-muted); border-top-style: dotted"></span>Bollinger (20, 2σ)</span>
+      </div>
+    </div>
+    <div id="chartwrap">
+      <canvas id="chart"></canvas>
+      <div id="tooltip"></div>
+    </div>
+  </div>
+
+  <div class="hist-head">
+    <h2>Signal-Verlauf <span class="status-line">(entsteht, während das Dashboard offen ist)</span></h2>
+    <button id="clearhist">Verlauf löschen</button>
+  </div>
+  <div class="card">
+    <table>
+      <thead><tr><th>Zeit</th><th>Paar</th><th>TF</th><th>Signal</th><th>Score</th><th>Preis</th><th>Begründung</th></tr></thead>
+      <tbody id="histrows"></tbody>
+    </table>
+  </div>
+
+  <div class="footer">
+    Datenquelle: öffentliche Binance-API, Analyse läuft komplett lokal in deinem Browser.
+    Automatisch berechnete Analysen zu Informationszwecken – keine Anlageberatung.
+    Krypto-Handel ist hochriskant und kann zum Totalverlust führen.
+  </div>
+</div>
+
+<script>
+/* Indikatoren + Signal-Engine — 1:1-Port von app/signals/ (Python).
+   Läuft im Browser und in Node (für Paritätstests). */
+(function (root, factory) {
+  if (typeof module === "object" && module.exports) module.exports = factory();
+  else root.SignalEngine = factory();
+})(typeof self !== "undefined" ? self : this, function () {
+  function sma(values, period) {
+    if (values.length < period) return [];
+    const out = [];
+    let s = 0;
+    for (let i = 0; i < period; i++) s += values[i];
+    out.push(s / period);
+    for (let i = period; i < values.length; i++) {
+      s += values[i] - values[i - period];
+      out.push(s / period);
+    }
+    return out;
+  }
+
+  function ema(values, period) {
+    if (values.length < period) return [];
+    const k = 2 / (period + 1);
+    let s = 0;
+    for (let i = 0; i < period; i++) s += values[i];
+    const out = [s / period];
+    for (let i = period; i < values.length; i++) {
+      out.push(values[i] * k + out[out.length - 1] * (1 - k));
+    }
+    return out;
+  }
+
+  function rsi(values, period = 14) {
+    if (values.length <= period) return [];
+    const gains = [], losses = [];
+    for (let i = 1; i < values.length; i++) {
+      const ch = values[i] - values[i - 1];
+      gains.push(Math.max(ch, 0));
+      losses.push(Math.max(-ch, 0));
+    }
+    let avgGain = 0, avgLoss = 0;
+    for (let i = 0; i < period; i++) { avgGain += gains[i]; avgLoss += losses[i]; }
+    avgGain /= period; avgLoss /= period;
+    const calc = (g, l) => (l === 0 ? 100 : 100 - 100 / (1 + g / l));
+    const out = [calc(avgGain, avgLoss)];
+    for (let i = period; i < gains.length; i++) {
+      avgGain = (avgGain * (period - 1) + gains[i]) / period;
+      avgLoss = (avgLoss * (period - 1) + losses[i]) / period;
+      out.push(calc(avgGain, avgLoss));
+    }
+    return out;
+  }
+
+  function macd(values, fast = 12, slow = 26, signal = 9) {
+    const emaFast = ema(values, fast);
+    const emaSlow = ema(values, slow);
+    if (!emaSlow.length) return { macdLine: [], signalLine: [], hist: [] };
+    const offset = slow - fast;
+    const macdLine = [];
+    for (let i = 0; i < emaSlow.length; i++) macdLine.push(emaFast[i + offset] - emaSlow[i]);
+    const signalLine = ema(macdLine, signal);
+    if (!signalLine.length) return { macdLine, signalLine: [], hist: [] };
+    const hist = [];
+    for (let i = 0; i < signalLine.length; i++) hist.push(macdLine[i + signal - 1] - signalLine[i]);
+    return { macdLine, signalLine, hist };
+  }
+
+  function bollinger(values, period = 20, numStd = 2.0) {
+    if (values.length < period) return [];
+    const out = [];
+    for (let i = period - 1; i < values.length; i++) {
+      const win = values.slice(i - period + 1, i + 1);
+      const mean = win.reduce((a, b) => a + b, 0) / period;
+      const variance = win.reduce((a, b) => a + (b - mean) ** 2, 0) / period;
+      const std = Math.sqrt(variance);
+      out.push([mean - numStd * std, mean, mean + numStd * std]);
+    }
+    return out;
+  }
+
+  const MIN_CANDLES = 60;
+
+  function analyze(closes) {
+    if (closes.length < MIN_CANDLES) throw new Error(`Mindestens ${MIN_CANDLES} Kerzen nötig`);
+    const price = closes[closes.length - 1];
+    const reasons = [];
+    let score = 0;
+
+    const rsiSeries = rsi(closes, 14);
+    const rsiNow = rsiSeries[rsiSeries.length - 1];
+    if (rsiNow < 30) { score += 2; reasons.push(`RSI stark überverkauft (${rsiNow.toFixed(1)})`); }
+    else if (rsiNow < 40) { score += 1; reasons.push(`RSI überverkauft (${rsiNow.toFixed(1)})`); }
+    else if (rsiNow > 70) { score -= 2; reasons.push(`RSI stark überkauft (${rsiNow.toFixed(1)})`); }
+    else if (rsiNow > 60) { score -= 1; reasons.push(`RSI überkauft (${rsiNow.toFixed(1)})`); }
+
+    const { hist } = macd(closes);
+    const eps = Math.abs(price) * 1e-9;
+    let histNow = hist[hist.length - 1]; if (Math.abs(histNow) <= eps) histNow = 0;
+    let histPrev = hist[hist.length - 2]; if (Math.abs(histPrev) <= eps) histPrev = 0;
+    if (histPrev <= 0 && histNow > 0) { score += 2; reasons.push("MACD-Histogramm kreuzt nach oben"); }
+    else if (histPrev >= 0 && histNow < 0) { score -= 2; reasons.push("MACD-Histogramm kreuzt nach unten"); }
+    else if (histNow > 0) { score += 1; reasons.push("MACD-Momentum positiv"); }
+    else { score -= 1; reasons.push("MACD-Momentum negativ"); }
+
+    const emaSeries = ema(closes, 50);
+    const ema50 = emaSeries[emaSeries.length - 1];
+    if (price > ema50) { score += 1; reasons.push("Kurs über EMA50 (Aufwärtstrend)"); }
+    else { score -= 1; reasons.push("Kurs unter EMA50 (Abwärtstrend)"); }
+
+    const bb = bollinger(closes, 20);
+    const [lower, mid, upper] = bb[bb.length - 1];
+    if (price < lower) { score += 1; reasons.push("Kurs unter unterem Bollinger-Band"); }
+    else if (price > upper) { score -= 1; reasons.push("Kurs über oberem Bollinger-Band"); }
+
+    const action = score >= 3 ? "BUY" : score <= -3 ? "SELL" : "NEUTRAL";
+    return {
+      action, score,
+      confidence: Math.round(Math.min(Math.abs(score) / 6, 1) * 100) / 100,
+      price,
+      indicators: { rsi: rsiNow, macd_hist: histNow, ema50, bb_lower: lower, bb_mid: mid, bb_upper: upper },
+      reasons,
+    };
+  }
+
+  return { sma, ema, rsi, macd, bollinger, analyze, MIN_CANDLES };
+});
+
+</script>
+<script>
+"use strict";
+/* SignalBot Personal Dashboard – läuft komplett im Browser.
+   Daten: öffentliche Binance-API (CORS-frei zugänglich). */
+
+const LS = {
+  get(key, fallback) { try { const v = localStorage.getItem(key); return v ? JSON.parse(v) : fallback; } catch { return fallback; } },
+  set(key, val) { try { localStorage.setItem(key, JSON.stringify(val)); } catch {} },
+};
+
+const DEFAULT_PAIRS = ["BTCUSDT", "ETHUSDT", "SOLUSDT", "BNBUSDT", "XRPUSDT"];
+const BASES = ["https://api.binance.com", "https://data-api.binance.vision"];
+let pairs = LS.get("sb_pairs", DEFAULT_PAIRS);
+let timeframe = LS.get("sb_tf", "1h");
+let selectedPair = LS.get("sb_selected", pairs[0]);
+let history = LS.get("sb_history", []);
+let lastAction = LS.get("sb_lastaction", {});   // pair|tf -> BUY/SELL
+let analyses = {};                              // pair -> Analyse
+let candlesCache = {};                          // pair -> Kerzen
+let workingBase = null;
+
+const $ = (id) => document.getElementById(id);
+const fmtPrice = (p) => p >= 1000 ? p.toLocaleString("de-DE", {maximumFractionDigits: 2})
+  : p >= 1 ? p.toFixed(3) : p.toFixed(6);
+const fmtTime = (t) => new Date(t).toLocaleString("de-DE", {day:"2-digit",month:"2-digit",hour:"2-digit",minute:"2-digit"});
+const ICONS = { BUY: "▲", SELL: "▼", NEUTRAL: "→" };
+
+/* ---------- Daten laden ---------- */
+async function fetchKlines(pair, interval, limit = 200) {
+  const bases = workingBase ? [workingBase, ...BASES.filter(b => b !== workingBase)] : BASES;
+  let lastErr;
+  for (const base of bases) {
+    try {
+      const res = await fetch(`${base}/api/v3/klines?symbol=${encodeURIComponent(pair)}&interval=${interval}&limit=${limit}`);
+      if (res.status === 400) throw Object.assign(new Error("bad symbol"), { badSymbol: true });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      workingBase = base;
+      const raw = await res.json();
+      return raw.map(r => ({ time: r[0], open: +r[1], high: +r[2], low: +r[3], close: +r[4] }));
+    } catch (e) { lastErr = e; if (e.badSymbol) throw e; }
+  }
+  throw lastErr;
+}
+
+/* ---------- Scan ---------- */
+async function scan() {
+  $("status").textContent = "Aktualisiere…";
+  let failed = 0, badPairs = [];
+  for (const pair of pairs) {
+    try {
+      const candles = await fetchKlines(pair, timeframe);
+      candlesCache[pair] = candles;
+      const result = SignalEngine.analyze(candles.map(c => c.close));
+      result.pair = pair; result.updated = Date.now();
+      analyses[pair] = result;
+      recordSignal(pair, result);
+    } catch (e) {
+      if (e.badSymbol) badPairs.push(pair); else failed++;
+    }
+  }
+  renderCards(); renderHistory(); drawChart();
+  const banner = $("banner");
+  if (badPairs.length) {
+    banner.style.display = "block";
+    banner.textContent = `Unbekannte(s) Paar(e) bei Binance: ${badPairs.join(", ")} – bitte prüfen (Format z.B. DOGEUSDT).`;
+  } else if (failed === pairs.length && pairs.length) {
+    banner.style.display = "block";
+    banner.textContent = "Binance ist gerade nicht erreichbar. Prüfe deine Internetverbindung – in manchen Netzwerken/Ländern ist api.binance.com gesperrt (dann hilft z.B. ein VPN).";
+  } else {
+    banner.style.display = "none";
+  }
+  $("status").textContent = failed || badPairs.length
+    ? `Stand: ${fmtTime(Date.now())} – ${failed + badPairs.length} Paar(e) fehlgeschlagen`
+    : `Stand: ${fmtTime(Date.now())} · Timeframe ${timeframe} · Auto-Refresh alle 60 s`;
+}
+
+function recordSignal(pair, result) {
+  const key = `${pair}|${timeframe}`;
+  if (result.action === "NEUTRAL") { delete lastAction[key]; LS.set("sb_lastaction", lastAction); return; }
+  if (lastAction[key] === result.action) return;
+  lastAction[key] = result.action;
+  LS.set("sb_lastaction", lastAction);
+  history.unshift({ time: Date.now(), pair, tf: timeframe, action: result.action,
+    score: result.score, price: result.price, reasons: result.reasons });
+  history = history.slice(0, 300);
+  LS.set("sb_history", history);
+}
+
+/* ---------- Karten ---------- */
+function renderCards() {
+  const grid = $("cards");
+  grid.replaceChildren();
+  for (const pair of pairs) {
+    const a = analyses[pair];
+    const card = document.createElement("div");
+    card.className = "pair-card card" + (pair === selectedPair ? " selected" : "");
+
+    const rm = document.createElement("button");
+    rm.className = "rm"; rm.textContent = "✕"; rm.title = "Paar entfernen";
+    rm.addEventListener("click", (ev) => { ev.stopPropagation(); removePair(pair); });
+    card.appendChild(rm);
+
+    const head = document.createElement("div"); head.className = "pair-head";
+    const name = document.createElement("span"); name.textContent = pair; head.appendChild(name);
+    if (a) {
+      const badge = document.createElement("span");
+      badge.className = `badge badge-${a.action}`;
+      badge.textContent = `${ICONS[a.action]} ${a.action === "NEUTRAL" ? "NEUTRAL" : a.action}`;
+      head.appendChild(badge);
+    }
+    card.appendChild(head);
+
+    if (a) {
+      const price = document.createElement("div"); price.className = "price";
+      price.textContent = "$" + fmtPrice(a.price); card.appendChild(price);
+
+      // Score-Meter: divergierend um die Mitte (−6 … +6)
+      const meter = document.createElement("div"); meter.className = "meter";
+      const mid = document.createElement("div"); mid.className = "mid"; meter.appendChild(mid);
+      if (a.score !== 0) {
+        const fill = document.createElement("div"); fill.className = "fill";
+        const pct = Math.min(Math.abs(a.score) / 6, 1) * 50;
+        fill.style.width = pct + "%";
+        fill.style.background = a.score > 0 ? "var(--good)" : "var(--critical)";
+        if (a.score > 0) fill.style.left = "50%"; else fill.style.right = "50%";
+        meter.appendChild(fill);
+      }
+      card.appendChild(meter);
+
+      const stats = document.createElement("div"); stats.className = "stats";
+      stats.textContent = `Score ${a.score > 0 ? "+" + a.score : a.score} · RSI ${a.indicators.rsi.toFixed(1)} · MACD ${a.indicators.macd_hist > 0 ? "↑" : "↓"}`;
+      card.appendChild(stats);
+
+      const det = document.createElement("details");
+      const sum = document.createElement("summary"); sum.textContent = "Begründung"; det.appendChild(sum);
+      const ul = document.createElement("ul");
+      for (const r of a.reasons) { const li = document.createElement("li"); li.textContent = r; ul.appendChild(li); }
+      det.appendChild(ul); card.appendChild(det);
+    } else {
+      const load = document.createElement("div"); load.className = "stats"; load.textContent = "Lade…";
+      card.appendChild(load);
+    }
+
+    card.addEventListener("click", () => { selectedPair = pair; LS.set("sb_selected", pair); renderCards(); drawChart(); });
+    grid.appendChild(card);
+  }
+}
+
+function removePair(pair) {
+  pairs = pairs.filter(p => p !== pair);
+  LS.set("sb_pairs", pairs);
+  delete analyses[pair]; delete candlesCache[pair];
+  if (selectedPair === pair) selectedPair = pairs[0] || null;
+  renderCards(); drawChart();
+}
+
+/* ---------- Verlauf ---------- */
+function renderHistory() {
+  const tbody = $("histrows");
+  tbody.replaceChildren();
+  if (!history.length) {
+    const tr = document.createElement("tr"); const td = document.createElement("td");
+    td.colSpan = 7; td.textContent = "Noch keine Signalwechsel aufgezeichnet."; td.style.color = "var(--text-muted)";
+    tr.appendChild(td); tbody.appendChild(tr); return;
+  }
+  for (const h of history.slice(0, 60)) {
+    const tr = document.createElement("tr");
+    const cells = [fmtTime(h.time), h.pair, h.tf, null, (h.score > 0 ? "+" : "") + h.score, "$" + fmtPrice(h.price), h.reasons.join(", ")];
+    cells.forEach((c, i) => {
+      const td = document.createElement("td");
+      if (i === 3) {
+        const b = document.createElement("span"); b.className = `badge badge-${h.action}`;
+        b.textContent = `${ICONS[h.action]} ${h.action}`; td.appendChild(b);
+      } else { td.textContent = c; if (i === 4 || i === 5) td.className = "num"; }
+      if (i === 6) td.style.color = "var(--text-secondary)";
+      tr.appendChild(td);
+    });
+    tbody.appendChild(tr);
+  }
+}
+
+/* ---------- Canvas-Chart (Candles + EMA50 + Bollinger + Crosshair) ---------- */
+const canvas = $("chart"), ctx = canvas.getContext("2d");
+let chartState = null;
+
+function cssVar(name) { return getComputedStyle(document.documentElement).getPropertyValue(name).trim(); }
+
+function drawChart(hoverX = null) {
+  const pair = selectedPair;
+  $("charttitle").textContent = pair ? `${pair} · ${timeframe}` : "Chart";
+  const dpr = window.devicePixelRatio || 1;
+  const W = canvas.clientWidth, H = 360;
+  canvas.width = W * dpr; canvas.height = H * dpr;
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.clearRect(0, 0, W, H);
+  const candles = pair && candlesCache[pair];
+  if (!candles || candles.length < SignalEngine.MIN_CANDLES) { chartState = null; return; }
+
+  const padL = 8, padR = 64, padT = 10, padB = 24;
+  const plotW = W - padL - padR, plotH = H - padT - padB;
+  const view = candles.slice(-120);
+  const closes = candles.map(c => c.close);
+
+  // Overlays rechtsbündig auf die letzten `view.length` Kerzen ausrichten
+  const emaAll = SignalEngine.ema(closes, 50);
+  const bbAll = SignalEngine.bollinger(closes, 20);
+  const emaView = emaAll.slice(-view.length);
+  const bbView = bbAll.slice(-view.length);
+  const emaOffset = view.length - emaView.length;   // führende Kerzen ohne EMA-Wert
+  const bbOffset = view.length - bbView.length;
+
+  let lo = Infinity, hi = -Infinity;
+  for (const c of view) { lo = Math.min(lo, c.low); hi = Math.max(hi, c.high); }
+  for (const b of bbView) { lo = Math.min(lo, b[0]); hi = Math.max(hi, b[2]); }
+  const span = (hi - lo) || 1; lo -= span * 0.04; hi += span * 0.04;
+
+  const x = (i) => padL + (i + 0.5) * (plotW / view.length);
+  const y = (v) => padT + (hi - v) / (hi - lo) * plotH;
+
+  // Gridlines (hairline, dezent) + Preis-Ticks rechts
+  ctx.strokeStyle = cssVar("--grid"); ctx.lineWidth = 1;
+  ctx.fillStyle = cssVar("--text-muted"); ctx.font = "11px system-ui, sans-serif"; ctx.textBaseline = "middle";
+  const ticks = 5;
+  for (let t = 0; t <= ticks; t++) {
+    const v = lo + (hi - lo) * t / ticks, yy = y(v);
+    ctx.beginPath(); ctx.moveTo(padL, yy); ctx.lineTo(W - padR, yy); ctx.stroke();
+    ctx.fillText(fmtPrice(v), W - padR + 6, yy);
+  }
+  // Zeit-Ticks unten
+  ctx.textAlign = "center"; ctx.textBaseline = "top";
+  for (let i = 0; i < view.length; i += Math.ceil(view.length / 6)) {
+    // Label horizontal einklemmen, damit es links/rechts nicht abgeschnitten wird
+    const half = ctx.measureText(fmtTime(view[i].time)).width / 2;
+    const tx = Math.min(Math.max(x(i), padL + half), W - padR - half);
+    ctx.fillText(fmtTime(view[i].time), tx, H - padB + 6);
+  }
+  ctx.textAlign = "left"; ctx.textBaseline = "middle";
+
+  // Bollinger-Band: Wash + gepunktete Ränder
+  if (bbView.length > 1) {
+    ctx.beginPath();
+    bbView.forEach((b, j) => { const px = x(j + bbOffset), py = y(b[2]); j ? ctx.lineTo(px, py) : ctx.moveTo(px, py); });
+    for (let j = bbView.length - 1; j >= 0; j--) ctx.lineTo(x(j + bbOffset), y(bbView[j][0]));
+    ctx.closePath();
+    ctx.globalAlpha = 0.07; ctx.fillStyle = cssVar("--accent"); ctx.fill(); ctx.globalAlpha = 1;
+    ctx.strokeStyle = cssVar("--text-muted"); ctx.setLineDash([2, 3]); ctx.lineWidth = 1;
+    for (const edge of [0, 2]) {
+      ctx.beginPath();
+      bbView.forEach((b, j) => { const px = x(j + bbOffset), py = y(b[edge]); j ? ctx.lineTo(px, py) : ctx.moveTo(px, py); });
+      ctx.stroke();
+    }
+    ctx.setLineDash([]);
+  }
+
+  // Kerzen
+  const cw = Math.max(2, plotW / view.length - 2);
+  for (let i = 0; i < view.length; i++) {
+    const c = view[i], up = c.close >= c.open;
+    ctx.strokeStyle = ctx.fillStyle = up ? cssVar("--good") : cssVar("--critical");
+    ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(x(i), y(c.high)); ctx.lineTo(x(i), y(c.low)); ctx.stroke();
+    const top = y(Math.max(c.open, c.close)), bot = y(Math.min(c.open, c.close));
+    ctx.fillRect(x(i) - cw / 2, top, cw, Math.max(bot - top, 1));
+  }
+
+  // EMA50-Linie (2px, Akzentfarbe)
+  if (emaView.length > 1) {
+    ctx.strokeStyle = cssVar("--accent"); ctx.lineWidth = 2; ctx.lineJoin = "round"; ctx.lineCap = "round";
+    ctx.beginPath();
+    emaView.forEach((v, j) => { const px = x(j + emaOffset), py = y(v); j ? ctx.lineTo(px, py) : ctx.moveTo(px, py); });
+    ctx.stroke();
+  }
+
+  chartState = { view, x, y, padL, padR, plotW, W, H, padT, plotH, emaView, emaOffset, bbView, bbOffset };
+
+  // Crosshair
+  if (hoverX !== null) {
+    const i = Math.min(view.length - 1, Math.max(0, Math.round((hoverX - padL) / (plotW / view.length) - 0.5)));
+    const cx = x(i);
+    ctx.strokeStyle = cssVar("--text-muted"); ctx.lineWidth = 1; ctx.setLineDash([3, 3]);
+    ctx.beginPath(); ctx.moveTo(cx, padT); ctx.lineTo(cx, H - padB); ctx.stroke();
+    ctx.setLineDash([]);
+    showTooltip(i, cx);
+  } else {
+    $("tooltip").style.display = "none";
+  }
+}
+
+function showTooltip(i, cx) {
+  const st = chartState; if (!st) return;
+  const c = st.view[i];
+  const tt = $("tooltip");
+  tt.replaceChildren();
+  const t = document.createElement("div"); t.className = "tt-time"; t.textContent = fmtTime(c.time); tt.appendChild(t);
+  const rows = [["Open", c.open], ["Hoch", c.high], ["Tief", c.low], ["Close", c.close]];
+  const emaIdx = i - st.emaOffset;
+  if (emaIdx >= 0 && st.emaView[emaIdx] !== undefined) rows.push(["EMA50", st.emaView[emaIdx]]);
+  const bbIdx = i - st.bbOffset;
+  if (bbIdx >= 0 && st.bbView[bbIdx]) { rows.push(["BB oben", st.bbView[bbIdx][2]], ["BB unten", st.bbView[bbIdx][0]]); }
+  for (const [label, val] of rows) {
+    const d = document.createElement("div");
+    const v = document.createElement("span"); v.className = "v"; v.textContent = "$" + fmtPrice(val);
+    d.textContent = label; d.appendChild(v); tt.appendChild(d);
+  }
+  tt.style.display = "block";
+  const wrap = $("chartwrap");
+  const left = cx + 14 + tt.offsetWidth > wrap.clientWidth ? cx - tt.offsetWidth - 14 : cx + 14;
+  tt.style.left = left + "px"; tt.style.top = "14px";
+}
+
+canvas.addEventListener("pointermove", (e) => {
+  const rect = canvas.getBoundingClientRect();
+  drawChart(e.clientX - rect.left);
+});
+canvas.addEventListener("pointerleave", () => drawChart());
+window.addEventListener("resize", () => drawChart());
+
+/* ---------- Controls ---------- */
+$("tf").value = timeframe;
+$("tf").addEventListener("change", () => {
+  timeframe = $("tf").value; LS.set("sb_tf", timeframe);
+  analyses = {}; candlesCache = {}; renderCards(); scan();
+});
+$("refresh").addEventListener("click", scan);
+$("addpair").addEventListener("click", addPair);
+$("newpair").addEventListener("keydown", (e) => { if (e.key === "Enter") addPair(); });
+function addPair() {
+  const p = $("newpair").value.trim().toUpperCase();
+  if (!p || pairs.includes(p) || !/^[A-Z0-9]{5,20}$/.test(p)) return;
+  pairs.push(p); LS.set("sb_pairs", pairs);
+  $("newpair").value = ""; renderCards(); scan();
+}
+$("clearhist").addEventListener("click", () => {
+  history = []; lastAction = {};
+  LS.set("sb_history", history); LS.set("sb_lastaction", lastAction);
+  renderHistory();
+});
+$("themetoggle").addEventListener("click", () => {
+  const cur = document.documentElement.dataset.theme
+    || (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+  const next = cur === "dark" ? "light" : "dark";
+  document.documentElement.dataset.theme = next;
+  LS.set("sb_theme", next);
+  drawChart();
+});
+const savedTheme = LS.get("sb_theme", null);
+if (savedTheme) document.documentElement.dataset.theme = savedTheme;
+
+/* ---------- Start ---------- */
+renderCards(); renderHistory();
+scan();
+setInterval(scan, 60_000);
+
+</script>
+</body>
+</html>
