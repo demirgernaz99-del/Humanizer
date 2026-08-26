@@ -93,6 +93,25 @@
     </table></div>
   </section>
 
+  <section class="card" id="opt-section">
+    <div class="opt-head">
+      <h2>Strategie-Optimierung (Walk-Forward)</h2>
+      <div class="opt-controls">
+        <select id="opt-objective">
+          <option value="winrate" selected>Ziel: Winrate</option>
+          <option value="pf">Ziel: Profit-Faktor</option>
+          <option value="totalR">Ziel: Gesamt-R</option>
+        </select>
+        <button id="opt-run">Alle Timeframes optimieren</button>
+      </div>
+    </div>
+    <p class="hint">Testet pro Timeframe hunderte Parameter-Kombinationen auf echten Kursdaten – mit strikter
+    Training/Test-Trennung (Walk-Forward). Angezeigt und bewertet wird nur die <strong>Out-of-Sample</strong>-Leistung
+    auf ungesehenen Daten. Vergangene Ergebnisse garantieren keine zukünftigen.</p>
+    <div id="opt-progress"></div>
+    <div id="opt-results"></div>
+  </section>
+
   <section>
     <div class="hist-head">
       <h2>Signal-Verlauf</h2>
@@ -124,7 +143,13 @@
 @@ENGINE@@
 </script>
 <script>
+@@FASTENGINE@@
+</script>
+<script>
 @@BACKTEST@@
+</script>
+<script>
+@@OPTIMIZER@@
 </script>
 <script>
 @@CHART@@

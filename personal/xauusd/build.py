@@ -9,6 +9,8 @@ parts = {
     "@@STYLES@@": "styles.css",
     "@@INDICATORS@@": "indicators.js",
     "@@ENGINE@@": "engine.js",
+    "@@FASTENGINE@@": "fastengine.js",
+    "@@OPTIMIZER@@": "optimizer.js",
     "@@BACKTEST@@": "backtest.js",
     "@@CHART@@": "chart.js",
     "@@APP@@": "app.js",
