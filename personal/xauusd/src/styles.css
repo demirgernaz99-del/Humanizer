@@ -225,3 +225,83 @@ tr:last-child td { border-bottom: 0; }
 .hero-sub .down { color: var(--critical-text); }
 td .pos, .r-pos { color: var(--good-text); }
 td .neg, .r-neg { color: var(--critical-text); }
+
+/* ---------- Strategie-Optimierung (Walk-Forward) ---------- */
+
+/* Gold-Textfarbe mit ausreichend Kontrast – Muster wie --good-text */
+:root {
+  --gold-text: #7a5a00;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) { --gold-text: var(--gold); }
+}
+:root[data-theme="dark"] { --gold-text: var(--gold); }
+
+/* Kopfzeile wie .bt-head: Titel links, Steuerung rechts */
+.opt-head { display: flex; flex-wrap: wrap; gap: .5rem 1rem; justify-content: space-between; align-items: center; margin-bottom: .6rem; }
+.opt-head h2 { margin: 0; }
+.opt-controls { display: flex; flex-wrap: wrap; gap: .5rem; align-items: center; }
+
+/* Fortschritt: Textzeile + <progress> in Akzentfarbe, volle Breite, dezent */
+#opt-progress { margin: .6rem 0 .2rem; font-size: .82rem; color: var(--text-secondary); }
+#opt-progress:empty { display: none; }
+.opt-progress-text { display: block; margin-bottom: .3rem; font-variant-numeric: tabular-nums; }
+#opt-progress progress {
+  -webkit-appearance: none; appearance: none;
+  display: block; width: 100%; height: 6px;
+  border: 0; border-radius: 3px; overflow: hidden;
+  background: var(--surface-2); accent-color: var(--accent);
+}
+#opt-progress progress::-webkit-progress-bar { background: var(--surface-2); border-radius: 3px; }
+#opt-progress progress::-webkit-progress-value { background: var(--accent); border-radius: 3px; }
+#opt-progress progress::-moz-progress-bar { background: var(--accent); border-radius: 3px; }
+
+/* Ergebnis-Grid: eine Karte pro Timeframe */
+#opt-results { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: .8rem; margin-top: .8rem; }
+#opt-results > .hint { grid-column: 1 / -1; margin: 0; }
+
+.opt-tf-card {
+  border: 1px solid var(--border); border-radius: 12px;
+  padding: .75rem .85rem; background: var(--surface-1);
+  display: flex; flex-direction: column; gap: .55rem; min-width: 0;
+}
+.opt-tf-head { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem; }
+.opt-tf-name { font-size: .95rem; }
+
+/* Optimierte Konfiguration in einer Zeile */
+.opt-config { font-size: .8rem; color: var(--text-secondary); font-variant-numeric: tabular-nums; }
+
+/* Out-of-Sample groß, In-Sample klein/gedämpft */
+.opt-compare { display: flex; flex-direction: column; gap: .6rem; }
+.opt-group-label { font-size: .72rem; color: var(--text-muted); margin-bottom: .3rem; }
+.opt-oos .opt-group-label { color: var(--text-secondary); font-weight: 600; }
+.opt-tiles { display: flex; flex-wrap: wrap; gap: .5rem; }
+.opt-tiles-big .stat-tile { min-width: 86px; flex: 1 1 86px; }
+.opt-tiles-small { gap: .4rem; }
+.opt-tiles-small .stat-tile { padding: .3rem .55rem; min-width: 70px; flex: 1 1 70px; }
+.opt-tiles-small .stat-tile .value { font-size: .88rem; font-weight: 600; color: var(--text-secondary); }
+.opt-tiles-small .stat-tile .label { font-size: .68rem; }
+
+/* Kleiner gold-getönter Chip ("aktiv" / optimierte Parameter) */
+.tuned-chip {
+  display: inline-flex; align-items: center;
+  font-size: .68rem; font-weight: 700; letter-spacing: .02em;
+  padding: .1rem .5rem; border-radius: 999px;
+  background: var(--gold-wash); color: var(--gold-text);
+}
+
+/* Warn- und Fehlerzeilen */
+.opt-warn { color: var(--critical-text); font-size: .8rem; margin: 0; }
+.opt-error { color: var(--critical-text); font-size: .84rem; margin: 0; }
+
+/* Buttons-Zeile der Karte */
+.opt-actions { display: flex; flex-wrap: wrap; gap: .5rem; margin-top: auto; padding-top: .2rem; }
+.opt-actions button:disabled { cursor: default; color: var(--text-muted); border-color: var(--border); }
+
+@media (max-width: 560px) {
+  .opt-head { flex-direction: column; align-items: flex-start; }
+}
+
+/* Review-Fixes: Kachelwerte nicht umbrechen, Waisen-/Fehlerkarten */
+.stat-tile .value { white-space: nowrap; }
+.opt-error { color: var(--critical-text); font-size: .85rem; }

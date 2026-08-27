@@ -1,17 +1,23 @@
-/* XAU.backtest – Walk-forward-Backtest für die Signal-Engine (XAU/USD).
-   Bar für Bar: Signal auf Fensterbasis, Entry am Open der Folgekerze (kein Look-Ahead),
-   Stop/Target aus ATR zum Signalzeitpunkt. Nie werfen – im Zweifel leeres Ergebnis. */
+/* XAU.backtest – Backtest v2 für die XAU/USD-Signal-Engine.
+   Signale kommen aus vorberechneten Score-Serien (XAU.fast.computeSeries) – O(n) pro Lauf,
+   keine analyzeTF-Aufrufe pro Bar mehr. Trade-Mechanik: Signal an Bar i (Score über/unter
+   ±threshold), Entry am Open von Bar i+1 (kein Look-Ahead), nur ein Trade gleichzeitig.
+   Je Kerze im Trade in fester Reihenfolge: Gap-Open jenseits Stop/Target -> Exit zum Open;
+   Stop (konservativ vor Target); Target; danach exitMode-Update (trailing/breakeven zieht
+   den Stop NACH den Checks nach, wirksam ab der Folgekerze); Gegensignal -> Exit zum Close;
+   maxHoldBars -> 'Zeit-Exit' zum Close; letzte Kerze -> 'Laufzeitende'. rMultiple immer
+   relativ zum INITIALEN Risiko. Nie werfen – im Zweifel leeres Ergebnis. */
 (function () {
   "use strict";
   var root = (typeof window !== "undefined") ? window : globalThis;
   root.XAU = root.XAU || {};
 
-  // In Node: Engine lokal laden; im Browser hängt XAU.engine am globalen Objekt.
-  var engineLocal = null;
+  // In Node: Fast-Engine defensiv laden; im Browser hängt XAU.fast am globalen Objekt.
+  var fastLocal = null;
   if (typeof module !== "undefined" && typeof require === "function") {
-    try { engineLocal = require("./engine.js"); } catch (e) { engineLocal = null; }
+    try { fastLocal = require("./fastengine.js"); } catch (e) { fastLocal = null; }
   }
-  function getEngine() { return root.XAU.engine || engineLocal || null; }
+  function getFast() { return root.XAU.fast || fastLocal || null; }
 
   function num(x) { return typeof x === "number" && isFinite(x); }
 
@@ -32,12 +38,14 @@
     return { n: 0, wins: 0, losses: 0, winrate: 0, avgR: 0, totalR: 0, profitFactor: null, maxDrawdownR: 0 };
   }
 
+  /* wins = r > 0, losses = r < 0; r === 0 ist Breakeven und zählt weder als Gewinn
+     noch als Verlust (wohl aber in n). profitFactor ist null bei 0 Verlusten. */
   function buildStats(trades) {
     var stats = emptyStats();
-    if (!trades.length) return stats;
+    if (!Array.isArray(trades) || !trades.length) return stats;
     var rs = [], sumPos = 0, sumNeg = 0, total = 0, wins = 0, losses = 0;
     for (var i = 0; i < trades.length; i++) {
-      var r = trades[i].rMultiple;
+      var r = trades[i] ? trades[i].rMultiple : 0;
       if (!num(r)) r = 0;
       rs.push(r);
       total += r;
@@ -56,27 +64,59 @@
     return stats;
   }
 
-  function run(candles, opts) {
-    opts = opts || {};
-    var atrMult = num(opts.atrMult) ? opts.atrMult : 1.5;
-    var rr = num(opts.rr) ? opts.rr : 2;
-    var threshold = num(opts.threshold) ? opts.threshold : 4;
-    var warmup = num(opts.warmup) ? opts.warmup : 250;
+  var EXIT_MODES = { fixed: true, trailing: true, breakeven: true };
 
-    var engine = getEngine();
-    if (!engine || !Array.isArray(candles) || candles.length <= warmup) {
-      return { trades: [], stats: emptyStats() };
+  function normalizeConfig(config) {
+    config = config || {};
+    return {
+      threshold: (num(config.threshold) && Math.abs(config.threshold) > 0) ? Math.abs(config.threshold) : 4,
+      atrMult: (num(config.atrMult) && config.atrMult > 0) ? config.atrMult : 1.5,
+      rr: (num(config.rr) && config.rr > 0) ? config.rr : 2,
+      exitMode: EXIT_MODES[config.exitMode] ? config.exitMode : "fixed",
+      sessionFilter: config.sessionFilter === "londonNY" ? "londonNY" : "none",
+      maxHoldBars: (num(config.maxHoldBars) && config.maxHoldBars > 0) ? Math.floor(config.maxHoldBars) : 0
+    };
+  }
+
+  // UTC-Stunde der Kerze i: bevorzugt aus precomputed.utcHour, sonst aus candle.time (ms).
+  function utcHourAt(pre, candles, i) {
+    if (pre && Array.isArray(pre.utcHour) && num(pre.utcHour[i])) return pre.utcHour[i];
+    var c = candles[i];
+    if (c && num(c.time)) return new Date(c.time).getUTCHours();
+    return null;
+  }
+
+  /* run(candles, config, precomputed)
+     config: { threshold, atrMult, rr, exitMode: 'fixed'|'trailing'|'breakeven',
+               sessionFilter: 'none'|'londonNY', maxHoldBars } – alles optional.
+     precomputed: Ergebnis von XAU.fast.computeSeries(candles) – wird bei Bedarf
+     selbst berechnet. Liefert { config, trades, stats }. */
+  function run(candles, config, precomputed) {
+    var cfg = normalizeConfig(config);
+    var out = { config: cfg, trades: [], stats: emptyStats() };
+    if (!Array.isArray(candles) || candles.length < 2) return out;
+
+    var pre = (precomputed && typeof precomputed === "object") ? precomputed : null;
+    if (!pre) {
+      var fast = getFast();
+      if (fast && typeof fast.computeSeries === "function") {
+        try { pre = fast.computeSeries(candles); } catch (e) { pre = null; }
+      }
     }
+    var scores = pre ? (Array.isArray(pre.score) ? pre.score : pre.scores) : null;
+    var atrs = (pre && Array.isArray(pre.atr)) ? pre.atr : null;
+    if (!Array.isArray(scores)) return out;
 
-    var trades = [];
-    var open = null;     // {direction, entry, entryTime, stop, target, risk}
-    var pending = null;  // {direction, atr} – Entry am Open der nächsten Kerze
+    var trades = out.trades;
+    var open = null;    // {direction, entry, entryTime, entryIndex, stop, target, risk, beDone}
+    var pending = null; // {direction, atr} – Entry am Open der nächsten Kerze
     var n = candles.length;
 
-    function closeTrade(exit, exitTime, reason) {
-      var r;
-      if (open.direction === "LONG") r = (exit - open.entry) / open.risk;
-      else r = (open.entry - exit) / open.risk;
+    function closeTrade(exit, exitTime, exitIndex, reason) {
+      // rMultiple immer relativ zum INITIALEN Risiko (entry - initialStop)
+      var r = (open.direction === "LONG")
+        ? (exit - open.entry) / open.risk
+        : (open.entry - exit) / open.risk;
       trades.push({
         entryTime: open.entryTime,
         direction: open.direction,
@@ -84,81 +124,123 @@
         exit: exit,
         exitTime: exitTime,
         rMultiple: r,
-        reason: reason
+        reason: reason,
+        entryIndex: open.entryIndex,
+        exitIndex: exitIndex,
+        bars: exitIndex - open.entryIndex + 1
       });
       open = null;
     }
 
-    for (var i = warmup; i < n; i++) {
+    for (var i = 0; i < n; i++) {
       var c = candles[i];
-      if (!c || !num(c.open) || !num(c.high) || !num(c.low) || !num(c.close)) continue;
+      if (!c || !num(c.open) || !num(c.high) || !num(c.low) || !num(c.close)) {
+        pending = null; // Datenlücke: Signal verfällt, kein Entry mit veraltetem ATR
+        continue;
+      }
 
       // Pending-Signal der Vorkerze: Entry am Open dieser Kerze
       if (pending && !open) {
-        var risk = atrMult * pending.atr;
-        if (risk > 0) {
+        var risk = cfg.atrMult * pending.atr;
+        if (num(risk) && risk > 0) {
           open = {
             direction: pending.direction,
             entry: c.open,
             entryTime: c.time,
+            entryIndex: i,
             stop: pending.direction === "LONG" ? c.open - risk : c.open + risk,
-            target: pending.direction === "LONG" ? c.open + rr * risk : c.open - rr * risk,
-            risk: risk
+            target: pending.direction === "LONG" ? c.open + cfg.rr * risk : c.open - cfg.rr * risk,
+            risk: risk,
+            beDone: false
           };
         }
       }
       pending = null;
 
-      // Offener Trade: erst Stop (konservativ), dann Target – intrabar
+      // (1) Gap-Open jenseits Stop/Target -> Exit zum Open
+      // (2) Stop (konservativ: vor Target, wenn beide berührt), (3) Target
       if (open) {
         if (open.direction === "LONG") {
-          // Gap-Eröffnung jenseits von Stop/Target: realistisch zum Open abrechnen
-          if (c.open <= open.stop) closeTrade(c.open, c.time, "Stop-Loss");
-          else if (c.open >= open.target) closeTrade(c.open, c.time, "Take-Profit");
-          else if (c.low <= open.stop) closeTrade(open.stop, c.time, "Stop-Loss");
-          else if (c.high >= open.target) closeTrade(open.target, c.time, "Take-Profit");
+          if (c.open <= open.stop) closeTrade(c.open, c.time, i, "Stop-Loss");
+          else if (c.open >= open.target) closeTrade(c.open, c.time, i, "Take-Profit");
+          else if (c.low <= open.stop) closeTrade(open.stop, c.time, i, "Stop-Loss");
+          else if (c.high >= open.target) closeTrade(open.target, c.time, i, "Take-Profit");
         } else {
-          if (c.open >= open.stop) closeTrade(c.open, c.time, "Stop-Loss");
-          else if (c.open <= open.target) closeTrade(c.open, c.time, "Take-Profit");
-          else if (c.high >= open.stop) closeTrade(open.stop, c.time, "Stop-Loss");
-          else if (c.low <= open.target) closeTrade(open.target, c.time, "Take-Profit");
+          if (c.open >= open.stop) closeTrade(c.open, c.time, i, "Stop-Loss");
+          else if (c.open <= open.target) closeTrade(c.open, c.time, i, "Take-Profit");
+          else if (c.high >= open.stop) closeTrade(open.stop, c.time, i, "Stop-Loss");
+          else if (c.low <= open.target) closeTrade(open.target, c.time, i, "Take-Profit");
         }
       }
 
-      // Signal zum Kerzenschluss (Fenster auf letzte 300 Kerzen begrenzt)
-      var res = null;
-      try {
-        res = engine.analyzeTF(candles.slice(Math.max(0, i - 359), i + 1));
-      } catch (e) { res = null; }
+      // (4) exitMode: Stop NACH den Checks aktualisieren – wirksam ab der Folgekerze
+      if (open) {
+        if (cfg.exitMode === "trailing") {
+          var aNow = atrs ? atrs[i] : null;
+          if (num(aNow) && aNow > 0) {
+            if (open.direction === "LONG") open.stop = Math.max(open.stop, c.close - cfg.atrMult * aNow);
+            else open.stop = Math.min(open.stop, c.close + cfg.atrMult * aNow);
+          }
+        } else if (cfg.exitMode === "breakeven" && !open.beDone) {
+          var beHit = (open.direction === "LONG")
+            ? c.high >= open.entry + open.risk
+            : c.low <= open.entry - open.risk;
+          if (beHit) { open.stop = open.entry; open.beDone = true; }
+        }
+      }
+
+      // Signal dieser Kerze aus dem vorberechneten Score
+      var s = scores[i];
       var sig = null;
-      if (res && num(res.score)) {
-        if (res.score >= threshold) sig = "BUY";
-        else if (res.score <= -threshold) sig = "SELL";
+      if (num(s)) {
+        if (s >= cfg.threshold) sig = "BUY";
+        else if (s <= -cfg.threshold) sig = "SELL";
       }
 
-      // Gegensignal: Exit zum Close
+      // (5) Gegensignal -> Exit zum Close
       if (open && sig && ((open.direction === "LONG" && sig === "SELL") || (open.direction === "SHORT" && sig === "BUY"))) {
-        closeTrade(c.close, c.time, "Gegensignal");
+        closeTrade(c.close, c.time, i, "Gegensignal");
       }
 
-      // Neuer Entry nur ohne offenen Trade und wenn eine Folgekerze existiert
+      // (6) Zeit-Exit: Entry-Kerze zählt als Kerze 1 im Trade
+      if (open && cfg.maxHoldBars > 0 && (i - open.entryIndex + 1) >= cfg.maxHoldBars) {
+        closeTrade(c.close, c.time, i, "Zeit-Exit");
+      }
+
+      // (7) Letzte Kerze -> Laufzeitende
+      if (open && i === n - 1) closeTrade(c.close, c.time, i, "Laufzeitende");
+
+      // Neuer Entry: nur ohne offenen Trade, mit Folgekerze, gültigem ATR und (optional) Session
       if (!open && sig && i + 1 < n) {
-        var atrNow = res && res.indicators ? res.indicators.atr : null;
-        if (num(atrNow) && atrNow > 0) {
-          pending = { direction: sig === "BUY" ? "LONG" : "SHORT", atr: atrNow };
+        var allowed = true;
+        if (cfg.sessionFilter === "londonNY") {
+          // maßgeblich ist die Entry-Kerze i+1 (dort wird gehandelt), zur Handelszeit bekannt
+          var h = utcHourAt(pre, candles, i + 1);
+          allowed = num(h) && h >= 7 && h < 21;
+        }
+        if (allowed) {
+          var atrSig = atrs ? atrs[i] : null;
+          if (num(atrSig) && atrSig > 0) {
+            pending = { direction: sig === "BUY" ? "LONG" : "SHORT", atr: atrSig };
+          }
         }
       }
     }
 
-    // Laufzeitende: offenen Trade zum Close der letzten Kerze schließen
+    // Ist die letzte Kerze ungültig, wurde ein offener Trade oben nie geschlossen:
+    // zum letzten gültigen Close abrechnen, damit er nicht aus der Statistik fällt.
     if (open) {
-      var lastC = candles[n - 1];
-      closeTrade(lastC.close, lastC.time, "Laufzeitende");
+      for (var z = n - 1; z >= 0; z--) {
+        var cz = candles[z];
+        if (cz && num(cz.close) && num(cz.time)) { closeTrade(cz.close, cz.time, z, "Laufzeitende"); break; }
+      }
+      if (open) open = null; // keine einzige gültige Kerze: Trade verwerfen
     }
 
-    return { trades: trades, stats: buildStats(trades) };
+    out.stats = buildStats(trades);
+    return out;
   }
 
-  root.XAU.backtest = { run: run, _maxDrawdownR: maxDrawdownR };
+  root.XAU.backtest = { run: run, buildStats: buildStats, _maxDrawdownR: maxDrawdownR };
 })();
 if (typeof module !== "undefined") module.exports = (typeof window !== "undefined" ? window : globalThis).XAU.backtest;

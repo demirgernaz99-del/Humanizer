@@ -233,6 +233,86 @@ tr:last-child td { border-bottom: 0; }
 td .pos, .r-pos { color: var(--good-text); }
 td .neg, .r-neg { color: var(--critical-text); }
 
+/* ---------- Strategie-Optimierung (Walk-Forward) ---------- */
+
+/* Gold-Textfarbe mit ausreichend Kontrast – Muster wie --good-text */
+:root {
+  --gold-text: #7a5a00;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) { --gold-text: var(--gold); }
+}
+:root[data-theme="dark"] { --gold-text: var(--gold); }
+
+/* Kopfzeile wie .bt-head: Titel links, Steuerung rechts */
+.opt-head { display: flex; flex-wrap: wrap; gap: .5rem 1rem; justify-content: space-between; align-items: center; margin-bottom: .6rem; }
+.opt-head h2 { margin: 0; }
+.opt-controls { display: flex; flex-wrap: wrap; gap: .5rem; align-items: center; }
+
+/* Fortschritt: Textzeile + <progress> in Akzentfarbe, volle Breite, dezent */
+#opt-progress { margin: .6rem 0 .2rem; font-size: .82rem; color: var(--text-secondary); }
+#opt-progress:empty { display: none; }
+.opt-progress-text { display: block; margin-bottom: .3rem; font-variant-numeric: tabular-nums; }
+#opt-progress progress {
+  -webkit-appearance: none; appearance: none;
+  display: block; width: 100%; height: 6px;
+  border: 0; border-radius: 3px; overflow: hidden;
+  background: var(--surface-2); accent-color: var(--accent);
+}
+#opt-progress progress::-webkit-progress-bar { background: var(--surface-2); border-radius: 3px; }
+#opt-progress progress::-webkit-progress-value { background: var(--accent); border-radius: 3px; }
+#opt-progress progress::-moz-progress-bar { background: var(--accent); border-radius: 3px; }
+
+/* Ergebnis-Grid: eine Karte pro Timeframe */
+#opt-results { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: .8rem; margin-top: .8rem; }
+#opt-results > .hint { grid-column: 1 / -1; margin: 0; }
+
+.opt-tf-card {
+  border: 1px solid var(--border); border-radius: 12px;
+  padding: .75rem .85rem; background: var(--surface-1);
+  display: flex; flex-direction: column; gap: .55rem; min-width: 0;
+}
+.opt-tf-head { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem; }
+.opt-tf-name { font-size: .95rem; }
+
+/* Optimierte Konfiguration in einer Zeile */
+.opt-config { font-size: .8rem; color: var(--text-secondary); font-variant-numeric: tabular-nums; }
+
+/* Out-of-Sample groß, In-Sample klein/gedämpft */
+.opt-compare { display: flex; flex-direction: column; gap: .6rem; }
+.opt-group-label { font-size: .72rem; color: var(--text-muted); margin-bottom: .3rem; }
+.opt-oos .opt-group-label { color: var(--text-secondary); font-weight: 600; }
+.opt-tiles { display: flex; flex-wrap: wrap; gap: .5rem; }
+.opt-tiles-big .stat-tile { min-width: 86px; flex: 1 1 86px; }
+.opt-tiles-small { gap: .4rem; }
+.opt-tiles-small .stat-tile { padding: .3rem .55rem; min-width: 70px; flex: 1 1 70px; }
+.opt-tiles-small .stat-tile .value { font-size: .88rem; font-weight: 600; color: var(--text-secondary); }
+.opt-tiles-small .stat-tile .label { font-size: .68rem; }
+
+/* Kleiner gold-getönter Chip ("aktiv" / optimierte Parameter) */
+.tuned-chip {
+  display: inline-flex; align-items: center;
+  font-size: .68rem; font-weight: 700; letter-spacing: .02em;
+  padding: .1rem .5rem; border-radius: 999px;
+  background: var(--gold-wash); color: var(--gold-text);
+}
+
+/* Warn- und Fehlerzeilen */
+.opt-warn { color: var(--critical-text); font-size: .8rem; margin: 0; }
+.opt-error { color: var(--critical-text); font-size: .84rem; margin: 0; }
+
+/* Buttons-Zeile der Karte */
+.opt-actions { display: flex; flex-wrap: wrap; gap: .5rem; margin-top: auto; padding-top: .2rem; }
+.opt-actions button:disabled { cursor: default; color: var(--text-muted); border-color: var(--border); }
+
+@media (max-width: 560px) {
+  .opt-head { flex-direction: column; align-items: flex-start; }
+}
+
+/* Review-Fixes: Kachelwerte nicht umbrechen, Waisen-/Fehlerkarten */
+.stat-tile .value { white-space: nowrap; }
+.opt-error { color: var(--critical-text); font-size: .85rem; }
+
 </style>
 </head>
 <body>
@@ -320,15 +400,37 @@ td .neg, .r-neg { color: var(--critical-text); }
     </table></div>
   </section>
 
+  <section class="card" id="opt-section">
+    <div class="opt-head">
+      <h2>Strategie-Optimierung (Walk-Forward)</h2>
+      <div class="opt-controls">
+        <select id="opt-objective">
+          <option value="winrate" selected>Ziel: Winrate</option>
+          <option value="pf">Ziel: Profit-Faktor</option>
+          <option value="totalR">Ziel: Gesamt-R</option>
+        </select>
+        <button id="opt-run">Alle Timeframes optimieren</button>
+      </div>
+    </div>
+    <p class="hint">Testet pro Timeframe hunderte Parameter-Kombinationen auf echten Kursdaten.
+    Klassisches Walk-Forward: In jedem der drei Zeitfenster wird die beste Kombination NUR auf den
+    Trainingsdaten gewählt und danach auf dem jeweils folgenden, ungesehenen Testabschnitt bewertet –
+    die <strong>Out-of-Sample</strong>-Zahlen sind die Verkettung dieser Testabschnitte. Die empfohlene
+    Kombination wird ohne Blick auf Testdaten bestimmt (Mehrheit der Fenster-Sieger). An Segmentgrenzen
+    werden offene Trades zum Schlusskurs gewertet. Vergangene Ergebnisse garantieren keine zukünftigen.</p>
+    <div id="opt-progress"></div>
+    <div id="opt-results"></div>
+  </section>
+
   <section>
     <div class="hist-head">
       <h2>Signal-Verlauf</h2>
       <button id="clearhist">Verlauf löschen</button>
     </div>
-    <div class="card"><table>
+    <div class="card"><div class="bt-table-wrap"><table>
       <thead><tr><th>Zeit</th><th>TF</th><th>Signal</th><th>Score</th><th>Preis</th><th>Begründung</th></tr></thead>
       <tbody id="histrows"></tbody>
-    </table></div>
+    </table></div></div>
   </section>
 
   <section class="card info-card">
@@ -566,7 +668,7 @@ td .neg, .r-neg { color: var(--critical-text); }
   var MAX_SCORE = 9; // Summe aller Regel-Maxima (2+2+1+1+1+1+1)
   function clampScore(s) { return Math.max(-MAX_SCORE, Math.min(MAX_SCORE, s)); }
 
-  function analyzeTF(candles) {
+  function analyzeTF(candles, opts) {
     var ind = getInd();
     if (!ind || !Array.isArray(candles) || candles.length < MIN_CANDLES) return null;
     var closes = [];
@@ -660,7 +762,9 @@ td .neg, .r-neg { color: var(--critical-text); }
     }
 
     score = clampScore(score);
-    var action = score >= 4 ? 'BUY' : (score <= -4 ? 'SELL' : 'NEUTRAL');
+    // Optionaler Threshold (default 4) – beeinflusst NUR die action-Ableitung aus dem Score.
+    var threshold = (opts && num(opts.threshold)) ? opts.threshold : 4;
+    var action = score >= threshold ? 'BUY' : (score <= -threshold ? 'SELL' : 'NEUTRAL');
     return {
       action: action,
       score: score,
@@ -728,20 +832,190 @@ if (typeof module !== 'undefined') module.exports = (typeof window !== 'undefine
 
 </script>
 <script>
-/* XAU.backtest – Walk-forward-Backtest für die Signal-Engine (XAU/USD).
-   Bar für Bar: Signal auf Fensterbasis, Entry am Open der Folgekerze (kein Look-Ahead),
-   Stop/Target aus ATR zum Signalzeitpunkt. Nie werfen – im Zweifel leeres Ergebnis. */
+/* XAU.fast – Schnelle Score-Serien für Backtest & Optimizer (XAU/USD).
+   Berechnet alle Indikator-Serien EINMAL über die volle Historie und leitet daraus
+   je Kerze den Score mit EXAKT den Regeln aus XAU.engine.analyzeTF ab.
+   Da alle Indikatoren kausal sind (Vorwärts-Rekursion bzw. Fenster), gilt:
+     score[i] === XAU.engine.analyzeTF(candles.slice(0, i+1)).score  (für i >= MIN_CANDLES-1)
+   Alle Rückgabe-Serien sind rechtsbündig und gleich lang wie candles; führende
+   Kerzen ohne Wert tragen null. Nie werfen – im Zweifel leere/null-Serien. */
 (function () {
   "use strict";
   var root = (typeof window !== "undefined") ? window : globalThis;
   root.XAU = root.XAU || {};
 
-  // In Node: Engine lokal laden; im Browser hängt XAU.engine am globalen Objekt.
-  var engineLocal = null;
+  // In Node: Indikatoren defensiv lokal laden; im Browser hängt XAU.ind am globalen Objekt.
+  var indLocal = null;
   if (typeof module !== "undefined" && typeof require === "function") {
-    try { engineLocal = require("./engine.js"); } catch (e) { engineLocal = null; }
+    try { indLocal = require("./indicators.js"); } catch (e) { indLocal = null; }
   }
-  function getEngine() { return root.XAU.engine || engineLocal || null; }
+  function getInd() { return root.XAU.ind || indLocal || null; }
+
+  var MIN_CANDLES = 220; // identisch zu XAU.engine (wegen EMA200)
+  var MAX_SCORE = 9;
+
+  function num(x) { return typeof x === "number" && isFinite(x); }
+  function clampScore(s) { return Math.max(-MAX_SCORE, Math.min(MAX_SCORE, s)); }
+
+  // Rechtsbündige Serie: series[i - offset] gehört zur Kerze i. Außerhalb: null.
+  function at(series, idx) {
+    if (!series || idx < 0 || idx >= series.length) return null;
+    var v = series[idx];
+    return (v === undefined) ? null : v;
+  }
+
+  function emptyResult() {
+    return { score: [], atr: [], time: [], close: [], utcHour: [] };
+  }
+
+  function computeSeries(candles) {
+    var res = emptyResult();
+    if (!Array.isArray(candles) || candles.length === 0) return res;
+    var ind = getInd();
+    var n = candles.length;
+
+    // Basis-Serien (time/close/utcHour) immer über die volle Länge füllen.
+    var i, c;
+    for (i = 0; i < n; i++) {
+      c = candles[i];
+      var t = (c && num(c.time)) ? c.time : null;
+      res.time.push(t);
+      res.close.push((c && num(c.close)) ? c.close : null);
+      // Deterministisch aus dem Kerzen-Timestamp (ms, UTC) – keine Date.now()-Abhängigkeit.
+      res.utcHour.push(t === null ? null : new Date(t).getUTCHours());
+      res.score.push(null);
+      res.atr.push(null);
+    }
+    if (!ind) return res;
+
+    // Engine-Parität: analyzeTF liefert null, sobald der Prefix eine ungültige
+    // Kerze enthält -> ab der ersten ungültigen Kerze bleibt score null.
+    var clean = n;
+    for (i = 0; i < n; i++) {
+      c = candles[i];
+      if (!c || !num(c.close)) { clean = i; break; }
+    }
+    var work = (clean === n) ? candles : candles.slice(0, clean);
+    if (work.length === 0) return res;
+
+    var closes = [];
+    for (i = 0; i < work.length; i++) closes.push(work[i].close);
+
+    // Alle Indikator-Serien einmal über die volle (saubere) Historie.
+    var rsiArr = ind.rsi(closes, 14) || [];                                   // offset 14
+    var macdRes = ind.macd(closes, 12, 26, 9) || { hist: [] };
+    var hist = macdRes.hist || [];                                            // offset 33 (=25+8)
+    var e50 = ind.ema(closes, 50) || [];                                      // offset 49
+    var e200 = ind.ema(closes, 200) || [];                                    // offset 199
+    var bb = ind.bollinger(closes, 20, 2) || [];                              // offset 19
+    var st = ind.stochastic(work, 14, 3, 3) || { k: [], d: [] };
+    var kArr = st.k || [];                                                    // offset 15
+    var dArr = st.d || [];                                                    // offset 17
+    var atrArr = ind.atr(work, 14) || [];                                     // offset 14
+    var adxRes = ind.adx(work, 14) || { adx: [] };
+    var adxArr = adxRes.adx || [];                                            // offset 27 (=13+14)
+
+    for (i = 0; i < work.length; i++) {
+      var a = at(atrArr, i - 14);
+      res.atr[i] = num(a) ? a : null;
+      if (i < MIN_CANDLES - 1) continue; // analyzeTF verlangt >= 220 Kerzen -> score bleibt null
+
+      var price = closes[i];
+      var s = 0;
+
+      // RSI(14) – Zonen exakt wie engine.js
+      var rsiNow = at(rsiArr, i - 14);
+      if (num(rsiNow)) {
+        if (rsiNow < 30) s += 2;
+        else if (rsiNow < 40) s += 1;
+        else if (rsiNow > 70) s -= 2;
+        else if (rsiNow > 60) s -= 1;
+      }
+
+      // MACD-Histogramm mit Epsilon gegen Rundungsrauschen + Kreuz-Logik
+      var eps = Math.abs(price) * 1e-9;
+      var histNow = at(hist, i - 33);
+      var histPrev = at(hist, i - 34);
+      if (num(histNow) && Math.abs(histNow) <= eps) histNow = 0;
+      if (num(histPrev) && Math.abs(histPrev) <= eps) histPrev = 0;
+      if (num(histNow)) {
+        if (num(histPrev) && histPrev <= 0 && histNow > 0) s += 2;
+        else if (num(histPrev) && histPrev >= 0 && histNow < 0) s -= 2;
+        else if (histNow > 0) s += 1;
+        else if (histNow < 0) s -= 1;
+      }
+
+      // EMA50 / EMA200
+      var ema50 = at(e50, i - 49);
+      var ema200 = at(e200, i - 199);
+      var above50 = null, above200 = null;
+      if (num(ema50)) { above50 = price > ema50; s += above50 ? 1 : -1; }
+      if (num(ema200)) { above200 = price > ema200; s += above200 ? 1 : -1; }
+
+      // Bollinger(20, 2)
+      var bbRow = at(bb, i - 19);
+      var bbLower = bbRow ? bbRow[0] : null;
+      var bbUpper = bbRow ? bbRow[2] : null;
+      if (num(bbLower) && price < bbLower) s += 1;
+      else if (num(bbUpper) && price > bbUpper) s -= 1;
+
+      // Slow-Stochastik(14, 3, 3): Kreuzungen in Extremzonen
+      var kNow = at(kArr, i - 15), kPrev = at(kArr, i - 16);
+      var dNow = at(dArr, i - 17), dPrev = at(dArr, i - 18);
+      if (num(kNow) && num(dNow) && num(kPrev) && num(dPrev)) {
+        if (kNow < 20 && kPrev <= dPrev && kNow > dNow) s += 1;
+        else if (kNow > 80 && kPrev >= dPrev && kNow < dNow) s -= 1;
+      }
+
+      // ADX(14): starker Trend verstärkt gleichgerichtete EMA-Signale
+      var adxNow = at(adxArr, i - 27);
+      if (num(adxNow) && adxNow > 25 && above50 !== null && above200 !== null && above50 === above200) {
+        s += above50 ? 1 : -1;
+      }
+
+      res.score[i] = clampScore(s);
+    }
+    return res;
+  }
+
+  // Action-Ableitung aus einem Score-Wert – identisch zur engine-Regel.
+  function actionAt(score, threshold) {
+    var th = num(threshold) ? threshold : 4;
+    if (!num(score)) return "NEUTRAL";
+    return score >= th ? "BUY" : (score <= -th ? "SELL" : "NEUTRAL");
+  }
+
+  root.XAU.fast = {
+    MIN_CANDLES: MIN_CANDLES,
+    MAX_SCORE: MAX_SCORE,
+    computeSeries: computeSeries,
+    actionAt: actionAt
+  };
+})();
+if (typeof module !== "undefined") module.exports = (typeof window !== "undefined" ? window : globalThis).XAU.fast;
+
+</script>
+<script>
+/* XAU.backtest – Backtest v2 für die XAU/USD-Signal-Engine.
+   Signale kommen aus vorberechneten Score-Serien (XAU.fast.computeSeries) – O(n) pro Lauf,
+   keine analyzeTF-Aufrufe pro Bar mehr. Trade-Mechanik: Signal an Bar i (Score über/unter
+   ±threshold), Entry am Open von Bar i+1 (kein Look-Ahead), nur ein Trade gleichzeitig.
+   Je Kerze im Trade in fester Reihenfolge: Gap-Open jenseits Stop/Target -> Exit zum Open;
+   Stop (konservativ vor Target); Target; danach exitMode-Update (trailing/breakeven zieht
+   den Stop NACH den Checks nach, wirksam ab der Folgekerze); Gegensignal -> Exit zum Close;
+   maxHoldBars -> 'Zeit-Exit' zum Close; letzte Kerze -> 'Laufzeitende'. rMultiple immer
+   relativ zum INITIALEN Risiko. Nie werfen – im Zweifel leeres Ergebnis. */
+(function () {
+  "use strict";
+  var root = (typeof window !== "undefined") ? window : globalThis;
+  root.XAU = root.XAU || {};
+
+  // In Node: Fast-Engine defensiv laden; im Browser hängt XAU.fast am globalen Objekt.
+  var fastLocal = null;
+  if (typeof module !== "undefined" && typeof require === "function") {
+    try { fastLocal = require("./fastengine.js"); } catch (e) { fastLocal = null; }
+  }
+  function getFast() { return root.XAU.fast || fastLocal || null; }
 
   function num(x) { return typeof x === "number" && isFinite(x); }
 
@@ -762,12 +1036,14 @@ if (typeof module !== 'undefined') module.exports = (typeof window !== 'undefine
     return { n: 0, wins: 0, losses: 0, winrate: 0, avgR: 0, totalR: 0, profitFactor: null, maxDrawdownR: 0 };
   }
 
+  /* wins = r > 0, losses = r < 0; r === 0 ist Breakeven und zählt weder als Gewinn
+     noch als Verlust (wohl aber in n). profitFactor ist null bei 0 Verlusten. */
   function buildStats(trades) {
     var stats = emptyStats();
-    if (!trades.length) return stats;
+    if (!Array.isArray(trades) || !trades.length) return stats;
     var rs = [], sumPos = 0, sumNeg = 0, total = 0, wins = 0, losses = 0;
     for (var i = 0; i < trades.length; i++) {
-      var r = trades[i].rMultiple;
+      var r = trades[i] ? trades[i].rMultiple : 0;
       if (!num(r)) r = 0;
       rs.push(r);
       total += r;
@@ -786,27 +1062,59 @@ if (typeof module !== 'undefined') module.exports = (typeof window !== 'undefine
     return stats;
   }
 
-  function run(candles, opts) {
-    opts = opts || {};
-    var atrMult = num(opts.atrMult) ? opts.atrMult : 1.5;
-    var rr = num(opts.rr) ? opts.rr : 2;
-    var threshold = num(opts.threshold) ? opts.threshold : 4;
-    var warmup = num(opts.warmup) ? opts.warmup : 250;
+  var EXIT_MODES = { fixed: true, trailing: true, breakeven: true };
 
-    var engine = getEngine();
-    if (!engine || !Array.isArray(candles) || candles.length <= warmup) {
-      return { trades: [], stats: emptyStats() };
+  function normalizeConfig(config) {
+    config = config || {};
+    return {
+      threshold: (num(config.threshold) && Math.abs(config.threshold) > 0) ? Math.abs(config.threshold) : 4,
+      atrMult: (num(config.atrMult) && config.atrMult > 0) ? config.atrMult : 1.5,
+      rr: (num(config.rr) && config.rr > 0) ? config.rr : 2,
+      exitMode: EXIT_MODES[config.exitMode] ? config.exitMode : "fixed",
+      sessionFilter: config.sessionFilter === "londonNY" ? "londonNY" : "none",
+      maxHoldBars: (num(config.maxHoldBars) && config.maxHoldBars > 0) ? Math.floor(config.maxHoldBars) : 0
+    };
+  }
+
+  // UTC-Stunde der Kerze i: bevorzugt aus precomputed.utcHour, sonst aus candle.time (ms).
+  function utcHourAt(pre, candles, i) {
+    if (pre && Array.isArray(pre.utcHour) && num(pre.utcHour[i])) return pre.utcHour[i];
+    var c = candles[i];
+    if (c && num(c.time)) return new Date(c.time).getUTCHours();
+    return null;
+  }
+
+  /* run(candles, config, precomputed)
+     config: { threshold, atrMult, rr, exitMode: 'fixed'|'trailing'|'breakeven',
+               sessionFilter: 'none'|'londonNY', maxHoldBars } – alles optional.
+     precomputed: Ergebnis von XAU.fast.computeSeries(candles) – wird bei Bedarf
+     selbst berechnet. Liefert { config, trades, stats }. */
+  function run(candles, config, precomputed) {
+    var cfg = normalizeConfig(config);
+    var out = { config: cfg, trades: [], stats: emptyStats() };
+    if (!Array.isArray(candles) || candles.length < 2) return out;
+
+    var pre = (precomputed && typeof precomputed === "object") ? precomputed : null;
+    if (!pre) {
+      var fast = getFast();
+      if (fast && typeof fast.computeSeries === "function") {
+        try { pre = fast.computeSeries(candles); } catch (e) { pre = null; }
+      }
     }
+    var scores = pre ? (Array.isArray(pre.score) ? pre.score : pre.scores) : null;
+    var atrs = (pre && Array.isArray(pre.atr)) ? pre.atr : null;
+    if (!Array.isArray(scores)) return out;
 
-    var trades = [];
-    var open = null;     // {direction, entry, entryTime, stop, target, risk}
-    var pending = null;  // {direction, atr} – Entry am Open der nächsten Kerze
+    var trades = out.trades;
+    var open = null;    // {direction, entry, entryTime, entryIndex, stop, target, risk, beDone}
+    var pending = null; // {direction, atr} – Entry am Open der nächsten Kerze
     var n = candles.length;
 
-    function closeTrade(exit, exitTime, reason) {
-      var r;
-      if (open.direction === "LONG") r = (exit - open.entry) / open.risk;
-      else r = (open.entry - exit) / open.risk;
+    function closeTrade(exit, exitTime, exitIndex, reason) {
+      // rMultiple immer relativ zum INITIALEN Risiko (entry - initialStop)
+      var r = (open.direction === "LONG")
+        ? (exit - open.entry) / open.risk
+        : (open.entry - exit) / open.risk;
       trades.push({
         entryTime: open.entryTime,
         direction: open.direction,
@@ -814,84 +1122,414 @@ if (typeof module !== 'undefined') module.exports = (typeof window !== 'undefine
         exit: exit,
         exitTime: exitTime,
         rMultiple: r,
-        reason: reason
+        reason: reason,
+        entryIndex: open.entryIndex,
+        exitIndex: exitIndex,
+        bars: exitIndex - open.entryIndex + 1
       });
       open = null;
     }
 
-    for (var i = warmup; i < n; i++) {
+    for (var i = 0; i < n; i++) {
       var c = candles[i];
-      if (!c || !num(c.open) || !num(c.high) || !num(c.low) || !num(c.close)) continue;
+      if (!c || !num(c.open) || !num(c.high) || !num(c.low) || !num(c.close)) {
+        pending = null; // Datenlücke: Signal verfällt, kein Entry mit veraltetem ATR
+        continue;
+      }
 
       // Pending-Signal der Vorkerze: Entry am Open dieser Kerze
       if (pending && !open) {
-        var risk = atrMult * pending.atr;
-        if (risk > 0) {
+        var risk = cfg.atrMult * pending.atr;
+        if (num(risk) && risk > 0) {
           open = {
             direction: pending.direction,
             entry: c.open,
             entryTime: c.time,
+            entryIndex: i,
             stop: pending.direction === "LONG" ? c.open - risk : c.open + risk,
-            target: pending.direction === "LONG" ? c.open + rr * risk : c.open - rr * risk,
-            risk: risk
+            target: pending.direction === "LONG" ? c.open + cfg.rr * risk : c.open - cfg.rr * risk,
+            risk: risk,
+            beDone: false
           };
         }
       }
       pending = null;
 
-      // Offener Trade: erst Stop (konservativ), dann Target – intrabar
+      // (1) Gap-Open jenseits Stop/Target -> Exit zum Open
+      // (2) Stop (konservativ: vor Target, wenn beide berührt), (3) Target
       if (open) {
         if (open.direction === "LONG") {
-          // Gap-Eröffnung jenseits von Stop/Target: realistisch zum Open abrechnen
-          if (c.open <= open.stop) closeTrade(c.open, c.time, "Stop-Loss");
-          else if (c.open >= open.target) closeTrade(c.open, c.time, "Take-Profit");
-          else if (c.low <= open.stop) closeTrade(open.stop, c.time, "Stop-Loss");
-          else if (c.high >= open.target) closeTrade(open.target, c.time, "Take-Profit");
+          if (c.open <= open.stop) closeTrade(c.open, c.time, i, "Stop-Loss");
+          else if (c.open >= open.target) closeTrade(c.open, c.time, i, "Take-Profit");
+          else if (c.low <= open.stop) closeTrade(open.stop, c.time, i, "Stop-Loss");
+          else if (c.high >= open.target) closeTrade(open.target, c.time, i, "Take-Profit");
         } else {
-          if (c.open >= open.stop) closeTrade(c.open, c.time, "Stop-Loss");
-          else if (c.open <= open.target) closeTrade(c.open, c.time, "Take-Profit");
-          else if (c.high >= open.stop) closeTrade(open.stop, c.time, "Stop-Loss");
-          else if (c.low <= open.target) closeTrade(open.target, c.time, "Take-Profit");
+          if (c.open >= open.stop) closeTrade(c.open, c.time, i, "Stop-Loss");
+          else if (c.open <= open.target) closeTrade(c.open, c.time, i, "Take-Profit");
+          else if (c.high >= open.stop) closeTrade(open.stop, c.time, i, "Stop-Loss");
+          else if (c.low <= open.target) closeTrade(open.target, c.time, i, "Take-Profit");
         }
       }
 
-      // Signal zum Kerzenschluss (Fenster auf letzte 300 Kerzen begrenzt)
-      var res = null;
-      try {
-        res = engine.analyzeTF(candles.slice(Math.max(0, i - 359), i + 1));
-      } catch (e) { res = null; }
+      // (4) exitMode: Stop NACH den Checks aktualisieren – wirksam ab der Folgekerze
+      if (open) {
+        if (cfg.exitMode === "trailing") {
+          var aNow = atrs ? atrs[i] : null;
+          if (num(aNow) && aNow > 0) {
+            if (open.direction === "LONG") open.stop = Math.max(open.stop, c.close - cfg.atrMult * aNow);
+            else open.stop = Math.min(open.stop, c.close + cfg.atrMult * aNow);
+          }
+        } else if (cfg.exitMode === "breakeven" && !open.beDone) {
+          var beHit = (open.direction === "LONG")
+            ? c.high >= open.entry + open.risk
+            : c.low <= open.entry - open.risk;
+          if (beHit) { open.stop = open.entry; open.beDone = true; }
+        }
+      }
+
+      // Signal dieser Kerze aus dem vorberechneten Score
+      var s = scores[i];
       var sig = null;
-      if (res && num(res.score)) {
-        if (res.score >= threshold) sig = "BUY";
-        else if (res.score <= -threshold) sig = "SELL";
+      if (num(s)) {
+        if (s >= cfg.threshold) sig = "BUY";
+        else if (s <= -cfg.threshold) sig = "SELL";
       }
 
-      // Gegensignal: Exit zum Close
+      // (5) Gegensignal -> Exit zum Close
       if (open && sig && ((open.direction === "LONG" && sig === "SELL") || (open.direction === "SHORT" && sig === "BUY"))) {
-        closeTrade(c.close, c.time, "Gegensignal");
+        closeTrade(c.close, c.time, i, "Gegensignal");
       }
 
-      // Neuer Entry nur ohne offenen Trade und wenn eine Folgekerze existiert
+      // (6) Zeit-Exit: Entry-Kerze zählt als Kerze 1 im Trade
+      if (open && cfg.maxHoldBars > 0 && (i - open.entryIndex + 1) >= cfg.maxHoldBars) {
+        closeTrade(c.close, c.time, i, "Zeit-Exit");
+      }
+
+      // (7) Letzte Kerze -> Laufzeitende
+      if (open && i === n - 1) closeTrade(c.close, c.time, i, "Laufzeitende");
+
+      // Neuer Entry: nur ohne offenen Trade, mit Folgekerze, gültigem ATR und (optional) Session
       if (!open && sig && i + 1 < n) {
-        var atrNow = res && res.indicators ? res.indicators.atr : null;
-        if (num(atrNow) && atrNow > 0) {
-          pending = { direction: sig === "BUY" ? "LONG" : "SHORT", atr: atrNow };
+        var allowed = true;
+        if (cfg.sessionFilter === "londonNY") {
+          // maßgeblich ist die Entry-Kerze i+1 (dort wird gehandelt), zur Handelszeit bekannt
+          var h = utcHourAt(pre, candles, i + 1);
+          allowed = num(h) && h >= 7 && h < 21;
+        }
+        if (allowed) {
+          var atrSig = atrs ? atrs[i] : null;
+          if (num(atrSig) && atrSig > 0) {
+            pending = { direction: sig === "BUY" ? "LONG" : "SHORT", atr: atrSig };
+          }
         }
       }
     }
 
-    // Laufzeitende: offenen Trade zum Close der letzten Kerze schließen
+    // Ist die letzte Kerze ungültig, wurde ein offener Trade oben nie geschlossen:
+    // zum letzten gültigen Close abrechnen, damit er nicht aus der Statistik fällt.
     if (open) {
-      var lastC = candles[n - 1];
-      closeTrade(lastC.close, lastC.time, "Laufzeitende");
+      for (var z = n - 1; z >= 0; z--) {
+        var cz = candles[z];
+        if (cz && num(cz.close) && num(cz.time)) { closeTrade(cz.close, cz.time, z, "Laufzeitende"); break; }
+      }
+      if (open) open = null; // keine einzige gültige Kerze: Trade verwerfen
     }
 
-    return { trades: trades, stats: buildStats(trades) };
+    out.stats = buildStats(trades);
+    return out;
   }
 
-  root.XAU.backtest = { run: run, _maxDrawdownR: maxDrawdownR };
+  root.XAU.backtest = { run: run, buildStats: buildStats, _maxDrawdownR: maxDrawdownR };
 })();
 if (typeof module !== "undefined") module.exports = (typeof window !== "undefined" ? window : globalThis).XAU.backtest;
+
+</script>
+<script>
+/* XAU.opt – Walk-Forward-Optimizer für die XAU/USD-Strategie.
+   Testet ein deterministisches Konfigurations-Grid (threshold/atrMult/rr/exitMode/
+   sessionFilter/maxHoldBars) per XAU.backtest.run auf 3 anchored Walk-Forward-Folds:
+     Fold1: Train [0,50%),   Test [50%,66.7%)
+     Fold2: Train [0,66.7%), Test [66.7%,83.3%)
+     Fold3: Train [0,83.3%), Test [83.3%,100%)
+   Die Indikator-Serien werden EINMAL via XAU.fast.computeSeries berechnet und für
+   Teilbereiche einfach mitgeslict (sliceRange): alle Serien sind gleich lang wie
+   candles und kausal berechnet – Werte am Slice-Anfang stammen ausschließlich aus
+   der Vergangenheit, ihre Nutzung ist also KEIN Look-Ahead. Deshalb werden beim
+   Slicen bewusst KEINE führenden Werte genullt.
+   Je Fold gewinnt eine Config NUR auf dem Train-Bereich (Objective mit minTrades-Guard).
+   outOfSample = klassische Walk-Forward-Verkettung: die Trades des JEWEILIGEN
+   Fold-Siegers auf seinem EIGENEN Test-Segment, chronologisch konkateniert – kein
+   bewerteter Test-Bar liegt im Train-Fenster der Config, die darauf bewertet wird.
+   Die finale Config wird OHNE Testdaten bestimmt: Mehrheit unter den Fold-Siegern,
+   sonst der Fold-3-Sieger (meistes Trainingsmaterial). inSample = finale Config auf
+   [0,83.3%) – zur Einordnung, nicht zur Auswahl.
+   Async: Auswertung in Chunks à 50 Configs mit setTimeout(0)-Yield (UI-freundlich).
+   Alles deterministisch – kein Math.random(), kein Date.now(). Nie werfen. */
+(function () {
+  "use strict";
+  var root = (typeof window !== "undefined") ? window : globalThis;
+  root.XAU = root.XAU || {};
+
+  // In Node: Abhängigkeiten defensiv laden; im Browser hängen sie am globalen XAU.
+  var fastLocal = null, btLocal = null;
+  if (typeof module !== "undefined" && typeof require === "function") {
+    try { fastLocal = require("./fastengine.js"); } catch (e) { fastLocal = null; }
+    try { btLocal = require("./backtest.js"); } catch (e2) { btLocal = null; }
+  }
+  function getFast() { return root.XAU.fast || fastLocal || null; }
+  function getBacktest() { return root.XAU.backtest || btLocal || null; }
+
+  var CHUNK = 50; // Configs pro Chunk zwischen zwei Yields (und Progress-Drosselung)
+
+  var THRESHOLDS = [3, 4, 5, 6];
+  var ATR_MULTS = [1.0, 1.5, 2.0, 2.5];
+  var RRS = [1.0, 1.5, 2.0, 3.0];
+  var EXIT_MODES = ["fixed", "trailing", "breakeven"];
+  var HOLD_BARS = [0, 24, 48];
+
+  function num(x) { return typeof x === "number" && isFinite(x); }
+
+  function clone(obj) {
+    var out = {};
+    for (var k in obj) if (Object.prototype.hasOwnProperty.call(obj, k)) out[k] = obj[k];
+    return out;
+  }
+
+  /* Volles deterministisches Grid; sessionFilter 'londonNY' nur für 15m/1h
+     (Intraday-Sessions sind auf 4h/1d bedeutungslos). */
+  function buildGrid(tf) {
+    var sessions = (tf === "15m" || tf === "1h") ? ["none", "londonNY"] : ["none"];
+    var grid = [];
+    for (var a = 0; a < THRESHOLDS.length; a++)
+      for (var b = 0; b < ATR_MULTS.length; b++)
+        for (var c = 0; c < RRS.length; c++)
+          for (var d = 0; d < EXIT_MODES.length; d++)
+            for (var e = 0; e < sessions.length; e++)
+              for (var f = 0; f < HOLD_BARS.length; f++)
+                grid.push({
+                  threshold: THRESHOLDS[a],
+                  atrMult: ATR_MULTS[b],
+                  rr: RRS[c],
+                  exitMode: EXIT_MODES[d],
+                  sessionFilter: sessions[e],
+                  maxHoldBars: HOLD_BARS[f]
+                });
+    return grid;
+  }
+
+  /* Teilbereich [start,end) aus precomputed: alle Serien-Arrays mit demselben Offset
+     mitslicen (sie sind gleich lang wie candles). Führende Werte NICHT nullen –
+     die Serien sind kausal, Vorgeschichte-Signale sind kein Look-Ahead. */
+  function sliceRange(precomputed, start, end) {
+    var out = {};
+    if (!precomputed || typeof precomputed !== "object") return out;
+    for (var k in precomputed) {
+      if (!Object.prototype.hasOwnProperty.call(precomputed, k)) continue;
+      out[k] = Array.isArray(precomputed[k]) ? precomputed[k].slice(start, end) : precomputed[k];
+    }
+    return out;
+  }
+
+  function zeroStats() {
+    return { n: 0, wins: 0, losses: 0, winrate: 0, totalR: 0, profitFactor: null, maxDrawdownR: 0 };
+  }
+
+  /* Stats exakt im Vertragsformat aus einer (chronologischen) Trade-Liste.
+     wins = r > 0, losses = r < 0 (r === 0 ist Breakeven), profitFactor null ohne Verluste. */
+  function statsFromTrades(trades) {
+    var s = zeroStats();
+    if (!Array.isArray(trades) || !trades.length) return s;
+    var sumPos = 0, sumNeg = 0, cum = 0, peak = 0, dd = 0;
+    for (var i = 0; i < trades.length; i++) {
+      var r = trades[i] ? trades[i].rMultiple : 0;
+      if (!num(r)) r = 0;
+      s.totalR += r;
+      if (r > 0) { s.wins++; sumPos += r; }
+      else if (r < 0) { s.losses++; sumNeg += r; }
+      cum += r;
+      if (cum > peak) peak = cum;
+      if (peak - cum > dd) dd = peak - cum;
+    }
+    s.n = trades.length;
+    s.winrate = s.wins / s.n;
+    s.profitFactor = (sumNeg === 0) ? null : sumPos / Math.abs(sumNeg);
+    s.maxDrawdownR = dd;
+    return s;
+  }
+
+  /* Objective -> [Primärwert, Tiebreak] oder null (= unzulässig).
+     'winrate': winrate, Tiebreak totalR. 'pf': profitFactor (null wie Infinity, aber
+     nur bei wins >= 3, sonst unzulässig), Tiebreak Trades. 'totalR': totalR, Tiebreak winrate.
+     Guard: trades < minTrades -> unzulässig. relaxed = totaler Fallback-Schlüssel,
+     falls KEINE Config zulässig ist (nie null; pf null mit wins < 3 zählt dann 0). */
+  // Wilson-Lower-Bound (95%) der Winrate: bestraft Mini-Stichproben,
+  // 8/8 Gewinne (~0.63) schlagen nicht 28/30 (~0.79).
+  function wilsonLower(wins, n) {
+    if (!n) return 0;
+    var z = 1.959963984540054, p = wins / n;
+    var denom = 1 + z * z / n;
+    var center = p + z * z / (2 * n);
+    var margin = z * Math.sqrt((p * (1 - p) + z * z / (4 * n)) / n);
+    return Math.max(0, (center - margin) / denom);
+  }
+
+  function objectiveKey(stats, objective, minTrades, relaxed) {
+    var decisive = stats.wins + stats.losses; // Breakeven-Trades zählen nicht für den Guard
+    if (!relaxed && decisive < minTrades) return null;
+    if (objective === "winrate") return [wilsonLower(stats.wins, decisive), stats.totalR];
+    if (objective === "pf") {
+      var pf = stats.profitFactor;
+      if (pf === null) {
+        // verlustfrei: nur mit belastbarer Stichprobe als "unendlich" werten
+        if (stats.wins >= 5 && decisive >= minTrades) pf = Infinity;
+        else if (relaxed) pf = 0;
+        else return null;
+      }
+      return [pf, stats.n];
+    }
+    return [stats.totalR, stats.winrate]; // 'totalR'
+  }
+
+  // Strikt besser? Bei Gleichstand gewinnt der frühere Kandidat (deterministische Grid-Reihenfolge).
+  function isBetter(key, bestKey) {
+    if (!bestKey) return true;
+    if (key[0] !== bestKey[0]) return key[0] > bestKey[0];
+    return key[1] > bestKey[1];
+  }
+
+  // Backtest auf dem Teilbereich [start,end): Kerzen und precomputed mit gleichem Offset slicen.
+  function runRange(bt, candles, precomputed, start, end, config) {
+    var res = null;
+    try { res = bt.run(candles.slice(start, end), config, sliceRange(precomputed, start, end)); }
+    catch (e) { res = null; }
+    return (res && Array.isArray(res.trades)) ? res.trades : [];
+  }
+
+  function emptyResult(tf) {
+    return { tf: tf, config: null, inSample: zeroStats(), outOfSample: zeroStats(), folds: [], evaluated: 0 };
+  }
+
+  function yieldNow() { return new Promise(function (r) { setTimeout(r, 0); }); }
+
+  /* optimize(candles, opts) -> Promise<Walk-Forward-Ergebnis>
+     opts = { tf, objective: 'winrate'|'pf'|'totalR' (Default 'totalR'),
+              minTrades (Default 8), onProgress(done,total) (gedrosselt, ~alle 50 Configs),
+              grid (Override für Tests), precomputed (Override für Tests) }.
+     evaluated = Anzahl getesteter Konfigurationen (Grid-Größe); onProgress zählt
+     Auswertungen (Grid x 3 Folds). */
+  async function optimize(candles, opts) {
+    opts = opts || {};
+    var tf = (typeof opts.tf === "string") ? opts.tf : "";
+    var objective = (opts.objective === "winrate" || opts.objective === "pf" || opts.objective === "totalR")
+      ? opts.objective : "totalR";
+    var defaultMin = { winrate: 30, pf: 20, totalR: 20 };
+    var minTrades = (num(opts.minTrades) && opts.minTrades >= 0)
+      ? opts.minTrades
+      : (defaultMin[opts.objective] || 20);
+    var onProgress = (typeof opts.onProgress === "function") ? opts.onProgress : null;
+    var grid = Array.isArray(opts.grid) ? opts.grid.map(clone) : buildGrid(tf);
+
+    var bt = getBacktest();
+    if (!bt || !Array.isArray(candles) || !grid.length) return emptyResult(tf);
+
+    var n = candles.length;
+    var i50 = Math.floor(n / 2);       // 50 %
+    var i67 = Math.floor(n * 2 / 3);   // 66.7 %
+    var i83 = Math.floor(n * 5 / 6);   // 83.3 %
+    if (!(i50 > 0 && i50 < i67 && i67 < i83 && i83 < n)) return emptyResult(tf);
+
+    // Indikator-Serien EINMAL über die volle Historie (oder Test-Override).
+    var precomputed = (opts.precomputed && typeof opts.precomputed === "object") ? opts.precomputed : null;
+    if (!precomputed) {
+      var fast = getFast();
+      if (!fast || typeof fast.computeSeries !== "function") return emptyResult(tf);
+      try { precomputed = fast.computeSeries(candles); } catch (e) { precomputed = null; }
+      if (!precomputed || !Array.isArray(precomputed.score)) return emptyResult(tf);
+    }
+
+    var folds = [
+      { train: [0, i50], test: [i50, i67] },
+      { train: [0, i67], test: [i67, i83] },
+      { train: [0, i83], test: [i83, n] }
+    ];
+
+    var total = grid.length * folds.length;
+    var done = 0, lastReported = -1;
+    function report() {
+      if (!onProgress) return;
+      try { onProgress(done, total); } catch (e) { /* Progress darf nie stören */ }
+      lastReported = done;
+    }
+
+    var foldOut = [];
+    var winnerIdxs = [];
+    var guardRelaxed = false;
+    var oosTrades = []; // ehrliche WFA-Verkettung: Fold-Sieger auf JE EIGENEM Test-Segment
+    for (var f = 0; f < folds.length; f++) {
+      var tr = folds[f].train;
+      var best = null, bestRelax = null; // {idx, key}
+      for (var g = 0; g < grid.length; g++) {
+        var st = statsFromTrades(runRange(bt, candles, precomputed, tr[0], tr[1], grid[g]));
+        var key = objectiveKey(st, objective, minTrades, false);
+        if (key && (!best || isBetter(key, best.key))) best = { idx: g, key: key };
+        var rkey = objectiveKey(st, objective, 0, true);
+        if (!bestRelax || isBetter(rkey, bestRelax.key)) bestRelax = { idx: g, key: rkey };
+        done++;
+        if (done % CHUNK === 0) { report(); await yieldNow(); }
+      }
+      // Fallback ohne zulässige Config: bester relaxter Schlüssel (deterministisch) – markieren!
+      if (!best) guardRelaxed = true;
+      var winIdx = best ? best.idx : (bestRelax ? bestRelax.idx : 0);
+      winnerIdxs.push(winIdx);
+      var te = folds[f].test;
+      var testTrades = runRange(bt, candles, precomputed, te[0], te[1], grid[winIdx]);
+      oosTrades = oosTrades.concat(testTrades);
+      foldOut.push({
+        trainRange: [tr[0], tr[1]],
+        testRange: [te[0], te[1]],
+        config: clone(grid[winIdx]),
+        testStats: statsFromTrades(testTrades)
+      });
+    }
+    if (lastReported !== total) report();
+
+    // Finale Config OHNE Testdaten: Mehrheit unter den Fold-Siegern,
+    // sonst der Fold-3-Sieger (auf dem meisten Trainingsmaterial gewählt).
+    var chosenIdx = winnerIdxs[winnerIdxs.length - 1];
+    for (var w = 0; w < winnerIdxs.length; w++) {
+      var votes = 0;
+      for (var v = 0; v < winnerIdxs.length; v++) if (winnerIdxs[v] === winnerIdxs[w]) votes++;
+      if (votes >= 2) { chosenIdx = winnerIdxs[w]; break; }
+    }
+
+    // outOfSample: verkettete Fold-Test-Trades (kein Test-Bar im Train der bewerteten Config).
+    // inSample: finale Config auf [0, 83.3%) – nur zur Einordnung.
+    var oosStats = statsFromTrades(oosTrades);
+    var inStats = statsFromTrades(runRange(bt, candles, precomputed, 0, i83, grid[chosenIdx]));
+
+    return {
+      tf: tf,
+      config: clone(grid[chosenIdx]),
+      inSample: inStats,
+      outOfSample: oosStats,
+      oosMethod: "wfa",           // verkettete Fold-Sieger-Tests, Auswahl train-only
+      guardRelaxed: guardRelaxed, // true = Mindest-Trades unterschritten, Ergebnis nicht belastbar
+      objective: objective,
+      folds: foldOut,
+      evaluated: grid.length
+    };
+  }
+
+  root.XAU.opt = {
+    CHUNK: CHUNK,
+    optimize: optimize,
+    buildGrid: buildGrid,
+    sliceRange: sliceRange,
+    _statsFromTrades: statsFromTrades,
+    _objectiveKey: objectiveKey
+  };
+})();
+if (typeof module !== "undefined") module.exports = (typeof window !== "undefined" ? window : globalThis).XAU.opt;
 
 </script>
 <script>
@@ -1444,6 +2082,109 @@ if (typeof module !== "undefined") module.exports = XAU.chart;
 
   root.XAU.data = { SYMBOL: SYMBOL, BASES: BASES, fetchKlines: fetchKlines };
 
+  /* ================= Pure Helfer (Tuned-Params & Optimizer-UI) =================
+     Kein DOM nötig – in Node über XAU.apputil testbar. */
+  var TF_KEYS = ["15m", "1h", "4h", "1d"];
+  var DEFAULT_CONFIG = { threshold: 4, atrMult: 1.5, rr: 2, exitMode: "fixed", sessionFilter: "none", maxHoldBars: 0 };
+
+  function validConfig(c) {
+    if (!c || typeof c !== "object" || Array.isArray(c)) return false;
+    if (!num(c.threshold) || c.threshold <= 0) return false;
+    if (!num(c.atrMult) || c.atrMult <= 0) return false;
+    if (!num(c.rr) || c.rr <= 0) return false;
+    if (c.exitMode !== "fixed" && c.exitMode !== "trailing" && c.exitMode !== "breakeven") return false;
+    if (c.sessionFilter !== "none" && c.sessionFilter !== "londonNY") return false;
+    if (!num(c.maxHoldBars) || c.maxHoldBars < 0) return false;
+    return true;
+  }
+  // Nur die Vertragsfelder übernehmen – Fremdfelder aus dem Storage fliegen raus.
+  function cleanConfig(c) {
+    return { threshold: c.threshold, atrMult: c.atrMult, rr: c.rr,
+      exitMode: c.exitMode, sessionFilter: c.sessionFilter, maxHoldBars: c.maxHoldBars };
+  }
+  function configsEqual(a, b) {
+    if (!validConfig(a) || !validConfig(b)) return false;
+    return a.threshold === b.threshold && a.atrMult === b.atrMult && a.rr === b.rr &&
+      a.exitMode === b.exitMode && a.sessionFilter === b.sessionFilter && a.maxHoldBars === b.maxHoldBars;
+  }
+  function validStats(s) {
+    return !!s && typeof s === "object" && !Array.isArray(s) &&
+      num(s.n) && num(s.wins) && num(s.losses) && num(s.winrate) &&
+      num(s.totalR) && num(s.maxDrawdownR) &&
+      (s.profitFactor === null || num(s.profitFactor));
+  }
+  function cleanStats(s) {
+    return { n: s.n, wins: s.wins, losses: s.losses, winrate: s.winrate,
+      totalR: s.totalR, profitFactor: (s.profitFactor === null ? null : s.profitFactor),
+      maxDrawdownR: s.maxDrawdownR };
+  }
+  // localStorage "sb2_tuned" ({tf: config}) robust validieren – Unbrauchbares ignorieren.
+  function sanitizeTuned(raw) {
+    var out = {};
+    if (raw && typeof raw === "object" && !Array.isArray(raw)) {
+      for (var i = 0; i < TF_KEYS.length; i++) {
+        var tf = TF_KEYS[i];
+        if (validConfig(raw[tf])) out[tf] = cleanConfig(raw[tf]);
+      }
+    }
+    return out;
+  }
+  // localStorage "sb2_optresults" ({tf: Walk-Forward-Ergebnis}) robust validieren.
+  function sanitizeOptResults(raw) {
+    var out = {};
+    if (raw && typeof raw === "object" && !Array.isArray(raw)) {
+      for (var i = 0; i < TF_KEYS.length; i++) {
+        var tf = TF_KEYS[i], r = raw[tf];
+        if (r && typeof r === "object" && !Array.isArray(r) &&
+            validConfig(r.config) && validStats(r.inSample) && validStats(r.outOfSample)) {
+          out[tf] = { tf: tf, config: cleanConfig(r.config),
+            inSample: cleanStats(r.inSample), outOfSample: cleanStats(r.outOfSample),
+            evaluated: num(r.evaluated) ? r.evaluated : null,
+            objective: (r.objective === "winrate" || r.objective === "pf" || r.objective === "totalR") ? r.objective : null,
+            guardRelaxed: r.guardRelaxed === true };
+        }
+      }
+    }
+    return out;
+  }
+  function fmtMult(x) { return num(x) ? x.toLocaleString("de-DE", { maximumFractionDigits: 2 }) : "–"; }
+  // Lesbare Konfigurationszeile, z. B. "Schwelle ±5 · Stop 2×ATR · Target 1,5R · Trailing · nur London/NY · Zeit-Exit 24"
+  function configLabel(c) {
+    if (!validConfig(c)) return "–";
+    var parts = [
+      "Schwelle ±" + fmtMult(c.threshold),
+      "Stop " + fmtMult(c.atrMult) + "×ATR",
+      "Target " + fmtMult(c.rr) + "R",
+      c.exitMode === "trailing" ? "Trailing" : (c.exitMode === "breakeven" ? "Breakeven" : "Fixer Exit")
+    ];
+    if (c.sessionFilter === "londonNY") parts.push("nur London/NY");
+    if (c.maxHoldBars > 0) parts.push("Zeit-Exit " + fmtMult(c.maxHoldBars));
+    return parts.join(" · ");
+  }
+  // onProgress-Argumente des Optimizers normalisieren: ({done, total}) oder (done, total).
+  function parseProgress(a, b) {
+    if (a && typeof a === "object" && !Array.isArray(a)) {
+      var d = num(a.done) ? a.done : (num(a.evaluated) ? a.evaluated : null);
+      return { done: d, total: num(a.total) ? a.total : null };
+    }
+    return { done: num(a) ? a : null, total: num(b) ? b : null };
+  }
+
+  root.XAU.apputil = {
+    TF_KEYS: TF_KEYS,
+    DEFAULT_CONFIG: DEFAULT_CONFIG,
+    validConfig: validConfig,
+    cleanConfig: cleanConfig,
+    configsEqual: configsEqual,
+    validStats: validStats,
+    cleanStats: cleanStats,
+    sanitizeTuned: sanitizeTuned,
+    sanitizeOptResults: sanitizeOptResults,
+    fmtMult: fmtMult,
+    configLabel: configLabel,
+    parseProgress: parseProgress
+  };
+
   /* ================= App (nur im Browser mit Template-DOM) ================= */
   if (typeof document === "undefined" || !document.getElementById || !document.getElementById("tf-cards")) return;
 
@@ -1466,7 +2207,7 @@ if (typeof module !== "undefined") module.exports = XAU.chart;
     set: function (k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
   };
 
-  var TFS = ["15m", "1h", "4h", "1d"];
+  var TFS = TF_KEYS;
   var TF_LABEL = { "15m": "15 Min", "1h": "1 Std", "4h": "4 Std", "1d": "1 Tag" };
   var ICONS = { BUY: "▲", SELL: "▼", NEUTRAL: "→" };
   var HIST_TFS = ["1h", "4h"]; // nur diese TFs in den Signal-Verlauf
@@ -1490,6 +2231,13 @@ if (typeof module !== "undefined") module.exports = XAU.chart;
   var currentSetup = null; // {entry, stop} bei aktivem 1h-Signal
   var chartApi = null;
   var scanning = false;
+  var tuned = sanitizeTuned(LS.get("sb2_tuned", {}));                // {tf: config} – nur validierte Einträge
+  var optResults = sanitizeOptResults(LS.get("sb2_optresults", {})); // {tf: Walk-Forward-Ergebnis}
+  var optErrors = {};   // {tf: Fehlermeldung} – nur für die laufende Sitzung, nicht persistiert
+  var fetchErrors = {}; // {tf: true} – letzter Kursabruf dieses TF fehlgeschlagen
+  var optRunning = false;
+
+  function tunedFor(tf) { return tuned[tf] || null; }
 
   function currentPrice() {
     // 1h bevorzugt; fällt der 1h-Fetch aus, liefert der nächste verfügbare TF den Kurs
@@ -1517,11 +2265,15 @@ if (typeof module !== "undefined") module.exports = XAU.chart;
         var tf = TFS[i];
         if (results[i].status === "fulfilled") {
           okCount++;
+          delete fetchErrors[tf];
           candlesByTF[tf] = results[i].value;
           var a = null;
-          try { a = XAU.engine.analyzeTF(results[i].value); } catch (e) { a = null; }
+          var tc = tunedFor(tf); // aktive optimierte Parameter: nur der Threshold wirkt live
+          try { a = XAU.engine.analyzeTF(results[i].value, tc ? { threshold: tc.threshold } : undefined); } catch (e) { a = null; }
           analysesByTF[tf] = a;
           if (a && HIST_TFS.indexOf(tf) !== -1) recordSignal(tf, a);
+        } else {
+          fetchErrors[tf] = true;
         }
       }
       try { confluenceRes = XAU.engine.confluence(analysesByTF); } catch (e2) { confluenceRes = null; }
@@ -1614,6 +2366,14 @@ if (typeof module !== "undefined") module.exports = XAU.chart;
         var name = document.createElement("span");
         name.textContent = TF_LABEL[tf] || tf;
         head.appendChild(name);
+        var tc = tunedFor(tf);
+        if (tc) {
+          var chip = document.createElement("span");
+          chip.className = "tuned-chip";
+          chip.textContent = "optimiert";
+          chip.title = "Nutzt optimierte Parameter: " + configLabel(tc);
+          head.appendChild(chip);
+        }
         if (a) head.appendChild(makeBadge(a.action, false));
         card.appendChild(head);
 
@@ -1647,10 +2407,16 @@ if (typeof module !== "undefined") module.exports = XAU.chart;
         } else {
           var load = document.createElement("div"); load.className = "stats";
           var have = candlesByTF[tf] ? candlesByTF[tf].length : 0;
-          load.textContent = have && XAU.engine && have < XAU.engine.MIN_CANDLES
-            ? "Zu wenig Historie (" + have + " von " + XAU.engine.MIN_CANDLES + " Kerzen)"
-            : "Lade…";
+          if (fetchErrors[tf]) load.textContent = "Daten nicht abrufbar – letzter Versuch fehlgeschlagen";
+          else if (have && XAU.engine && have < XAU.engine.MIN_CANDLES)
+            load.textContent = "Zu wenig Historie (" + have + " von " + XAU.engine.MIN_CANDLES + " Kerzen)";
+          else load.textContent = "Lade…";
           card.appendChild(load);
+        }
+        if (a && fetchErrors[tf]) {
+          var stale = document.createElement("div"); stale.className = "stats";
+          stale.textContent = "⚠ Aktualisierung fehlgeschlagen – Stand ist älter";
+          card.appendChild(stale);
         }
 
         card.tabIndex = 0;
@@ -1791,21 +2557,34 @@ if (typeof module !== "undefined") module.exports = XAU.chart;
     }
     var isLong = a.action === "BUY";
     var entry = a.price;
-    var risk = 1.5 * atr;
+    // Stop-Abstand und Target aus den optimierten 1h-Parametern (Fallback 1,5 × ATR / 2R)
+    var t1 = tunedFor("1h");
+    var atrMult = t1 ? t1.atrMult : 1.5;
+    var rr = t1 ? t1.rr : 2;
+    var risk = atrMult * atr;
     var stop = isLong ? entry - risk : entry + risk;
     var tp1 = isLong ? entry + risk : entry - risk;
     var tp2 = isLong ? entry + 2 * risk : entry - 2 * risk;
     var tp3 = isLong ? entry + 3 * risk : entry - 3 * risk;
+    // Strategie-Ziel (rr aus Optimierung) für die Pivot-Nähe und die Info-Zeile
+    var tpStrat = isLong ? entry + rr * risk : entry - rr * risk;
     currentSetup = { entry: entry, stop: stop };
 
     el.appendChild(makeBadge(a.action, false));
+    if (t1) {
+      var tn = document.createElement("p");
+      tn.className = "hint tuned-note";
+      tn.textContent = "Nutzt optimierte 1h-Parameter: Stop " + fmtMult(atrMult) + " × ATR, Target " + fmtMult(rr) + "R.";
+      el.appendChild(tn);
+    }
     var rows = [
       ["Richtung", isLong ? "LONG (Kaufen)" : "SHORT (Verkaufen)"],
       ["Entry", "$" + fmtPrice(entry)],
-      ["Stop-Loss (1,5 × ATR)", "$" + fmtPrice(stop)],
+      ["Stop-Loss (" + fmtMult(atrMult) + " × ATR)", "$" + fmtPrice(stop)],
       ["TP1 (1R)", "$" + fmtPrice(tp1)],
       ["TP2 (2R)", "$" + fmtPrice(tp2)],
-      ["TP3 (3R)", "$" + fmtPrice(tp3)]
+      ["TP3 (3R)", "$" + fmtPrice(tp3)],
+      ["Strategie-Ziel (" + fmtMult(rr) + "R)", "$" + fmtPrice(tpStrat)]
     ];
     for (var i = 0; i < rows.length; i++) {
       var div = document.createElement("div");
@@ -1822,12 +2601,12 @@ if (typeof module !== "undefined") module.exports = XAU.chart;
       var levels = [["P", pv.p], ["R1", pv.r1], ["R2", pv.r2], ["S1", pv.s1], ["S2", pv.s2]];
       var best = null;
       for (var j = 0; j < levels.length; j++) {
-        if (num(levels[j][1]) && (!best || Math.abs(levels[j][1] - tp2) < Math.abs(best[1] - tp2))) best = levels[j];
+        if (num(levels[j][1]) && (!best || Math.abs(levels[j][1] - tpStrat) < Math.abs(best[1] - tpStrat))) best = levels[j];
       }
       if (best) {
         var hint = document.createElement("p");
         hint.className = "hint";
-        hint.textContent = "TP2 liegt am nächsten am Pivot-Level " + best[0] + " (" + fmtPrice(best[1]) + " $).";
+        hint.textContent = "Das Strategie-Ziel liegt am nächsten am Pivot-Level " + best[0] + " (" + fmtPrice(best[1]) + " $).";
         el.appendChild(hint);
       }
     }
@@ -1868,13 +2647,15 @@ if (typeof module !== "undefined") module.exports = XAU.chart;
       el.textContent = "Bitte Kontogröße und Risiko angeben.";
       return;
     }
+    var t1 = tunedFor("1h");
+    var atrMult = t1 ? t1.atrMult : 1.5;
     var dist = null, hypothetical = false;
     if (currentSetup) {
       dist = Math.abs(currentSetup.entry - currentSetup.stop);
     } else {
       var a = analysesByTF["1h"];
       if (a && a.indicators && num(a.indicators.atr) && a.indicators.atr > 0) {
-        dist = 1.5 * a.indicators.atr;
+        dist = atrMult * a.indicators.atr;
         hypothetical = true;
       }
     }
@@ -1893,7 +2674,7 @@ if (typeof module !== "undefined") module.exports = XAU.chart;
     if (hypothetical) {
       var l3 = document.createElement("div");
       l3.className = "hint";
-      l3.textContent = "Ohne aktives Setup: gerechnet mit hypothetischem Stop-Abstand 1,5 × ATR (" + fmtPrice(dist) + " $).";
+      l3.textContent = "Ohne aktives Setup: gerechnet mit hypothetischem Stop-Abstand " + fmtMult(atrMult) + " × ATR (" + fmtPrice(dist) + " $).";
       el.appendChild(l3);
     }
   }
@@ -2015,14 +2796,22 @@ if (typeof module !== "undefined") module.exports = XAU.chart;
     tbody.replaceChildren();
     try {
       var tf = $("bt-tf").value;
+      var tc = tunedFor(tf);
+      var config = tc ? tc : DEFAULT_CONFIG;
       var candles = await XAU.data.fetchKlines(tf, 1000);
-      var res = XAU.backtest.run(candles, { atrMult: 1.5, rr: 2, threshold: 4, warmup: 250 });
+      var res = XAU.backtest.run(candles, config);
       renderBtStats(res.stats);
+      if (tc) {
+        var tunedNote = document.createElement("p");
+        tunedNote.className = "hint tuned-note";
+        tunedNote.textContent = "Nutzt optimierte Parameter.";
+        $("bt-stats").appendChild(tunedNote);
+      }
       var meth = document.createElement("p");
       meth.className = "hint";
-      meth.textContent = "Methodik: Entry am Open der Folgekerze, Stop 1,5 × ATR, Target 2R, konservative " +
-        "Stop-zuerst-Regel, Gaps zum Open abgerechnet. Signale auf gleitendem 360-Kerzen-Fenster – " +
-        "EMA200-Werte sind dadurch Näherungen. Vergangenheit ist kein Indikator für die Zukunft.";
+      meth.textContent = "Konfiguration: " + configLabel(config) + ". Methodik: Entry am Open der Folgekerze, " +
+        "konservative Stop-zuerst-Regel, Gaps zum Open abgerechnet; Gegensignal-/Zeit-Exits idealisiert zum Kerzenschluss. " +
+        "Vergangenheit ist kein Indikator für die Zukunft.";
       $("bt-stats").appendChild(meth);
       renderBtTrades(res.trades);
     } catch (e) {
@@ -2093,6 +2882,263 @@ if (typeof module !== "undefined") module.exports = XAU.chart;
         tr.appendChild(td);
       }
       tbody.appendChild(tr);
+    }
+  }
+
+  /* ---------- Strategie-Optimierung (Walk-Forward) ---------- */
+  function fmtInt(x) { return num(x) ? x.toLocaleString("de-DE", { maximumFractionDigits: 0 }) : "–"; }
+
+  // Fortschrittszeile: Text + <progress>; ohne done/total indeterminiert.
+  function setOptProgress(text, done, total) {
+    var el = $("opt-progress");
+    el.replaceChildren();
+    if (!text) return;
+    var span = document.createElement("span");
+    span.className = "opt-progress-text";
+    span.textContent = text;
+    el.appendChild(span);
+    var bar = document.createElement("progress");
+    if (num(done) && num(total) && total > 0) {
+      bar.max = total;
+      bar.value = Math.max(0, Math.min(done, total));
+    }
+    el.appendChild(bar);
+  }
+
+  function makeProgress(tf) {
+    return function (a, b) {
+      var p = parseProgress(a, b);
+      if (num(p.done) && num(p.total) && p.total > 0) {
+        setOptProgress(tf + ": " + fmtInt(p.done) + " von " + fmtInt(p.total) + " Kombinationen …", p.done, p.total);
+      }
+    };
+  }
+
+  function saveOptResults() { LS.set("sb2_optresults", optResults); }
+
+  function nextTick() { return new Promise(function (resolve) { setTimeout(resolve, 0); }); }
+
+  async function runOptimization() {
+    if (optRunning) return;
+    var btn = $("opt-run");
+    if (!XAU.opt || typeof XAU.opt.optimize !== "function") {
+      setOptProgress("Optimizer-Modul nicht geladen – bitte Seite neu laden.");
+      return;
+    }
+    optRunning = true;
+    btn.disabled = true;
+    var objective = $("opt-objective").value;
+    LS.set("sb2_objective", objective);
+    try {
+      for (var i = 0; i < TFS.length; i++) {
+        var tf = TFS[i];
+        try {
+          setOptProgress(tf + ": Lade Kursdaten (1000 Kerzen) …");
+          await nextTick();
+          var candles = await XAU.data.fetchKlines(tf, 1000);
+          setOptProgress(tf + ": Optimierung läuft …");
+          await nextTick();
+          var res = await Promise.resolve(
+            XAU.opt.optimize(candles, { tf: tf, objective: objective, onProgress: makeProgress(tf) })
+          );
+          if (!res || !validConfig(res.config) || !validStats(res.inSample) || !validStats(res.outOfSample)) {
+            throw new Error("Unerwartetes Optimizer-Ergebnis");
+          }
+          optResults[tf] = { tf: tf, config: cleanConfig(res.config),
+            inSample: cleanStats(res.inSample), outOfSample: cleanStats(res.outOfSample),
+            evaluated: num(res.evaluated) ? res.evaluated : null,
+            objective: objective,
+            guardRelaxed: res.guardRelaxed === true };
+          delete optErrors[tf];
+          saveOptResults();
+        } catch (e) {
+          optErrors[tf] = /fetch|network|Failed|HTTP/i.test(String(e && e.message))
+            ? "Kursdaten nicht abrufbar (Internet/Firewall prüfen)."
+            : (e && e.message ? e.message : "Unbekannter Fehler");
+        }
+        (function restoreObjective() {
+    var saved = LS.get("sb2_objective", null);
+    if (saved === "winrate" || saved === "pf" || saved === "totalR") $("opt-objective").value = saved;
+  })();
+  renderOptResults();
+        await nextTick();
+      }
+      setOptProgress("Optimierung abgeschlossen.");
+    } finally {
+      optRunning = false;
+      btn.disabled = false;
+    }
+  }
+
+  function statTiles(s, big) {
+    var wrap = document.createElement("div");
+    wrap.className = "opt-tiles " + (big ? "opt-tiles-big" : "opt-tiles-small");
+    var tiles = [
+      [fmt1(s.winrate * 100) + " %", "Winrate"],
+      [fmtInt(s.n), "Trades"],
+      [fmtR(s.totalR), "Gesamt-R"],
+      [s.profitFactor === null ? (s.wins > 0 ? "∞" : "–") : fmtPrice(s.profitFactor), "Profit-Faktor"]
+    ];
+    for (var i = 0; i < tiles.length; i++) {
+      var tile = document.createElement("div");
+      tile.className = "stat-tile";
+      var val = document.createElement("div"); val.className = "value"; val.textContent = tiles[i][0];
+      var lab = document.createElement("div"); lab.className = "label"; lab.textContent = tiles[i][1];
+      tile.appendChild(val); tile.appendChild(lab);
+      wrap.appendChild(tile);
+    }
+    return wrap;
+  }
+
+  function buildOptCard(tf, res, err) {
+    var card = document.createElement("div");
+    card.className = "opt-tf-card";
+
+    var head = document.createElement("div");
+    head.className = "opt-tf-head";
+    var name = document.createElement("strong");
+    name.className = "opt-tf-name";
+    name.textContent = TF_LABEL[tf] || tf;
+    head.appendChild(name);
+    var active = !!(res && tunedFor(tf) && configsEqual(tuned[tf], res.config));
+    if (active) {
+      var chip = document.createElement("span");
+      chip.className = "tuned-chip";
+      chip.textContent = "aktiv";
+      head.appendChild(chip);
+    }
+    card.appendChild(head);
+
+    if (err) {
+      var pe = document.createElement("p");
+      pe.className = "opt-error";
+      pe.textContent = "Fehler bei der Optimierung: " + err;
+      card.appendChild(pe);
+      if (res) {
+        var old = document.createElement("p");
+        old.className = "hint";
+        old.textContent = "Es wird das zuletzt gespeicherte Ergebnis angezeigt.";
+        card.appendChild(old);
+      }
+    }
+    if (!res) return card;
+
+    var cfgLine = document.createElement("div");
+    cfgLine.className = "opt-config";
+    cfgLine.textContent = configLabel(res.config);
+    card.appendChild(cfgLine);
+
+    var cmp = document.createElement("div");
+    cmp.className = "opt-compare";
+    var oos = document.createElement("div");
+    oos.className = "opt-block opt-oos";
+    var oosLab = document.createElement("div");
+    oosLab.className = "opt-group-label";
+    oosLab.textContent = "Out-of-Sample (Walk-Forward-Test)";
+    oos.appendChild(oosLab);
+    oos.appendChild(statTiles(res.outOfSample, true));
+    cmp.appendChild(oos);
+    var ins = document.createElement("div");
+    ins.className = "opt-block opt-is";
+    var insLab = document.createElement("div");
+    insLab.className = "opt-group-label";
+    insLab.textContent = "In-Sample (Anpassung)";
+    ins.appendChild(insLab);
+    ins.appendChild(statTiles(res.inSample, false));
+    cmp.appendChild(ins);
+    card.appendChild(cmp);
+
+    if (res.guardRelaxed) {
+      var warnG = document.createElement("p");
+      warnG.className = "opt-warn";
+      warnG.textContent = "Mindest-Trade-Anzahl nicht erreicht – Ergebnis nicht belastbar.";
+      card.appendChild(warnG);
+    }
+    var warnAt = res.objective === "winrate" ? 30 : 20;
+    if (res.outOfSample.n < warnAt) {
+      var warn = document.createElement("p");
+      warn.className = "opt-warn";
+      warn.textContent = "Nur " + fmtInt(res.outOfSample.n) + " Out-of-Sample-Trades (unter " + warnAt + ") – wenig Aussagekraft.";
+      card.appendChild(warn);
+    }
+    if (num(res.evaluated)) {
+      var ev = document.createElement("p");
+      ev.className = "hint";
+      var objName = { winrate: "Winrate", pf: "Profit-Faktor", totalR: "Gesamt-R" }[res.objective] || null;
+      ev.textContent = fmtInt(res.evaluated) + " Kombinationen getestet (Walk-Forward)" +
+        (objName ? " · Ziel: " + objName : "") + ".";
+      card.appendChild(ev);
+    }
+
+    var actions = document.createElement("div");
+    actions.className = "opt-actions";
+    var apply = document.createElement("button");
+    apply.textContent = active ? "Übernommen" : "Übernehmen";
+    apply.disabled = active;
+    apply.addEventListener("click", function () {
+      tuned[tf] = cleanConfig(res.config);
+      LS.set("sb2_tuned", tuned);
+      renderOptResults();
+      renderCards();
+      renderSetup();
+      scan();
+    });
+    actions.appendChild(apply);
+    if (tunedFor(tf)) {
+      var reset = document.createElement("button");
+      reset.textContent = "Zurücksetzen";
+      reset.addEventListener("click", function () {
+        delete tuned[tf];
+        LS.set("sb2_tuned", tuned);
+        renderOptResults();
+        renderCards();
+        renderSetup();
+        scan();
+      });
+      actions.appendChild(reset);
+    }
+    card.appendChild(actions);
+    return card;
+  }
+
+  function buildOrphanTunedCard(tf) {
+    var card = document.createElement("div");
+    card.className = "opt-tf-card";
+    var head = document.createElement("div"); head.className = "pair-head";
+    var name = document.createElement("span"); name.textContent = TF_LABEL[tf] || tf; head.appendChild(name);
+    var chip = document.createElement("span"); chip.className = "tuned-chip"; chip.textContent = "aktiv"; head.appendChild(chip);
+    card.appendChild(head);
+    var p = document.createElement("p"); p.className = "hint";
+    p.textContent = "Optimierte Parameter sind aktiv (" + configLabel(tuned[tf]) + "), die Ergebnisdetails liegen nicht mehr vor.";
+    card.appendChild(p);
+    var row = document.createElement("div"); row.className = "opt-actions";
+    var btn = document.createElement("button"); btn.textContent = "Zurücksetzen";
+    btn.addEventListener("click", function () {
+      delete tuned[tf]; LS.set("sb2_tuned", tuned);
+      renderOptResults(); scan();
+    });
+    row.appendChild(btn); card.appendChild(row);
+    return card;
+  }
+
+  function renderOptResults() {
+    var wrap = $("opt-results");
+    wrap.replaceChildren();
+    var shown = 0;
+    for (var i = 0; i < TFS.length; i++) {
+      var tf = TFS[i];
+      if (!optResults[tf] && !optErrors[tf]) {
+        if (tunedFor(tf)) wrap.appendChild(buildOrphanTunedCard(tf));
+        continue;
+      }
+      shown++;
+      wrap.appendChild(buildOptCard(tf, optResults[tf] || null, optErrors[tf] || null));
+    }
+    if (!shown) {
+      var p = document.createElement("p");
+      p.className = "hint";
+      p.textContent = "Noch keine Optimierung gelaufen – „Alle Timeframes optimieren“ startet den Walk-Forward-Test.";
+      wrap.appendChild(p);
     }
   }
 
@@ -2210,6 +3256,7 @@ if (typeof module !== "undefined") module.exports = XAU.chart;
   $("alert-add").addEventListener("click", addAlert);
   $("alert-price").addEventListener("keydown", function (e) { if (e.key === "Enter") addAlert(); });
   $("bt-run").addEventListener("click", function () { runBacktest(); });
+  $("opt-run").addEventListener("click", function () { runOptimization(); });
   $("clearhist").addEventListener("click", function () {
     history = []; lastAction = {};
     LS.set("sb2_history", history);
@@ -2225,6 +3272,7 @@ if (typeof module !== "undefined") module.exports = XAU.chart;
   renderSetup();
   renderHistory();
   renderAlerts();
+  renderOptResults();
   scan();
   setInterval(scan, 60000);
 })();

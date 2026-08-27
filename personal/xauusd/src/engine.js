@@ -18,7 +18,7 @@
   var MAX_SCORE = 9; // Summe aller Regel-Maxima (2+2+1+1+1+1+1)
   function clampScore(s) { return Math.max(-MAX_SCORE, Math.min(MAX_SCORE, s)); }
 
-  function analyzeTF(candles) {
+  function analyzeTF(candles, opts) {
     var ind = getInd();
     if (!ind || !Array.isArray(candles) || candles.length < MIN_CANDLES) return null;
     var closes = [];
@@ -112,7 +112,9 @@
     }
 
     score = clampScore(score);
-    var action = score >= 4 ? 'BUY' : (score <= -4 ? 'SELL' : 'NEUTRAL');
+    // Optionaler Threshold (default 4) – beeinflusst NUR die action-Ableitung aus dem Score.
+    var threshold = (opts && num(opts.threshold)) ? opts.threshold : 4;
+    var action = score >= threshold ? 'BUY' : (score <= -threshold ? 'SELL' : 'NEUTRAL');
     return {
       action: action,
       score: score,

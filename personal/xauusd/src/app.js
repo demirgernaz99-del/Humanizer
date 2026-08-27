@@ -38,6 +38,109 @@
 
   root.XAU.data = { SYMBOL: SYMBOL, BASES: BASES, fetchKlines: fetchKlines };
 
+  /* ================= Pure Helfer (Tuned-Params & Optimizer-UI) =================
+     Kein DOM nötig – in Node über XAU.apputil testbar. */
+  var TF_KEYS = ["15m", "1h", "4h", "1d"];
+  var DEFAULT_CONFIG = { threshold: 4, atrMult: 1.5, rr: 2, exitMode: "fixed", sessionFilter: "none", maxHoldBars: 0 };
+
+  function validConfig(c) {
+    if (!c || typeof c !== "object" || Array.isArray(c)) return false;
+    if (!num(c.threshold) || c.threshold <= 0) return false;
+    if (!num(c.atrMult) || c.atrMult <= 0) return false;
+    if (!num(c.rr) || c.rr <= 0) return false;
+    if (c.exitMode !== "fixed" && c.exitMode !== "trailing" && c.exitMode !== "breakeven") return false;
+    if (c.sessionFilter !== "none" && c.sessionFilter !== "londonNY") return false;
+    if (!num(c.maxHoldBars) || c.maxHoldBars < 0) return false;
+    return true;
+  }
+  // Nur die Vertragsfelder übernehmen – Fremdfelder aus dem Storage fliegen raus.
+  function cleanConfig(c) {
+    return { threshold: c.threshold, atrMult: c.atrMult, rr: c.rr,
+      exitMode: c.exitMode, sessionFilter: c.sessionFilter, maxHoldBars: c.maxHoldBars };
+  }
+  function configsEqual(a, b) {
+    if (!validConfig(a) || !validConfig(b)) return false;
+    return a.threshold === b.threshold && a.atrMult === b.atrMult && a.rr === b.rr &&
+      a.exitMode === b.exitMode && a.sessionFilter === b.sessionFilter && a.maxHoldBars === b.maxHoldBars;
+  }
+  function validStats(s) {
+    return !!s && typeof s === "object" && !Array.isArray(s) &&
+      num(s.n) && num(s.wins) && num(s.losses) && num(s.winrate) &&
+      num(s.totalR) && num(s.maxDrawdownR) &&
+      (s.profitFactor === null || num(s.profitFactor));
+  }
+  function cleanStats(s) {
+    return { n: s.n, wins: s.wins, losses: s.losses, winrate: s.winrate,
+      totalR: s.totalR, profitFactor: (s.profitFactor === null ? null : s.profitFactor),
+      maxDrawdownR: s.maxDrawdownR };
+  }
+  // localStorage "sb2_tuned" ({tf: config}) robust validieren – Unbrauchbares ignorieren.
+  function sanitizeTuned(raw) {
+    var out = {};
+    if (raw && typeof raw === "object" && !Array.isArray(raw)) {
+      for (var i = 0; i < TF_KEYS.length; i++) {
+        var tf = TF_KEYS[i];
+        if (validConfig(raw[tf])) out[tf] = cleanConfig(raw[tf]);
+      }
+    }
+    return out;
+  }
+  // localStorage "sb2_optresults" ({tf: Walk-Forward-Ergebnis}) robust validieren.
+  function sanitizeOptResults(raw) {
+    var out = {};
+    if (raw && typeof raw === "object" && !Array.isArray(raw)) {
+      for (var i = 0; i < TF_KEYS.length; i++) {
+        var tf = TF_KEYS[i], r = raw[tf];
+        if (r && typeof r === "object" && !Array.isArray(r) &&
+            validConfig(r.config) && validStats(r.inSample) && validStats(r.outOfSample)) {
+          out[tf] = { tf: tf, config: cleanConfig(r.config),
+            inSample: cleanStats(r.inSample), outOfSample: cleanStats(r.outOfSample),
+            evaluated: num(r.evaluated) ? r.evaluated : null,
+            objective: (r.objective === "winrate" || r.objective === "pf" || r.objective === "totalR") ? r.objective : null,
+            guardRelaxed: r.guardRelaxed === true };
+        }
+      }
+    }
+    return out;
+  }
+  function fmtMult(x) { return num(x) ? x.toLocaleString("de-DE", { maximumFractionDigits: 2 }) : "–"; }
+  // Lesbare Konfigurationszeile, z. B. "Schwelle ±5 · Stop 2×ATR · Target 1,5R · Trailing · nur London/NY · Zeit-Exit 24"
+  function configLabel(c) {
+    if (!validConfig(c)) return "–";
+    var parts = [
+      "Schwelle ±" + fmtMult(c.threshold),
+      "Stop " + fmtMult(c.atrMult) + "×ATR",
+      "Target " + fmtMult(c.rr) + "R",
+      c.exitMode === "trailing" ? "Trailing" : (c.exitMode === "breakeven" ? "Breakeven" : "Fixer Exit")
+    ];
+    if (c.sessionFilter === "londonNY") parts.push("nur London/NY");
+    if (c.maxHoldBars > 0) parts.push("Zeit-Exit " + fmtMult(c.maxHoldBars));
+    return parts.join(" · ");
+  }
+  // onProgress-Argumente des Optimizers normalisieren: ({done, total}) oder (done, total).
+  function parseProgress(a, b) {
+    if (a && typeof a === "object" && !Array.isArray(a)) {
+      var d = num(a.done) ? a.done : (num(a.evaluated) ? a.evaluated : null);
+      return { done: d, total: num(a.total) ? a.total : null };
+    }
+    return { done: num(a) ? a : null, total: num(b) ? b : null };
+  }
+
+  root.XAU.apputil = {
+    TF_KEYS: TF_KEYS,
+    DEFAULT_CONFIG: DEFAULT_CONFIG,
+    validConfig: validConfig,
+    cleanConfig: cleanConfig,
+    configsEqual: configsEqual,
+    validStats: validStats,
+    cleanStats: cleanStats,
+    sanitizeTuned: sanitizeTuned,
+    sanitizeOptResults: sanitizeOptResults,
+    fmtMult: fmtMult,
+    configLabel: configLabel,
+    parseProgress: parseProgress
+  };
+
   /* ================= App (nur im Browser mit Template-DOM) ================= */
   if (typeof document === "undefined" || !document.getElementById || !document.getElementById("tf-cards")) return;
 
@@ -60,7 +163,7 @@
     set: function (k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
   };
 
-  var TFS = ["15m", "1h", "4h", "1d"];
+  var TFS = TF_KEYS;
   var TF_LABEL = { "15m": "15 Min", "1h": "1 Std", "4h": "4 Std", "1d": "1 Tag" };
   var ICONS = { BUY: "▲", SELL: "▼", NEUTRAL: "→" };
   var HIST_TFS = ["1h", "4h"]; // nur diese TFs in den Signal-Verlauf
@@ -84,6 +187,13 @@
   var currentSetup = null; // {entry, stop} bei aktivem 1h-Signal
   var chartApi = null;
   var scanning = false;
+  var tuned = sanitizeTuned(LS.get("sb2_tuned", {}));                // {tf: config} – nur validierte Einträge
+  var optResults = sanitizeOptResults(LS.get("sb2_optresults", {})); // {tf: Walk-Forward-Ergebnis}
+  var optErrors = {};   // {tf: Fehlermeldung} – nur für die laufende Sitzung, nicht persistiert
+  var fetchErrors = {}; // {tf: true} – letzter Kursabruf dieses TF fehlgeschlagen
+  var optRunning = false;
+
+  function tunedFor(tf) { return tuned[tf] || null; }
 
   function currentPrice() {
     // 1h bevorzugt; fällt der 1h-Fetch aus, liefert der nächste verfügbare TF den Kurs
@@ -111,11 +221,15 @@
         var tf = TFS[i];
         if (results[i].status === "fulfilled") {
           okCount++;
+          delete fetchErrors[tf];
           candlesByTF[tf] = results[i].value;
           var a = null;
-          try { a = XAU.engine.analyzeTF(results[i].value); } catch (e) { a = null; }
+          var tc = tunedFor(tf); // aktive optimierte Parameter: nur der Threshold wirkt live
+          try { a = XAU.engine.analyzeTF(results[i].value, tc ? { threshold: tc.threshold } : undefined); } catch (e) { a = null; }
           analysesByTF[tf] = a;
           if (a && HIST_TFS.indexOf(tf) !== -1) recordSignal(tf, a);
+        } else {
+          fetchErrors[tf] = true;
         }
       }
       try { confluenceRes = XAU.engine.confluence(analysesByTF); } catch (e2) { confluenceRes = null; }
@@ -208,6 +322,14 @@
         var name = document.createElement("span");
         name.textContent = TF_LABEL[tf] || tf;
         head.appendChild(name);
+        var tc = tunedFor(tf);
+        if (tc) {
+          var chip = document.createElement("span");
+          chip.className = "tuned-chip";
+          chip.textContent = "optimiert";
+          chip.title = "Nutzt optimierte Parameter: " + configLabel(tc);
+          head.appendChild(chip);
+        }
         if (a) head.appendChild(makeBadge(a.action, false));
         card.appendChild(head);
 
@@ -241,10 +363,16 @@
         } else {
           var load = document.createElement("div"); load.className = "stats";
           var have = candlesByTF[tf] ? candlesByTF[tf].length : 0;
-          load.textContent = have && XAU.engine && have < XAU.engine.MIN_CANDLES
-            ? "Zu wenig Historie (" + have + " von " + XAU.engine.MIN_CANDLES + " Kerzen)"
-            : "Lade…";
+          if (fetchErrors[tf]) load.textContent = "Daten nicht abrufbar – letzter Versuch fehlgeschlagen";
+          else if (have && XAU.engine && have < XAU.engine.MIN_CANDLES)
+            load.textContent = "Zu wenig Historie (" + have + " von " + XAU.engine.MIN_CANDLES + " Kerzen)";
+          else load.textContent = "Lade…";
           card.appendChild(load);
+        }
+        if (a && fetchErrors[tf]) {
+          var stale = document.createElement("div"); stale.className = "stats";
+          stale.textContent = "⚠ Aktualisierung fehlgeschlagen – Stand ist älter";
+          card.appendChild(stale);
         }
 
         card.tabIndex = 0;
@@ -385,21 +513,34 @@
     }
     var isLong = a.action === "BUY";
     var entry = a.price;
-    var risk = 1.5 * atr;
+    // Stop-Abstand und Target aus den optimierten 1h-Parametern (Fallback 1,5 × ATR / 2R)
+    var t1 = tunedFor("1h");
+    var atrMult = t1 ? t1.atrMult : 1.5;
+    var rr = t1 ? t1.rr : 2;
+    var risk = atrMult * atr;
     var stop = isLong ? entry - risk : entry + risk;
     var tp1 = isLong ? entry + risk : entry - risk;
     var tp2 = isLong ? entry + 2 * risk : entry - 2 * risk;
     var tp3 = isLong ? entry + 3 * risk : entry - 3 * risk;
+    // Strategie-Ziel (rr aus Optimierung) für die Pivot-Nähe und die Info-Zeile
+    var tpStrat = isLong ? entry + rr * risk : entry - rr * risk;
     currentSetup = { entry: entry, stop: stop };
 
     el.appendChild(makeBadge(a.action, false));
+    if (t1) {
+      var tn = document.createElement("p");
+      tn.className = "hint tuned-note";
+      tn.textContent = "Nutzt optimierte 1h-Parameter: Stop " + fmtMult(atrMult) + " × ATR, Target " + fmtMult(rr) + "R.";
+      el.appendChild(tn);
+    }
     var rows = [
       ["Richtung", isLong ? "LONG (Kaufen)" : "SHORT (Verkaufen)"],
       ["Entry", "$" + fmtPrice(entry)],
-      ["Stop-Loss (1,5 × ATR)", "$" + fmtPrice(stop)],
+      ["Stop-Loss (" + fmtMult(atrMult) + " × ATR)", "$" + fmtPrice(stop)],
       ["TP1 (1R)", "$" + fmtPrice(tp1)],
       ["TP2 (2R)", "$" + fmtPrice(tp2)],
-      ["TP3 (3R)", "$" + fmtPrice(tp3)]
+      ["TP3 (3R)", "$" + fmtPrice(tp3)],
+      ["Strategie-Ziel (" + fmtMult(rr) + "R)", "$" + fmtPrice(tpStrat)]
     ];
     for (var i = 0; i < rows.length; i++) {
       var div = document.createElement("div");
@@ -416,12 +557,12 @@
       var levels = [["P", pv.p], ["R1", pv.r1], ["R2", pv.r2], ["S1", pv.s1], ["S2", pv.s2]];
       var best = null;
       for (var j = 0; j < levels.length; j++) {
-        if (num(levels[j][1]) && (!best || Math.abs(levels[j][1] - tp2) < Math.abs(best[1] - tp2))) best = levels[j];
+        if (num(levels[j][1]) && (!best || Math.abs(levels[j][1] - tpStrat) < Math.abs(best[1] - tpStrat))) best = levels[j];
       }
       if (best) {
         var hint = document.createElement("p");
         hint.className = "hint";
-        hint.textContent = "TP2 liegt am nächsten am Pivot-Level " + best[0] + " (" + fmtPrice(best[1]) + " $).";
+        hint.textContent = "Das Strategie-Ziel liegt am nächsten am Pivot-Level " + best[0] + " (" + fmtPrice(best[1]) + " $).";
         el.appendChild(hint);
       }
     }
@@ -462,13 +603,15 @@
       el.textContent = "Bitte Kontogröße und Risiko angeben.";
       return;
     }
+    var t1 = tunedFor("1h");
+    var atrMult = t1 ? t1.atrMult : 1.5;
     var dist = null, hypothetical = false;
     if (currentSetup) {
       dist = Math.abs(currentSetup.entry - currentSetup.stop);
     } else {
       var a = analysesByTF["1h"];
       if (a && a.indicators && num(a.indicators.atr) && a.indicators.atr > 0) {
-        dist = 1.5 * a.indicators.atr;
+        dist = atrMult * a.indicators.atr;
         hypothetical = true;
       }
     }
@@ -487,7 +630,7 @@
     if (hypothetical) {
       var l3 = document.createElement("div");
       l3.className = "hint";
-      l3.textContent = "Ohne aktives Setup: gerechnet mit hypothetischem Stop-Abstand 1,5 × ATR (" + fmtPrice(dist) + " $).";
+      l3.textContent = "Ohne aktives Setup: gerechnet mit hypothetischem Stop-Abstand " + fmtMult(atrMult) + " × ATR (" + fmtPrice(dist) + " $).";
       el.appendChild(l3);
     }
   }
@@ -609,14 +752,22 @@
     tbody.replaceChildren();
     try {
       var tf = $("bt-tf").value;
+      var tc = tunedFor(tf);
+      var config = tc ? tc : DEFAULT_CONFIG;
       var candles = await XAU.data.fetchKlines(tf, 1000);
-      var res = XAU.backtest.run(candles, { atrMult: 1.5, rr: 2, threshold: 4, warmup: 250 });
+      var res = XAU.backtest.run(candles, config);
       renderBtStats(res.stats);
+      if (tc) {
+        var tunedNote = document.createElement("p");
+        tunedNote.className = "hint tuned-note";
+        tunedNote.textContent = "Nutzt optimierte Parameter.";
+        $("bt-stats").appendChild(tunedNote);
+      }
       var meth = document.createElement("p");
       meth.className = "hint";
-      meth.textContent = "Methodik: Entry am Open der Folgekerze, Stop 1,5 × ATR, Target 2R, konservative " +
-        "Stop-zuerst-Regel, Gaps zum Open abgerechnet. Signale auf gleitendem 360-Kerzen-Fenster – " +
-        "EMA200-Werte sind dadurch Näherungen. Vergangenheit ist kein Indikator für die Zukunft.";
+      meth.textContent = "Konfiguration: " + configLabel(config) + ". Methodik: Entry am Open der Folgekerze, " +
+        "konservative Stop-zuerst-Regel, Gaps zum Open abgerechnet; Gegensignal-/Zeit-Exits idealisiert zum Kerzenschluss. " +
+        "Vergangenheit ist kein Indikator für die Zukunft.";
       $("bt-stats").appendChild(meth);
       renderBtTrades(res.trades);
     } catch (e) {
@@ -687,6 +838,263 @@
         tr.appendChild(td);
       }
       tbody.appendChild(tr);
+    }
+  }
+
+  /* ---------- Strategie-Optimierung (Walk-Forward) ---------- */
+  function fmtInt(x) { return num(x) ? x.toLocaleString("de-DE", { maximumFractionDigits: 0 }) : "–"; }
+
+  // Fortschrittszeile: Text + <progress>; ohne done/total indeterminiert.
+  function setOptProgress(text, done, total) {
+    var el = $("opt-progress");
+    el.replaceChildren();
+    if (!text) return;
+    var span = document.createElement("span");
+    span.className = "opt-progress-text";
+    span.textContent = text;
+    el.appendChild(span);
+    var bar = document.createElement("progress");
+    if (num(done) && num(total) && total > 0) {
+      bar.max = total;
+      bar.value = Math.max(0, Math.min(done, total));
+    }
+    el.appendChild(bar);
+  }
+
+  function makeProgress(tf) {
+    return function (a, b) {
+      var p = parseProgress(a, b);
+      if (num(p.done) && num(p.total) && p.total > 0) {
+        setOptProgress(tf + ": " + fmtInt(p.done) + " von " + fmtInt(p.total) + " Kombinationen …", p.done, p.total);
+      }
+    };
+  }
+
+  function saveOptResults() { LS.set("sb2_optresults", optResults); }
+
+  function nextTick() { return new Promise(function (resolve) { setTimeout(resolve, 0); }); }
+
+  async function runOptimization() {
+    if (optRunning) return;
+    var btn = $("opt-run");
+    if (!XAU.opt || typeof XAU.opt.optimize !== "function") {
+      setOptProgress("Optimizer-Modul nicht geladen – bitte Seite neu laden.");
+      return;
+    }
+    optRunning = true;
+    btn.disabled = true;
+    var objective = $("opt-objective").value;
+    LS.set("sb2_objective", objective);
+    try {
+      for (var i = 0; i < TFS.length; i++) {
+        var tf = TFS[i];
+        try {
+          setOptProgress(tf + ": Lade Kursdaten (1000 Kerzen) …");
+          await nextTick();
+          var candles = await XAU.data.fetchKlines(tf, 1000);
+          setOptProgress(tf + ": Optimierung läuft …");
+          await nextTick();
+          var res = await Promise.resolve(
+            XAU.opt.optimize(candles, { tf: tf, objective: objective, onProgress: makeProgress(tf) })
+          );
+          if (!res || !validConfig(res.config) || !validStats(res.inSample) || !validStats(res.outOfSample)) {
+            throw new Error("Unerwartetes Optimizer-Ergebnis");
+          }
+          optResults[tf] = { tf: tf, config: cleanConfig(res.config),
+            inSample: cleanStats(res.inSample), outOfSample: cleanStats(res.outOfSample),
+            evaluated: num(res.evaluated) ? res.evaluated : null,
+            objective: objective,
+            guardRelaxed: res.guardRelaxed === true };
+          delete optErrors[tf];
+          saveOptResults();
+        } catch (e) {
+          optErrors[tf] = /fetch|network|Failed|HTTP/i.test(String(e && e.message))
+            ? "Kursdaten nicht abrufbar (Internet/Firewall prüfen)."
+            : (e && e.message ? e.message : "Unbekannter Fehler");
+        }
+        (function restoreObjective() {
+    var saved = LS.get("sb2_objective", null);
+    if (saved === "winrate" || saved === "pf" || saved === "totalR") $("opt-objective").value = saved;
+  })();
+  renderOptResults();
+        await nextTick();
+      }
+      setOptProgress("Optimierung abgeschlossen.");
+    } finally {
+      optRunning = false;
+      btn.disabled = false;
+    }
+  }
+
+  function statTiles(s, big) {
+    var wrap = document.createElement("div");
+    wrap.className = "opt-tiles " + (big ? "opt-tiles-big" : "opt-tiles-small");
+    var tiles = [
+      [fmt1(s.winrate * 100) + " %", "Winrate"],
+      [fmtInt(s.n), "Trades"],
+      [fmtR(s.totalR), "Gesamt-R"],
+      [s.profitFactor === null ? (s.wins > 0 ? "∞" : "–") : fmtPrice(s.profitFactor), "Profit-Faktor"]
+    ];
+    for (var i = 0; i < tiles.length; i++) {
+      var tile = document.createElement("div");
+      tile.className = "stat-tile";
+      var val = document.createElement("div"); val.className = "value"; val.textContent = tiles[i][0];
+      var lab = document.createElement("div"); lab.className = "label"; lab.textContent = tiles[i][1];
+      tile.appendChild(val); tile.appendChild(lab);
+      wrap.appendChild(tile);
+    }
+    return wrap;
+  }
+
+  function buildOptCard(tf, res, err) {
+    var card = document.createElement("div");
+    card.className = "opt-tf-card";
+
+    var head = document.createElement("div");
+    head.className = "opt-tf-head";
+    var name = document.createElement("strong");
+    name.className = "opt-tf-name";
+    name.textContent = TF_LABEL[tf] || tf;
+    head.appendChild(name);
+    var active = !!(res && tunedFor(tf) && configsEqual(tuned[tf], res.config));
+    if (active) {
+      var chip = document.createElement("span");
+      chip.className = "tuned-chip";
+      chip.textContent = "aktiv";
+      head.appendChild(chip);
+    }
+    card.appendChild(head);
+
+    if (err) {
+      var pe = document.createElement("p");
+      pe.className = "opt-error";
+      pe.textContent = "Fehler bei der Optimierung: " + err;
+      card.appendChild(pe);
+      if (res) {
+        var old = document.createElement("p");
+        old.className = "hint";
+        old.textContent = "Es wird das zuletzt gespeicherte Ergebnis angezeigt.";
+        card.appendChild(old);
+      }
+    }
+    if (!res) return card;
+
+    var cfgLine = document.createElement("div");
+    cfgLine.className = "opt-config";
+    cfgLine.textContent = configLabel(res.config);
+    card.appendChild(cfgLine);
+
+    var cmp = document.createElement("div");
+    cmp.className = "opt-compare";
+    var oos = document.createElement("div");
+    oos.className = "opt-block opt-oos";
+    var oosLab = document.createElement("div");
+    oosLab.className = "opt-group-label";
+    oosLab.textContent = "Out-of-Sample (Walk-Forward-Test)";
+    oos.appendChild(oosLab);
+    oos.appendChild(statTiles(res.outOfSample, true));
+    cmp.appendChild(oos);
+    var ins = document.createElement("div");
+    ins.className = "opt-block opt-is";
+    var insLab = document.createElement("div");
+    insLab.className = "opt-group-label";
+    insLab.textContent = "In-Sample (Anpassung)";
+    ins.appendChild(insLab);
+    ins.appendChild(statTiles(res.inSample, false));
+    cmp.appendChild(ins);
+    card.appendChild(cmp);
+
+    if (res.guardRelaxed) {
+      var warnG = document.createElement("p");
+      warnG.className = "opt-warn";
+      warnG.textContent = "Mindest-Trade-Anzahl nicht erreicht – Ergebnis nicht belastbar.";
+      card.appendChild(warnG);
+    }
+    var warnAt = res.objective === "winrate" ? 30 : 20;
+    if (res.outOfSample.n < warnAt) {
+      var warn = document.createElement("p");
+      warn.className = "opt-warn";
+      warn.textContent = "Nur " + fmtInt(res.outOfSample.n) + " Out-of-Sample-Trades (unter " + warnAt + ") – wenig Aussagekraft.";
+      card.appendChild(warn);
+    }
+    if (num(res.evaluated)) {
+      var ev = document.createElement("p");
+      ev.className = "hint";
+      var objName = { winrate: "Winrate", pf: "Profit-Faktor", totalR: "Gesamt-R" }[res.objective] || null;
+      ev.textContent = fmtInt(res.evaluated) + " Kombinationen getestet (Walk-Forward)" +
+        (objName ? " · Ziel: " + objName : "") + ".";
+      card.appendChild(ev);
+    }
+
+    var actions = document.createElement("div");
+    actions.className = "opt-actions";
+    var apply = document.createElement("button");
+    apply.textContent = active ? "Übernommen" : "Übernehmen";
+    apply.disabled = active;
+    apply.addEventListener("click", function () {
+      tuned[tf] = cleanConfig(res.config);
+      LS.set("sb2_tuned", tuned);
+      renderOptResults();
+      renderCards();
+      renderSetup();
+      scan();
+    });
+    actions.appendChild(apply);
+    if (tunedFor(tf)) {
+      var reset = document.createElement("button");
+      reset.textContent = "Zurücksetzen";
+      reset.addEventListener("click", function () {
+        delete tuned[tf];
+        LS.set("sb2_tuned", tuned);
+        renderOptResults();
+        renderCards();
+        renderSetup();
+        scan();
+      });
+      actions.appendChild(reset);
+    }
+    card.appendChild(actions);
+    return card;
+  }
+
+  function buildOrphanTunedCard(tf) {
+    var card = document.createElement("div");
+    card.className = "opt-tf-card";
+    var head = document.createElement("div"); head.className = "pair-head";
+    var name = document.createElement("span"); name.textContent = TF_LABEL[tf] || tf; head.appendChild(name);
+    var chip = document.createElement("span"); chip.className = "tuned-chip"; chip.textContent = "aktiv"; head.appendChild(chip);
+    card.appendChild(head);
+    var p = document.createElement("p"); p.className = "hint";
+    p.textContent = "Optimierte Parameter sind aktiv (" + configLabel(tuned[tf]) + "), die Ergebnisdetails liegen nicht mehr vor.";
+    card.appendChild(p);
+    var row = document.createElement("div"); row.className = "opt-actions";
+    var btn = document.createElement("button"); btn.textContent = "Zurücksetzen";
+    btn.addEventListener("click", function () {
+      delete tuned[tf]; LS.set("sb2_tuned", tuned);
+      renderOptResults(); scan();
+    });
+    row.appendChild(btn); card.appendChild(row);
+    return card;
+  }
+
+  function renderOptResults() {
+    var wrap = $("opt-results");
+    wrap.replaceChildren();
+    var shown = 0;
+    for (var i = 0; i < TFS.length; i++) {
+      var tf = TFS[i];
+      if (!optResults[tf] && !optErrors[tf]) {
+        if (tunedFor(tf)) wrap.appendChild(buildOrphanTunedCard(tf));
+        continue;
+      }
+      shown++;
+      wrap.appendChild(buildOptCard(tf, optResults[tf] || null, optErrors[tf] || null));
+    }
+    if (!shown) {
+      var p = document.createElement("p");
+      p.className = "hint";
+      p.textContent = "Noch keine Optimierung gelaufen – „Alle Timeframes optimieren“ startet den Walk-Forward-Test.";
+      wrap.appendChild(p);
     }
   }
 
@@ -804,6 +1212,7 @@
   $("alert-add").addEventListener("click", addAlert);
   $("alert-price").addEventListener("keydown", function (e) { if (e.key === "Enter") addAlert(); });
   $("bt-run").addEventListener("click", function () { runBacktest(); });
+  $("opt-run").addEventListener("click", function () { runOptimization(); });
   $("clearhist").addEventListener("click", function () {
     history = []; lastAction = {};
     LS.set("sb2_history", history);
@@ -819,6 +1228,7 @@
   renderSetup();
   renderHistory();
   renderAlerts();
+  renderOptResults();
   scan();
   setInterval(scan, 60000);
 })();

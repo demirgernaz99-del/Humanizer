@@ -105,9 +105,12 @@
         <button id="opt-run">Alle Timeframes optimieren</button>
       </div>
     </div>
-    <p class="hint">Testet pro Timeframe hunderte Parameter-Kombinationen auf echten Kursdaten – mit strikter
-    Training/Test-Trennung (Walk-Forward). Angezeigt und bewertet wird nur die <strong>Out-of-Sample</strong>-Leistung
-    auf ungesehenen Daten. Vergangene Ergebnisse garantieren keine zukünftigen.</p>
+    <p class="hint">Testet pro Timeframe hunderte Parameter-Kombinationen auf echten Kursdaten.
+    Klassisches Walk-Forward: In jedem der drei Zeitfenster wird die beste Kombination NUR auf den
+    Trainingsdaten gewählt und danach auf dem jeweils folgenden, ungesehenen Testabschnitt bewertet –
+    die <strong>Out-of-Sample</strong>-Zahlen sind die Verkettung dieser Testabschnitte. Die empfohlene
+    Kombination wird ohne Blick auf Testdaten bestimmt (Mehrheit der Fenster-Sieger). An Segmentgrenzen
+    werden offene Trades zum Schlusskurs gewertet. Vergangene Ergebnisse garantieren keine zukünftigen.</p>
     <div id="opt-progress"></div>
     <div id="opt-results"></div>
   </section>
@@ -117,10 +120,10 @@
       <h2>Signal-Verlauf</h2>
       <button id="clearhist">Verlauf löschen</button>
     </div>
-    <div class="card"><table>
+    <div class="card"><div class="bt-table-wrap"><table>
       <thead><tr><th>Zeit</th><th>TF</th><th>Signal</th><th>Score</th><th>Preis</th><th>Begründung</th></tr></thead>
       <tbody id="histrows"></tbody>
-    </table></div>
+    </table></div></div>
   </section>
 
   <section class="card info-card">
