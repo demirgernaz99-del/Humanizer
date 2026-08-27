@@ -31,7 +31,21 @@
   }
 
   function emptyResult() {
-    return { score: [], atr: [], time: [], close: [], utcHour: [] };
+    return {
+      score: [], atr: [], time: [], close: [], utcHour: [],
+      // v3-Feature-Serien (rechtsbündig, führend null, strikt kausal aus Bars <= i)
+      volumeRel: [], atrSpike: [],
+      bullDiv: [], bearDiv: [],
+      bullEngulf: [], bearEngulf: [],
+      bullPin: [], bearPin: []
+    };
+  }
+
+  var FEATURE_KEYS = ["volumeRel", "atrSpike", "bullDiv", "bearDiv",
+    "bullEngulf", "bearEngulf", "bullPin", "bearPin"];
+
+  function ohlcOk(c) {
+    return !!c && num(c.open) && num(c.high) && num(c.low) && num(c.close);
   }
 
   function computeSeries(candles) {
@@ -51,6 +65,7 @@
       res.utcHour.push(t === null ? null : new Date(t).getUTCHours());
       res.score.push(null);
       res.atr.push(null);
+      for (var fk = 0; fk < FEATURE_KEYS.length; fk++) res[FEATURE_KEYS[fk]].push(null);
     }
     if (!ind) return res;
 
@@ -141,7 +156,141 @@
 
       res.score[i] = clampScore(s);
     }
+
+    computeFeatureSeries(res, work, closes, rsiArr);
     return res;
+  }
+
+  /* v3-Feature-Serien – alle strikt kausal (nur Bars <= i), rechtsbündig,
+     führend null. Wird nur über den "sauberen" Prefix (work) berechnet;
+     dahinter bleibt alles null (wie score). */
+  var VOL_PERIOD = 20;      // volumeRel: SMA(volume, 20)
+  var DIV_FAR = 30;         // Divergenz-Fenster [i-30, i-5]
+  var DIV_NEAR = 5;
+  var DIV_RSI_GAP = 2;      // RSI-Mindestabstand für Divergenz
+  var RSI_OFFSET = 14;      // rsiArr[k - 14] gehört zu Kerze k
+
+  function computeFeatureSeries(res, work, closes, rsiArr) {
+    var n = work.length;
+    var i, k, c;
+
+    // --- volumeRel[i] = volume[i] / SMA(volume, 20)[i] (rollend, nur Bars <= i) ---
+    var vols = new Array(n);
+    for (i = 0; i < n; i++) {
+      c = work[i];
+      vols[i] = (c && num(c.volume)) ? c.volume : null;
+    }
+    var volSum = 0, volBad = 0;
+    for (i = 0; i < n; i++) {
+      if (vols[i] === null) volBad++; else volSum += vols[i];
+      if (i >= VOL_PERIOD) {
+        if (vols[i - VOL_PERIOD] === null) volBad--; else volSum -= vols[i - VOL_PERIOD];
+      }
+      if (i >= VOL_PERIOD - 1 && volBad === 0 && vols[i] !== null) {
+        var smaVol = volSum / VOL_PERIOD;
+        res.volumeRel[i] = (smaVol > 0) ? vols[i] / smaVol : null;
+      }
+    }
+
+    // --- atrSpike[i] = (high-low) / atr[i] (null wenn atr null/0) ---
+    for (i = 0; i < n; i++) {
+      c = work[i];
+      var a = res.atr[i];
+      if (num(a) && a !== 0 && c && num(c.high) && num(c.low)) {
+        res.atrSpike[i] = (c.high - c.low) / a;
+      }
+    }
+
+    // --- RSI-Divergenzen: Extrem-Close j in [i-30, i-5] vs. aktuelle Kerze i ---
+    for (i = DIV_FAR; i < n; i++) {
+      var rNow = at(rsiArr, i - RSI_OFFSET);
+      if (!num(rNow)) continue; // RSI fehlt -> null
+      var jMin = i - DIV_FAR, jMax = i - DIV_FAR;
+      for (k = i - DIV_FAR + 1; k <= i - DIV_NEAR; k++) {
+        if (closes[k] < closes[jMin]) jMin = k; // erster tiefster Close gewinnt
+        if (closes[k] > closes[jMax]) jMax = k; // erster höchster Close gewinnt
+      }
+      var rMin = at(rsiArr, jMin - RSI_OFFSET);
+      var rMax = at(rsiArr, jMax - RSI_OFFSET);
+      if (num(rMin)) res.bullDiv[i] = (closes[i] < closes[jMin] && rNow > rMin + DIV_RSI_GAP);
+      if (num(rMax)) res.bearDiv[i] = (closes[i] > closes[jMax] && rNow < rMax - DIV_RSI_GAP);
+    }
+
+    // --- Engulfing (braucht Vorkerze) & Pin-Bars (Einzelkerze) ---
+    for (i = 0; i < n; i++) {
+      c = work[i];
+      if (!ohlcOk(c)) continue; // OHLC unvollständig -> null
+      var range = c.high - c.low;
+      var body = Math.abs(c.close - c.open);
+      var bTop = Math.max(c.open, c.close);
+      var bBot = Math.min(c.open, c.close);
+      var lowerWick = bBot - c.low;
+      var upperWick = c.high - bTop;
+
+      // Pin: Docht >= 2x Körper und >= 60% der Range (range > 0 verlangt)
+      res.bullPin[i] = range > 0 && lowerWick >= 2 * body && lowerWick >= 0.6 * range;
+      res.bearPin[i] = range > 0 && upperWick >= 2 * body && upperWick >= 0.6 * range;
+
+      if (i === 0) continue; // Engulfing braucht Bar i-1 -> führend null
+      var p = work[i - 1];
+      if (!ohlcOk(p)) continue;
+      var pTop = Math.max(p.open, p.close);
+      var pBot = Math.min(p.open, p.close);
+      // Körper i umschließt Körper i-1 (inklusive), Körper i >= 50% der Range i
+      var enclose = bTop >= pTop && bBot <= pBot && range > 0 && body >= 0.5 * range;
+      res.bullEngulf[i] = enclose && c.close > c.open && p.close < p.open;
+      res.bearEngulf[i] = enclose && c.close < c.open && p.close > p.open;
+    }
+  }
+
+  // Median der positiven openTime-Abstände einer Kerzenreihe (Bar-Intervall in ms).
+  function medianStep(candles) {
+    if (!Array.isArray(candles) || candles.length < 2) return null;
+    var diffs = [];
+    for (var i = 1; i < candles.length; i++) {
+      var a = candles[i - 1], b = candles[i];
+      if (!a || !b || !num(a.time) || !num(b.time)) continue;
+      var d = b.time - a.time;
+      if (d > 0) diffs.push(d);
+    }
+    if (!diffs.length) return null;
+    diffs.sort(function (x, y) { return x - y; });
+    var m = diffs.length >> 1;
+    return (diffs.length % 2 === 1) ? diffs[m] : (diffs[m - 1] + diffs[m]) / 2;
+  }
+
+  /* mapHTFScore(lowCandles, htfPre, htfCandles) -> Array (Länge lowCandles).
+     Wert[i] = htfPre.score[j] des LETZTEN Higher-TF-Bars j, dessen Bar-ENDE
+     (openTime + Intervall) <= Bar-ENDE des Low-Bars i ist. Ein HTF-Bar, der exakt
+     am Low-Bar-Ende endet, zählt als geschlossen (<=). Der noch LAUFENDE HTF-Bar
+     fließt damit NIE ein (Leck-Kante). Intervalle = Median der openTime-Abstände
+     beider Reihen. Im Zweifel null; wirft nie. */
+  function mapHTFScore(lowCandles, htfPre, htfCandles) {
+    if (!Array.isArray(lowCandles)) return [];
+    var n = lowCandles.length;
+    var out = new Array(n);
+    var i;
+    for (i = 0; i < n; i++) out[i] = null;
+    if (!htfPre || !Array.isArray(htfPre.score) || !Array.isArray(htfCandles)) return out;
+    var lowStep = medianStep(lowCandles);
+    var htfStep = medianStep(htfCandles);
+    if (!num(lowStep) || !num(htfStep)) return out;
+
+    var j = -1; // Index des letzten GESCHLOSSENEN HTF-Bars
+    for (i = 0; i < n; i++) {
+      var c = lowCandles[i];
+      if (!c || !num(c.time)) continue; // Low-Bar ohne Zeit -> null
+      var lowEnd = c.time + lowStep;
+      while (j + 1 < htfCandles.length) {
+        var h = htfCandles[j + 1];
+        if (h && num(h.time) && h.time + htfStep <= lowEnd) j++;
+        else break;
+      }
+      if (j >= 0 && j < htfPre.score.length && htfPre.score[j] !== undefined) {
+        out[i] = htfPre.score[j];
+      }
+    }
+    return out;
   }
 
   // Action-Ableitung aus einem Score-Wert – identisch zur engine-Regel.
@@ -155,7 +304,8 @@
     MIN_CANDLES: MIN_CANDLES,
     MAX_SCORE: MAX_SCORE,
     computeSeries: computeSeries,
-    actionAt: actionAt
+    actionAt: actionAt,
+    mapHTFScore: mapHTFScore
   };
 })();
 if (typeof module !== "undefined") module.exports = (typeof window !== "undefined" ? window : globalThis).XAU.fast;
