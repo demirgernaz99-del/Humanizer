@@ -65,9 +65,77 @@
     return out;
   }
 
-  /* explain(ctx) → Liste deutscher Sätze. ctx = { fenBefore, move:{from,to,promotion,san,color}, cls, after (Analyse
-     der Folgestellung), notation:'de'|'en', clock:{left, spent} } */
-  function explain(ctx) {
+  /* Texte für Coach-Sätze (Deutsch/Englisch). {p} = Figur, {P} = Figur groß, {a} = Figur (Akkusativ),
+     {t} = Zielliste, {s} = Zug, {q} = Feld, {n} = Anzahl */
+  var TXT = {
+    de: {
+      mate: 'Schachmatt.',
+      fork: 'Gabel: {P} greift {t} an.',
+      wins: 'Gewinnt {a} auf {q}.',
+      forces_mate: 'Erzwingt Matt in {n}.',
+      mate_allowed1: 'Danach setzt der Gegner sofort matt ({s}).',
+      mate_allowed: 'Danach setzt der Gegner in {n} Zügen matt ({s}).',
+      hangs_moved: '{P} auf {q} steht ungedeckt – {s} gewinnt Material.',
+      hangs: '{P} auf {q} hängt – {s} gewinnt Material.',
+      fork_allowed: 'Der Gegner hat die Gabel {s} auf {t}.',
+      mate_missed1: '{s} hätte sofort mattgesetzt.',
+      mate_missed: '{s} hätte in {n} Zügen mattgesetzt.',
+      fork_missed: '{s} wäre eine Gabel auf {t} gewesen.',
+      win_missed: '{s} hätte {a} auf {q} gewonnen.',
+      fast: 'Gespielt nach nur {n} s Bedenkzeit – hier hätte sich Nachdenken gelohnt.',
+      time_trouble: 'In Zeitnot gespielt ({s} auf der Uhr).',
+      and: ' und '
+    },
+    en: {
+      mate: 'Checkmate.',
+      fork: 'Fork: the {p} attacks {t}.',
+      wins: 'Wins the {p} on {q}.',
+      forces_mate: 'Forces mate in {n}.',
+      mate_allowed1: 'Now your opponent mates at once ({s}).',
+      mate_allowed: 'Now your opponent mates in {n} ({s}).',
+      hangs_moved: 'The {p} on {q} is unprotected – {s} wins material.',
+      hangs: 'The {p} on {q} is hanging – {s} wins material.',
+      fork_allowed: 'Your opponent has the fork {s} on {t}.',
+      mate_missed1: '{s} would have been mate.',
+      mate_missed: '{s} would have forced mate in {n}.',
+      fork_missed: '{s} would have forked {t}.',
+      win_missed: '{s} would have won the {p} on {q}.',
+      fast: 'Played after only {n} s – this was a moment to think.',
+      time_trouble: 'Played in time trouble ({s} on the clock).',
+      and: ' and '
+    }
+  };
+  var PIECE_NAMES = {
+    de: { nom: NOM, akk: AKK, short: { p: 'Bauer', n: 'Springer', b: 'Läufer', r: 'Turm', q: 'Dame', k: 'König' } },
+    en: { short: { p: 'pawn', n: 'knight', b: 'bishop', r: 'rook', q: 'queen', k: 'king' } }
+  };
+  function lang(ctx) {
+    var l = (ctx && ctx.lang) || (root.SK.i18n && root.SK.i18n.lang && root.SK.i18n.lang()) || 'de';
+    return TXT[l] ? l : 'de';
+  }
+  function targetsText(ts, l) {
+    var names = ts.map(function (t) { return PIECE_NAMES[l].short[t.type]; });
+    if (l === 'en') names = names.map(function (n) { return 'the ' + n; });
+    return names.length <= 1 ? names.join('') : names.slice(0, -1).join(', ') + TXT[l].and + names[names.length - 1];
+  }
+  function render(f, l) {
+    var tpl = TXT[l][f.id + (f.n === 1 && TXT[l][f.id + '1'] ? '1' : '')] || '';
+    return tpl.replace(/\{(\w)\}/g, function (_, k) {
+      if (k === 'P') return l === 'de' ? cap(NOM[f.piece]) : 'The ' + PIECE_NAMES.en.short[f.piece];
+      if (k === 'p') return l === 'de' ? NOM[f.piece] : PIECE_NAMES.en.short[f.piece];
+      if (k === 'a') return l === 'de' ? AKK[f.piece] : 'the ' + PIECE_NAMES.en.short[f.piece];
+      if (k === 't') return targetsText(f.targets || [], l);
+      if (k === 's') return f.san != null ? f.san : '';
+      if (k === 'q') return f.sq || '';
+      if (k === 'n') return String(f.n);
+      return '';
+    });
+  }
+
+  /* facts(ctx) → Liste von Befunden { id, … } – Grundlage für Erklärungen (Text) und Tags (Insights).
+     ctx = { fenBefore, fenAfter?, move:{from,to,promotion,color}, cls, after (Analyse der Folgestellung),
+             notation:'de'|'en', clock:{left, spent}, base (Grundbedenkzeit in s) } */
+  function facts(ctx) {
     var cls = ctx.cls, mv = ctx.move, out = [];
     if (!cls || !cls.key) return out;
     var N = ctx.notation === 'en' ? function (s) { return s; } : deSan;
@@ -78,42 +146,56 @@
     var own = motifOf(ctx.fenBefore, uci);
 
     if (!bad) {
-      if (own && own.mate) out.push('Schachmatt.');
-      else if (own && own.fork.length) out.push('Gabel: ' + cap(NOM[own.piece]) + ' greift ' + targetList(own.fork) + ' an.');
-      else if (own && own.wins && cls.key !== 'brilliant') out.push('Gewinnt ' + AKK[own.wins.type] + ' auf ' + own.wins.square + '.');
-      if (cls.playedScore && cls.playedScore.mate > 0 && !(own && own.mate)) out.push('Erzwingt Matt in ' + cls.playedScore.mate + '.');
+      if (own && own.mate) out.push({ id: 'mate' });
+      else if (own && own.fork.length) out.push({ id: 'fork', piece: own.piece, targets: own.fork });
+      else if (own && own.wins && cls.key !== 'brilliant') out.push({ id: 'wins', piece: own.wins.type, sq: own.wins.square });
+      if (cls.playedScore && cls.playedScore.mate > 0 && !(own && own.mate)) out.push({ id: 'forces_mate', n: cls.playedScore.mate });
       return out;
     }
-
     // 1) Was passiert jetzt? (Widerlegung durch den Gegner)
     var ref = ctx.after && ctx.after.lines && ctx.after.lines[0];
     if (ref && ref.score && ref.score.mate > 0) {
-      out.push('Danach setzt der Gegner in ' + ref.score.mate + (ref.score.mate === 1 ? ' Zug' : ' Zügen') + ' matt' +
-               (ref.uci && fenAfter ? ' (' + N(sanOf(fenAfter, ref.uci)) + ')' : '') + '.');
+      out.push({ id: 'mate_allowed', n: ref.score.mate, san: ref.uci && fenAfter ? N(sanOf(fenAfter, ref.uci)) : '' });
     } else if (ref && ref.uci && fenAfter) {
       var rm = motifOf(fenAfter, ref.uci);
       if (rm && rm.wins && rm.wins.square) {
-        var movedHangs = rm.wins.square === mv.to;
-        out.push((movedHangs ? cap(NOM[rm.wins.type]) + ' auf ' + rm.wins.square + ' steht ungedeckt' :
-                  cap(NOM[rm.wins.type]) + ' auf ' + rm.wins.square + ' hängt') + ' – ' + N(rm.san) + ' gewinnt Material.');
+        out.push({ id: rm.wins.square === mv.to ? 'hangs_moved' : 'hangs', piece: rm.wins.type, sq: rm.wins.square, san: N(rm.san) });
       } else if (rm && rm.fork.length) {
-        out.push('Der Gegner hat die Gabel ' + N(rm.san) + ' auf ' + targetList(rm.fork) + '.');
+        out.push({ id: 'fork_allowed', san: N(rm.san), targets: rm.fork });
       }
     }
     // 2) Was wäre möglich gewesen? (bester Zug)
     if (cls.bestUci) {
       var bm = motifOf(ctx.fenBefore, cls.bestUci);
       var bs = N(bm ? bm.san : cls.bestUci);
-      if (cls.bestScore && cls.bestScore.mate > 0) out.push(bs + ' hätte ' + (cls.bestScore.mate === 1 ? 'sofort' : 'in ' + cls.bestScore.mate + ' Zügen') + ' mattgesetzt.');
-      else if (bm && bm.fork.length) out.push(bs + ' wäre eine Gabel auf ' + targetList(bm.fork) + ' gewesen.');
-      else if (bm && bm.wins) out.push(bs + ' hätte ' + AKK[bm.wins.type] + ' auf ' + bm.wins.square + ' gewonnen.');
+      if (cls.bestScore && cls.bestScore.mate > 0) out.push({ id: 'mate_missed', san: bs, n: cls.bestScore.mate });
+      else if (bm && bm.fork.length) out.push({ id: 'fork_missed', san: bs, targets: bm.fork });
+      else if (bm && bm.wins) out.push({ id: 'win_missed', san: bs, piece: bm.wins.type, sq: bm.wins.square });
     }
     // 3) Uhr
-    if (ctx.clock && ctx.clock.spent != null && ctx.clock.spent <= 3 && (cls.key === 'blunder' || cls.key === 'mistake')) {
-      out.push('Gespielt nach nur ' + Math.max(0, Math.round(ctx.clock.spent)) + ' s Bedenkzeit – hier hätte sich Nachdenken gelohnt.');
-    } else if (ctx.clock && ctx.clock.left != null && ctx.clock.left < 30 && bad) {
-      out.push('In Zeitnot gespielt (' + fmtClock(ctx.clock.left) + ' auf der Uhr).');
+    var c = ctx.clock || {};
+    var low = c.left != null && (c.left < 30 || (ctx.base && c.left < ctx.base * 0.1));
+    if (c.spent != null && c.spent <= 3 && !low && (cls.key === 'blunder' || cls.key === 'mistake')) {
+      out.push({ id: 'fast', n: Math.max(0, Math.round(c.spent)) });
+    } else if (low) {
+      out.push({ id: 'time_trouble', san: fmtClock(c.left) });
     }
+    return out;
+  }
+
+  // Klartext-Sätze für die Oberfläche
+  function explain(ctx) {
+    var l = lang(ctx);
+    return facts(ctx).map(function (f) { return render(f, l); });
+  }
+
+  // Kurze Merkmale für Statistiken über viele Partien
+  var TAG = { mate_allowed: 'mate_allowed', hangs_moved: 'hanging', hangs: 'hanging', fork_allowed: 'fork_allowed',
+              mate_missed: 'mate_missed', fork_missed: 'fork_missed', win_missed: 'win_missed', fast: 'fast',
+              time_trouble: 'time_trouble', fork: 'fork', mate: 'mate', wins: 'wins', forces_mate: 'mate' };
+  function tagsFor(ctx) {
+    var out = [];
+    facts(ctx).forEach(function (f) { var t = TAG[f.id]; if (t && out.indexOf(t) < 0) out.push(t); });
     return out;
   }
 
@@ -168,7 +250,7 @@
   }
 
   root.SK.coach = {
-    explain: explain, motifOf: motifOf, forkTargets: forkTargets, phaseOf: phaseOf, PHASES: PHASES,
+    explain: explain, facts: facts, tagsFor: tagsFor, render: render, motifOf: motifOf, forkTargets: forkTargets, phaseOf: phaseOf, PHASES: PHASES,
     parseClk: parseClk, parseTimeControl: parseTimeControl, timeSpent: timeSpent, fmtClock: fmtClock, deSan: deSan
   };
 })();

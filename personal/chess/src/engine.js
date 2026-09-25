@@ -230,7 +230,8 @@
   };
 
   Analyzer.prototype.setQueue = function (items) {
-    this.queue = items.map(function (x) { return { fen: x.fen, key: posKey(x.fen), legal: x.legal }; });
+    // depth: Zieltiefe je Eintrag (Standard: Review-Tiefe); batch: gehört zur Serien-Analyse
+    this.queue = items.map(function (x) { return { fen: x.fen, key: posKey(x.fen), legal: x.legal, depth: x.depth || 0, batch: !!x.batch }; });
     this.schedule(false);
   };
 
@@ -262,18 +263,25 @@
       var q = this.queue[i];
       var e = this.cache.get(q.key);
       if (e && e.terminal) continue;
-      if (!e || e.depth < this.cfg.reviewDepth || (e.lines.length < Math.min(this.cfg.reviewMpv, q.legal || 9))) return q;
+      if (!e || e.depth < (q.depth || this.cfg.reviewDepth) || (e.lines.length < Math.min(this.cfg.reviewMpv, q.legal || 9))) return q;
     }
     return null;
   };
 
+  // Genug analysiert für die Bewertung?
+  Analyzer.prototype.ready = function (fen, depth) {
+    var e = this.cache.get(posKey(fen));
+    return !!e && (!!e.terminal || e.depth >= depth);
+  };
+
   Analyzer.prototype.reviewProgress = function () {
     var done = 0, self = this;
-    this.queue.forEach(function (q) {
+    var items = this.queue.filter(function (q) { return !q.batch; });
+    items.forEach(function (q) {
       var e = self.cache.get(q.key);
-      if (e && (e.terminal || e.depth >= self.cfg.reviewDepth)) done++;
+      if (e && (e.terminal || e.depth >= (q.depth || self.cfg.reviewDepth))) done++;
     });
-    return { done: done, total: this.queue.length };
+    return { done: done, total: items.length };
   };
 
   // Was soll die Engine als Nächstes tun?
@@ -328,7 +336,7 @@
       mpv = Math.min(this.cfg.liveMpv, legal || 9); depth = this.cfg.liveMax;
     } else {
       fen = want.item.fen; key = want.item.key; legal = want.item.legal;
-      mpv = Math.min(this.cfg.reviewMpv, legal || 9); depth = this.cfg.reviewDepth;
+      mpv = Math.min(this.cfg.reviewMpv, legal || 9); depth = want.item.depth || this.cfg.reviewDepth;
     }
     var j2 = { kind: want.kind, fen: fen, key: key, multipv: mpv, depth: depth, lines: [],
                onInfo: function (info, j) { self._info(info, j); },
@@ -352,7 +360,15 @@
     var d = info.depth;
     for (var i = 0; i < job.multipv; i++) if (!job.lines[i] || job.lines[i].depth < d) return;
     var e = this.cache.get(job.key);
-    if (!e) { e = { key: job.key, fen: job.fen, depth: 0, lines: [] }; this.cache.set(job.key, e); }
+    if (!e) {
+      e = { key: job.key, fen: job.fen, depth: 0, lines: [] };
+      this.cache.set(job.key, e);
+      // Speicher begrenzen: älteste Einträge verwerfen (Map behält die Einfügereihenfolge)
+      if (this.cache.size > 20000) {
+        var drop = this.cache.size - 16000, it = this.cache.keys();
+        while (drop-- > 0) this.cache.delete(it.next().value);
+      }
+    }
     // Nur überschreiben, wenn die neue Suche mindestens so tief ist (und genug Zeilen hat)
     if (d > e.depth || (d === e.depth && job.multipv >= e.lines.length)) {
       e.depth = d;

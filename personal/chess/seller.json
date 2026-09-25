@@ -1,0 +1,19 @@
+{
+  "_hinweis": "Deine Geschäftsdaten. Nach Änderungen: python3 build.py. Leere Felder erscheinen auf der Website als [bitte ausfüllen].",
+  "brand": "Zugradar",
+  "siteUrl": "https://demirgernaz99-del.github.io/Humanizer/personal/chess/",
+  "checkoutUrl": "",
+  "prices": { "monthly": "4,99 €", "yearly": "34,99 €", "lifetime": "69 €" },
+  "pricesEn": { "monthly": "€4.99", "yearly": "€34.99", "lifetime": "€69" },
+  "license": { "storeId": null, "productIds": [] },
+  "legal": {
+    "name": "",
+    "street": "",
+    "city": "",
+    "country": "Deutschland",
+    "email": "",
+    "phone": "",
+    "vatId": ""
+  },
+  "merchantOfRecord": "Lemon Squeezy (Lemon Squeezy LLC)"
+}

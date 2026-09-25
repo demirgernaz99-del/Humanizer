@@ -1,8 +1,10 @@
 <title>Zugradar</title>
-<meta name="description" content="Live-Schachanalyse mit Stockfish 18: bester Zug, brillante und großartige Züge, Partie-Review.">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<meta name="description" content="Live-Schachanalyse mit Stockfish 18: bester Zug, brillante und großartige Züge, Coach, Insights und Taktik-Trainer.">
+<meta name="theme-color" content="#141719">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/icon-192.png" type="image/png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+@@FONTS@@
 <style>
 @@STYLES@@
 @@PIECES@@
@@ -11,19 +13,26 @@
 <div class="app" id="app">
   <header class="top">
     <div class="brand">
-      <span class="brand-name">Zugradar</span>
-      <span class="brand-sub">Stockfish-Analyse live</span>
-    </div>
-    <div class="top-actions">
-      <button type="button" class="btn ghost" id="btnImport">Partie laden</button>
-      <button type="button" class="chip" id="autoChip" hidden title="Auto-Import deiner beendeten Partien"></button>
-      <button type="button" class="btn ghost" id="btnNew">Neue Partie</button>
+      <a class="brand-name" href="index.html" id="brandLink">Zugradar</a>
       <span class="pill" id="enginePill" data-state="loading"><span class="dot"></span><span id="engineText">Engine lädt …</span></span>
+    </div>
+    <nav class="tabs" role="tablist" data-t-aria="Bereiche" aria-label="Bereiche">
+      <button type="button" role="tab" id="modeAnalyse" aria-selected="true" data-t>Analyse</button>
+      <button type="button" role="tab" id="modePlay" aria-selected="false" data-t>Spielen</button>
+      <button type="button" role="tab" id="modeInsights" aria-selected="false"><span data-t>Insights</span> <i class="pro-tag">PRO</i></button>
+      <button type="button" role="tab" id="modeTrainer" aria-selected="false"><span data-t>Trainer</span> <b class="count" id="trainerCount" hidden></b></button>
+    </nav>
+    <div class="top-actions">
+      <button type="button" class="btn ghost" id="btnImport" data-t>Partie laden</button>
+      <button type="button" class="chip" id="autoChip" hidden data-t-title="Auto-Import deiner beendeten Partien" title="Auto-Import deiner beendeten Partien"></button>
+      <button type="button" class="btn ghost" id="btnNew" data-t>Neue Partie</button>
+      <button type="button" class="plan-btn" id="planBtn" data-plan="free">Pro</button>
+      <button type="button" class="lang-btn" id="langBtn" data-t-title="Sprache" title="Sprache">EN</button>
     </div>
   </header>
 
-  <main class="layout">
-    <section class="stage" aria-label="Brett">
+  <main class="layout" id="mainView">
+    <section class="stage" data-t-aria="Brett" aria-label="Brett">
       <div class="stage-inner">
         <div class="player" id="playerTop"></div>
         <div class="board-row">
@@ -38,63 +47,68 @@
         </div>
         <div class="player" id="playerBottom"></div>
         <div class="controls">
-          <button type="button" class="icon-btn" id="btnFlip" title="Brett drehen (F)" aria-label="Brett drehen">
+          <button type="button" class="icon-btn" id="btnFlip" data-t-title="Brett drehen (F)" title="Brett drehen (F)" data-t-aria="Brett drehen" aria-label="Brett drehen">
             <svg viewBox="0 0 24 24"><path d="M7 4v13m0 0-3.5-3.5M7 17l3.5-3.5M17 20V7m0 0-3.5 3.5M17 7l3.5 3.5"/></svg>
           </button>
           <span class="ctl-sep"></span>
-          <button type="button" class="icon-btn" id="btnFirst" title="Zum Anfang (Pos1)" aria-label="Zum Anfang">
+          <button type="button" class="icon-btn" id="btnFirst" data-t-title="Zum Anfang (Pos1)" title="Zum Anfang (Pos1)" data-t-aria="Zum Anfang" aria-label="Zum Anfang">
             <svg viewBox="0 0 24 24"><path d="M6 5v14M18 6l-7 6 7 6"/></svg>
           </button>
-          <button type="button" class="icon-btn" id="btnPrev" title="Zurück (←)" aria-label="Zug zurück">
+          <button type="button" class="icon-btn" id="btnPrev" data-t-title="Zurück (←)" title="Zurück (←)" data-t-aria="Zug zurück" aria-label="Zug zurück">
             <svg viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></svg>
           </button>
-          <button type="button" class="icon-btn" id="btnNext" title="Vor (→)" aria-label="Zug vor">
+          <button type="button" class="icon-btn" id="btnNext" data-t-title="Vor (→)" title="Vor (→)" data-t-aria="Zug vor" aria-label="Zug vor">
             <svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg>
           </button>
-          <button type="button" class="icon-btn" id="btnLast" title="Zum Ende (Ende)" aria-label="Zum Ende">
+          <button type="button" class="icon-btn" id="btnLast" data-t-title="Zum Ende (Ende)" title="Zum Ende (Ende)" data-t-aria="Zum Ende" aria-label="Zum Ende">
             <svg viewBox="0 0 24 24"><path d="M18 5v14M6 6l7 6-7 6"/></svg>
           </button>
           <span class="ctl-sep"></span>
-          <button type="button" class="btn accent" id="btnBest" title="Besten Zug ausführen (Leertaste)">Besten Zug spielen</button>
+          <button type="button" class="btn accent" id="btnBest" data-t-title="Besten Zug ausführen (Leertaste)" title="Besten Zug ausführen (Leertaste)" data-t>Besten Zug spielen</button>
         </div>
       </div>
     </section>
 
-    <aside class="panel" aria-label="Analyse">
-      <div class="seg" role="tablist" aria-label="Modus">
-        <button type="button" role="tab" id="modeAnalyse" aria-selected="true">Analyse</button>
-        <button type="button" role="tab" id="modePlay" aria-selected="false">Gegen KI spielen</button>
-      </div>
-
+    <aside class="panel" data-t-aria="Analyse" aria-label="Analyse">
       <div class="play-box" id="playBox" hidden>
         <div class="field-row">
-          <label for="selColor">Ich spiele</label>
-          <select id="selColor"><option value="w">Weiß</option><option value="b">Schwarz</option></select>
+          <label for="selColor" data-t>Ich spiele</label>
+          <select id="selColor"><option value="w" data-t>Weiß</option><option value="b" data-t>Schwarz</option></select>
         </div>
         <div class="field-row">
-          <label for="selLevel">Stärke der KI</label>
+          <label for="selLevel" data-t>Stärke der KI</label>
           <select id="selLevel"></select>
         </div>
         <div class="field-row">
-          <label class="check"><input type="checkbox" id="chkHints"> Hinweise zeigen (bester Zug &amp; Linien)</label>
+          <label class="check"><input type="checkbox" id="chkHints"> <span data-t>Hinweise zeigen (bester Zug und Linien)</span></label>
         </div>
         <div class="play-actions">
-          <button type="button" class="btn accent" id="btnPlayNew">Neue Partie gegen KI</button>
-          <button type="button" class="btn ghost" id="btnTakeback">Zug zurücknehmen</button>
+          <button type="button" class="btn accent" id="btnPlayNew" data-t>Neue Partie gegen KI</button>
+          <button type="button" class="btn ghost" id="btnTakeback" data-t>Zug zurücknehmen</button>
+        </div>
+      </div>
+
+      <div class="trainer-box" id="trainerBox" hidden>
+        <div class="eyebrow" data-t>Taktik-Trainer</div>
+        <div class="tr-stats" id="trStats"></div>
+        <p class="tr-text" id="trText"></p>
+        <div class="play-actions">
+          <button type="button" class="btn accent" id="btnTrainerStart" data-t>Training starten</button>
+          <button type="button" class="btn ghost" id="btnTrainerInsights" data-t>Aufgaben sammeln</button>
         </div>
       </div>
 
       <div class="var-banner" id="varBanner" hidden>
-        <span>Du analysierst eine Variante. Die Partie ist gespeichert.</span>
-        <button type="button" class="btn ghost small" id="btnMain">Zurück zur Partie</button>
+        <span data-t>Du analysierst eine Variante. Die Partie ist gespeichert.</span>
+        <button type="button" class="btn ghost small" id="btnMain" data-t>Zurück zur Partie</button>
       </div>
 
       <section class="card verdict" id="verdict" aria-live="polite"></section>
 
-      <section class="card engine">
+      <section class="card engine" id="engineCard">
         <div class="engine-head">
           <div>
-            <div class="eyebrow">Bester Zug</div>
+            <div class="eyebrow" data-t>Bester Zug</div>
             <div class="best-move" id="bestMove">…</div>
           </div>
           <div class="engine-meta" id="engineMeta"></div>
@@ -102,114 +116,188 @@
         <ol class="lines" id="lines"></ol>
       </section>
 
-      <section class="card sheet">
+      <section class="card sheet" id="sheetCard">
         <div class="sheet-head">
-          <div class="eyebrow">Partieformular</div>
+          <div class="eyebrow" data-t>Partieformular</div>
           <div class="opening" id="opening"></div>
         </div>
         <div class="moves" id="moves"></div>
         <div class="sheet-actions">
-          <button type="button" class="btn ghost small" id="btnCopyPgn">PGN kopieren</button>
+          <button type="button" class="btn ghost small" id="btnCopyPgn" data-t>PGN kopieren</button>
           <span class="copy-note" id="copyNote" hidden></span>
         </div>
       </section>
 
       <section class="card review" id="review">
         <div class="review-head">
-          <div class="eyebrow">Partie-Review</div>
+          <div class="eyebrow" data-t>Partie-Review</div>
           <div class="progress" id="progress"></div>
         </div>
         <div class="graph" id="graph"></div>
         <div class="acc" id="acc"></div>
         <table class="counts" id="counts"></table>
-        <h3 class="sub-head">Phasen</h3>
+        <h3 class="sub-head" data-t>Phasen</h3>
         <table class="phases" id="phases"></table>
-        <h3 class="sub-head">Schlüsselmomente</h3>
+        <h3 class="sub-head" data-t>Schlüsselmomente</h3>
         <ul class="moments" id="moments"></ul>
         <div id="timeBox" hidden>
-          <h3 class="sub-head">Uhr</h3>
+          <h3 class="sub-head" data-t>Uhr</h3>
           <table class="counts time" id="timeStats"></table>
         </div>
-        <button type="button" class="btn accent train-btn" id="btnTrain">Fehler trainieren</button>
+        <div class="review-actions">
+          <button type="button" class="btn accent" id="btnTrain" data-t>Fehler trainieren</button>
+          <button type="button" class="btn ghost" id="btnShareReview" data-t>Review teilen</button>
+        </div>
       </section>
 
-      <details class="card settings">
-        <summary>Einstellungen</summary>
+      <details class="card settings" id="settingsCard">
+        <summary data-t>Einstellungen</summary>
         <div class="settings-grid">
           <div class="field-row">
-            <label for="selLive">Live-Tiefe</label>
+            <label for="selLive" data-t>Live-Tiefe</label>
             <select id="selLive"><option>18</option><option>22</option><option>26</option><option>30</option><option>40</option></select>
           </div>
           <div class="field-row">
-            <label for="selReview">Review-Tiefe</label>
-            <select id="selReview"><option>12</option><option>14</option><option>16</option><option>18</option><option>20</option></select>
+            <label for="selReview" data-t>Review-Tiefe</label>
+            <select id="selReview"><option>12</option><option>14</option><option>16</option><option>18</option><option>20</option><option>22</option></select>
           </div>
           <div class="field-row">
-            <label for="selLines">Engine-Linien</label>
+            <label for="selLines" data-t>Engine-Linien</label>
             <select id="selLines"><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option></select>
           </div>
           <div class="field-row">
-            <label for="selNotation">Notation</label>
-            <select id="selNotation"><option value="de">Deutsch (S, L, T, D)</option><option value="en">Englisch (N, B, R, Q)</option></select>
+            <label for="selNotation" data-t>Notation</label>
+            <select id="selNotation"><option value="de" data-t>Deutsch (S, L, T, D)</option><option value="en" data-t>Englisch (N, B, R, Q)</option></select>
           </div>
-          <label class="check"><input type="checkbox" id="chkArrowBest"> Pfeil für den besten Zug</label>
-          <label class="check"><input type="checkbox" id="chkArrowAlt"> Pfeil für den zweitbesten Zug</label>
-          <label class="check"><input type="checkbox" id="chkArrowBetter"> Pfeil „besser war …“ nach Fehlern</label>
-          <label class="check"><input type="checkbox" id="chkBadges"> Bewertungs-Symbol auf dem Brett</label>
-          <label class="check"><input type="checkbox" id="chkAuto"> Ganze Partie automatisch bewerten</label>
+          <div class="field-row">
+            <label for="selTheme" data-t>Brett</label>
+            <select id="selTheme"></select>
+          </div>
+          <label class="check"><input type="checkbox" id="chkSound"> <span data-t>Zugtöne</span></label>
+          <label class="check"><input type="checkbox" id="chkArrowBest"> <span data-t>Pfeil für den besten Zug</span></label>
+          <label class="check"><input type="checkbox" id="chkArrowAlt"> <span data-t>Pfeil für den zweitbesten Zug</span></label>
+          <label class="check"><input type="checkbox" id="chkArrowBetter"> <span data-t>Pfeil „besser war …“ nach Fehlern</span></label>
+          <label class="check"><input type="checkbox" id="chkBadges"> <span data-t>Bewertungs-Symbol auf dem Brett</span></label>
+          <label class="check"><input type="checkbox" id="chkAuto"> <span data-t>Ganze Partie automatisch bewerten</span></label>
         </div>
       </details>
 
       <p class="foot">
-        Engine: <a href="https://stockfishchess.org" target="_blank" rel="noopener">Stockfish</a> (GPLv3) via
-        <a href="https://github.com/nmrugg/stockfish.js" target="_blank" rel="noopener">stockfish.js</a>.
-        Fair Play: Zugradar ist für Analyse, Training und Partien gegen die KI gedacht –
-        Engine-Hilfe in laufenden Partien gegen Menschen ist auf allen Plattformen verboten.
+        <span data-t>Engine: Stockfish 18 (GPLv3).</span>
+        <a href="lizenzen.html" target="_blank" rel="noopener" data-t>Lizenzen</a> ·
+        <a href="impressum.html" target="_blank" rel="noopener" data-t>Impressum</a> ·
+        <a href="datenschutz.html" target="_blank" rel="noopener" data-t>Datenschutz</a><br>
+        <span data-t>Fair Play: Zugradar ist für Analyse, Training und Partien gegen die KI gedacht. Engine-Hilfe in laufenden Partien gegen Menschen ist auf allen Plattformen verboten.</span>
       </p>
     </aside>
   </main>
 
+  <section class="insights" id="insightsView" hidden data-t-aria="Insights" aria-label="Insights">
+    <div class="ins-head">
+      <div>
+        <h1 class="ins-title" data-t>Deine Insights</h1>
+        <p class="ins-sub" id="insSub"></p>
+      </div>
+      <div class="ins-actions">
+        <select id="insCount" data-t-aria="Anzahl Partien" aria-label="Anzahl Partien">
+          <option value="10">10</option><option value="20" selected>20</option><option value="50">50</option><option value="100">100</option>
+        </select>
+        <button type="button" class="btn accent" id="insRun" data-t>Partien analysieren</button>
+        <button type="button" class="btn ghost" id="insCancel" hidden data-t>Abbrechen</button>
+      </div>
+    </div>
+    <div class="ins-progress" id="insProgress" hidden><div class="bar"><span id="insBar"></span></div><span id="insProgText"></span></div>
+    <div class="ins-body" id="insBody"></div>
+  </section>
+
   <div class="overlay" id="importBox" hidden>
     <div class="sheet-dialog" role="dialog" aria-modal="true" aria-labelledby="importTitle">
       <div class="dlg-head">
-        <h2 id="importTitle">Partie laden</h2>
-        <div class="seg small" role="tablist" aria-label="Quelle">
-          <button type="button" role="tab" id="tabGames" aria-selected="true">Meine Partien</button>
-          <button type="button" role="tab" id="tabPgn" aria-selected="false">PGN / FEN</button>
+        <h2 id="importTitle" data-t>Partie laden</h2>
+        <div class="seg small" role="tablist" data-t-aria="Quelle" aria-label="Quelle">
+          <button type="button" role="tab" id="tabGames" aria-selected="true" data-t>Meine Partien</button>
+          <button type="button" role="tab" id="tabPgn" aria-selected="false" data-t>PGN / FEN</button>
         </div>
       </div>
       <div id="paneGames" class="pane">
         <div class="conn-form">
-          <select id="connSite" aria-label="Plattform"><option value="chesscom">chess.com</option><option value="lichess">lichess</option></select>
-          <input id="connUser" type="text" placeholder="Benutzername" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="Benutzername">
-          <button type="button" class="btn accent" id="connLoad">Partien holen</button>
+          <select id="connSite" data-t-aria="Plattform" aria-label="Plattform"><option value="chesscom">chess.com</option><option value="lichess">lichess</option></select>
+          <input id="connUser" type="text" data-t-placeholder="Benutzername" placeholder="Benutzername" autocomplete="off" autocapitalize="off" spellcheck="false" data-t-aria="Benutzername" aria-label="Benutzername">
+          <button type="button" class="btn accent" id="connLoad" data-t>Partien holen</button>
         </div>
-        <label class="check"><input type="checkbox" id="connAuto"> Neue Partien automatisch laden, sobald sie beendet sind</label>
+        <label class="check"><input type="checkbox" id="connAuto"> <span data-t>Neue Partien automatisch laden, sobald sie beendet sind</span> <i class="pro-tag">PRO</i></label>
         <p class="conn-status" id="connStatus"></p>
         <ul class="games" id="connGames"></ul>
-        <p class="hint small">Nur beendete Partien, über die öffentlichen Schnittstellen von chess.com und lichess, ohne Login.
-          Laufende Partien liest Zugradar grundsätzlich nicht mit – Engine-Hilfe während einer Partie gegen Menschen ist Betrug.</p>
+        <p class="hint small" data-t>Nur beendete Partien, über die öffentlichen Schnittstellen von chess.com und lichess, ohne Login. Laufende Partien liest Zugradar grundsätzlich nicht mit – Engine-Hilfe während einer Partie gegen Menschen ist Betrug.</p>
       </div>
       <div id="panePgn" class="pane" hidden>
-        <p class="hint">PGN aus chess.com oder lichess (Partie → Teilen → PGN) oder eine FEN einfügen.
-          Du kannst auch einfach irgendwo auf der Seite einfügen (Strg+V).</p>
-        <textarea id="importText" rows="9" spellcheck="false" placeholder="[Event &quot;…&quot;]&#10;1. e4 e5 2. Sf3 …  oder  rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq - 0 1"></textarea>
+        <p class="hint" data-t>PGN aus chess.com oder lichess (Partie → Teilen → PGN) oder eine FEN einfügen. Du kannst auch einfach irgendwo auf der Seite einfügen (Strg+V).</p>
+        <textarea id="importText" rows="9" spellcheck="false" placeholder="[Event &quot;…&quot;]&#10;1. e4 e5 2. Nf3 …&#10;rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq - 0 1"></textarea>
         <p class="error" id="importError" hidden></p>
         <div class="dialog-actions">
-          <button type="button" class="btn ghost" id="btnSample">Beispiel: Kasparov – Topalov 1999</button>
+          <button type="button" class="btn ghost" id="btnSample" data-t>Beispiel: Kasparow – Topalow 1999</button>
           <span class="grow"></span>
-          <button type="button" class="btn accent" id="btnImportGo">Laden</button>
+          <button type="button" class="btn accent" id="btnImportGo" data-t>Laden</button>
         </div>
       </div>
       <div class="dialog-actions end">
-        <button type="button" class="btn ghost" id="btnImportCancel">Schließen</button>
+        <button type="button" class="btn ghost" id="btnImportCancel" data-t>Schließen</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="overlay" id="proBox" hidden>
+    <div class="sheet-dialog pro-dialog" role="dialog" aria-modal="true" aria-labelledby="proTitle">
+      <div class="pro-head">
+        <h2 id="proTitle"><span>Zugradar</span> <i class="pro-tag big">PRO</i></h2>
+        <p class="pro-reason" id="proReason"></p>
+      </div>
+      <ul class="pro-list">
+        <li data-t-html><b>Insights über bis zu 100 Partien</b> – Genauigkeit, Phasen, Zeitnot, Eröffnungen und deine drei größten Baustellen.</li>
+        <li data-t-html><b>Unbegrenzter Taktik-Trainer</b> aus deinen eigenen Fehlern, mit Wiederholung im richtigen Abstand.</li>
+        <li data-t-html><b>Auto-Import:</b> Jede beendete Partie ist analysiert, bevor du zurück bist.</li>
+        <li data-t-html><b>Tiefere Analyse</b> (Review bis Tiefe 22), alle Brett-Designs, Teilen ohne Wasserzeichen.</li>
+      </ul>
+      <div class="prices" id="proPrices"></div>
+      <div class="dialog-actions">
+        <button type="button" class="btn accent" id="proBuy" data-t>Pro kaufen</button>
+        <button type="button" class="btn ghost" id="proTrial" data-t>7 Tage kostenlos testen</button>
+      </div>
+      <p class="pro-status" id="proStatus"></p>
+      <details class="pro-key" id="proKeyBox">
+        <summary data-t>Lizenzschlüssel eingeben</summary>
+        <div class="conn-form key-form">
+          <input id="proKey" type="text" data-t-placeholder="Lizenzschlüssel aus der Kauf-E-Mail" placeholder="Lizenzschlüssel aus der Kauf-E-Mail" autocomplete="off" spellcheck="false" data-t-aria="Lizenzschlüssel" aria-label="Lizenzschlüssel">
+          <button type="button" class="btn accent" id="proActivate" data-t>Aktivieren</button>
+        </div>
+        <p class="conn-status" id="proKeyStatus"></p>
+      </details>
+      <div class="dialog-actions end">
+        <button type="button" class="btn ghost small" id="proDeactivate" hidden data-t>Lizenz auf diesem Gerät abmelden</button>
+        <span class="grow"></span>
+        <button type="button" class="btn ghost" id="proClose" data-t>Schließen</button>
       </div>
     </div>
   </div>
 </div>
 
 <script>
+@@SELLER@@
+</script>
+<script>
+@@I18N@@
+</script>
+<script>
+@@I18N_EN@@
+</script>
+<script>
+@@CONFIG@@
+</script>
+<script>
 @@CHESS@@
+</script>
+<script>
+@@PIECES_JS@@
 </script>
 <script>
 @@OPENINGS@@
@@ -222,6 +310,18 @@
 </script>
 <script>
 @@CONNECT@@
+</script>
+<script>
+@@LICENSE@@
+</script>
+<script>
+@@LIBRARY@@
+</script>
+<script>
+@@INSIGHTS@@
+</script>
+<script>
+@@SHARE@@
 </script>
 <script>
 @@ENGINE@@
