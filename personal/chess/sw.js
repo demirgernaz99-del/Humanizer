@@ -1,6 +1,6 @@
 /* Zugradar Service Worker – macht die App offline-fähig.
    Die Version setzt build.py (ändert sich bei jedem Build mit neuem Inhalt). */
-var V = 'zugradar-c9ac84276a';
+var V = 'zugradar-277501f656';
 var CORE = ['./', 'index.html', 'zugradar.html', 'manifest.webmanifest', 'fonts/fonts.css',
   'fonts/ibm-plex-sans-latin-400-normal.woff2', 'fonts/ibm-plex-sans-latin-500-normal.woff2', 'fonts/ibm-plex-sans-latin-600-normal.woff2',
   'fonts/ibm-plex-mono-latin-400-normal.woff2', 'fonts/ibm-plex-mono-latin-600-normal.woff2',

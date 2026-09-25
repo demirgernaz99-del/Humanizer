@@ -6500,8 +6500,20 @@ if (typeof module !== 'undefined') module.exports = (typeof window !== 'undefine
     return Promise.resolve(toBlob(b.canvas));
   }
 
-  // Teilen (Handy) oder herunterladen (Desktop)
+  // Teilen (Handy) oder herunterladen (Desktop). In der claude.ai-Vorschau über deren Download-Schnittstelle.
   function deliver(blob, filename, text) {
+    var cl = root.claude;
+    if (cl && typeof cl.use === 'function') {
+      return cl.use('downloads').then(function (dl) {
+        if (!dl) return deliverPlain(blob, filename, text);
+        return dl.save({ filename: filename, data: blob }).then(function () { return 'saved'; }, function (e) {
+          return e && e.code === 'declined' ? 'cancelled' : deliverPlain(blob, filename, text);
+        });
+      }, function () { return deliverPlain(blob, filename, text); });
+    }
+    return deliverPlain(blob, filename, text);
+  }
+  function deliverPlain(blob, filename, text) {
     var file = null;
     try { file = new File([blob], filename, { type: 'image/png' }); } catch (e) { file = null; }
     if (file && navigator.canShare && navigator.canShare({ files: [file] })) {
