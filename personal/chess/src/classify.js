@@ -324,11 +324,25 @@
   /* moves: [{color:'w'|'b', cls:{key, accuracy, wpBefore, wpAfter}}] (cls darf null sein)
      → { w:{counts, accuracy, n}, b:{...} }  Genauigkeit nach Lichess: Mittel aus
      volatilitätsgewichtetem und harmonischem Mittel. */
+  /* Leistung einer Partie: durchschnittlicher Zentibauern-Verlust (ACPL, wie bei lichess: Bewertungen auf ±1000
+     begrenzt, Matt = ±1000) und daraus eine grobe Elo-Schätzung. Die Formel ist offen und bewusst einfach:
+     Elo ≈ 3100 · e^(−ACPL/100), begrenzt auf 400–3000 (ACPL 20 ≈ 2540, 40 ≈ 2080, 60 ≈ 1700, 100 ≈ 1140).
+     Eine einzelne Partie ist nur ein Anhaltspunkt. */
+  function cpCapped(s) {
+    if (!s) return null;
+    if (s.mate != null) return s.mate > 0 ? 1000 : -1000;
+    return Math.max(-1000, Math.min(1000, s.cp));
+  }
+  function eloFromAcpl(acpl) {
+    return Math.round(Math.max(400, Math.min(3000, 3100 * Math.exp(-acpl / 100))) / 10) * 10;
+  }
+  var MIN_PERF_MOVES = 8;
+
   function summarize(moves) {
     var out = {};
     ['w', 'b'].forEach(function (c) {
       var counts = {}; ORDER.forEach(function (k) { counts[k] = 0; });
-      out[c] = { counts: counts, accuracy: null, n: 0 };
+      out[c] = { counts: counts, accuracy: null, n: 0, acpl: null, elo: null };
     });
     // Gewinnchancen-Reihe (Weiß-Sicht) für die Gewichte
     var wps = [], i;
@@ -338,12 +352,14 @@
       wps.push(moves[i].color === 'w' ? cl.wpBefore : 100 - cl.wpBefore);
     }
     var win = Math.max(2, Math.min(8, Math.floor(moves.length / 10)));
-    var acc = { w: [], b: [] };
+    var acc = { w: [], b: [] }, cpl = { w: [], b: [] };
     for (i = 0; i < moves.length; i++) {
       var m = moves[i];
       if (!m.cls || !m.cls.key) continue;
       out[m.color].counts[m.cls.key]++;
       out[m.color].n++;
+      var cb = cpCapped(m.cls.bestScore), cp = cpCapped(m.cls.playedScore);
+      if (cb != null && cp != null && m.cls.key !== 'book' && m.cls.key !== 'forced') cpl[m.color].push(Math.max(0, cb - cp));
       if (m.cls.accuracy == null) continue;
       var lo = Math.max(0, i - win + 1), hi = Math.min(moves.length, lo + win);
       var seg = wps.slice(lo, hi).filter(function (x) { return x != null; });
@@ -351,6 +367,11 @@
       acc[m.color].push({ a: m.cls.accuracy, w: w });
     }
     ['w', 'b'].forEach(function (c) {
+      var l = cpl[c];
+      if (l.length >= MIN_PERF_MOVES) {
+        out[c].acpl = l.reduce(function (p, q) { return p + q; }, 0) / l.length;
+        out[c].elo = eloFromAcpl(out[c].acpl);
+      }
       var arr = acc[c];
       if (!arr.length) return;
       var sw = 0, swa = 0, sh = 0;
@@ -365,7 +386,7 @@
     CATS: CATS, ORDER: ORDER, THRESHOLDS: T, VAL: VAL,
     cpToWp: cpToWp, scoreWp: scoreWp, negate: negate, fmtScore: fmtScore, scorePawns: scorePawns,
     moveAccuracy: moveAccuracy, see: see, hanging: hanging, material: material,
-    detectSacrifice: detectSacrifice, classifyMove: classifyMove, summarize: summarize, uciOf: uciOf
+    detectSacrifice: detectSacrifice, classifyMove: classifyMove, summarize: summarize, uciOf: uciOf, eloFromAcpl: eloFromAcpl
   };
 })();
 if (typeof module !== 'undefined') module.exports = (typeof window !== 'undefined' ? window : globalThis).SK.classify;

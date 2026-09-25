@@ -5,7 +5,8 @@ Dazu zeigt die App live den besten Zug und erklärt Fehler in Klartext. Insights
 aus deinen eigenen Fehlern kommen hinzu. Alles läuft im Browser, auch offline, ohne Konto, auf Deutsch und Englisch.
 
 **Verkaufen:** [LAUNCH.md](LAUNCH.md) (Schritt für Schritt zum ersten Verkauf), [VERKAUF.md](VERKAUF.md) (Preise, Recht,
-Marketing). Stand prüfen: `python3 tools/launch_check.py`.
+Marketing), [KONKURRENZ.md](KONKURRENZ.md) (chess.com, lichess & Co.: wo Zugradar besser ist). Stand prüfen:
+`python3 tools/launch_check.py`.
 
 ## Starten
 
@@ -26,7 +27,11 @@ blockiert ist). Fehlen die Dateien, lädt die App Stockfish von cdn.jsdelivr.net
 - **Analyse:** bester Zug live (Pfeil, Bewertungsbalken, bis zu 5 Linien), Bewertung jedes Zuges mit Coach-Erklärung
   („Die Dame auf d5 steht ungedeckt – exd5 gewinnt Material“), Partie-Review mit Genauigkeit, Phasen,
   Schlüsselmomenten, Uhr-Auswertung und Fehler-Training, Varianten, PGN-Export mit `[%eval]` und `[%clk]`.
-- **Spielen:** gegen Stockfish in 8 Stärken, mit abschaltbaren Hinweisen.
+- **Spielen:** gegen Stockfish in 8 Stärken, mit abschaltbaren Hinweisen. Die Engine kennt den Partieverlauf: Sie
+  vermeidet Remis durch Zugwiederholung, wenn sie gewinnt. Dreifache Wiederholung und 50-Züge-Regel beenden die Partie.
+- **Was droht?** (Taste T): roter Pfeil für den Zug, den der Gegner jetzt spielen würde (Nullzug-Analyse).
+- **Fazit und Leistung:** stärkste/schwächste Phase, teuerster Zug, Leistungs-Elo pro Partie aus dem ACPL
+  (Elo ≈ 3100 · e^(−ACPL/100), offen dokumentiert).
 - **Insights (Pro):** analysiert deine letzten Partien von chess.com oder lichess im Hintergrund. Du siehst Genauigkeit
   je Partie, Punkte, Patzer pro Partie, Phasen, Fehlermuster, Eröffnungs-Bilanz und deine drei größten Baustellen
   mit Tipps. Free: letzte 5 Partien.
@@ -90,8 +95,8 @@ personal/chess/
 
 ```bash
 python3 build.py                  # nach jeder Änderung
-node src/classify.selftest.js     # 46 Tests: Bewertung, Buch, UCI-Parser
-node src/coach.selftest.js        # 39 Tests: Coach, Phasen, Uhr, Konnektor
+node src/classify.selftest.js     # 55 Tests: Bewertung, Leistung, Buch, UCI-Parser
+node src/coach.selftest.js        # 45 Tests: Coach, Phasen, Uhr, Konnektor
 node src/pro.selftest.js          # 71 Tests: Lizenz (beide Anbieter), Test, Bibliothek, Trainer, Insights
 python3 tools/launch_check.py     # alles zusammen + Shop-, Impressums- und Build-Prüfung
 ```

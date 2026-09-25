@@ -227,6 +227,8 @@ footer a:hover { color: var(--ink); }
         <div class="feature"><div class="sym" style="background:#8a5f0f">↻</div><h3><span data-i="f4_t">Deine Partien automatisch</span><span class="pro">PRO</span></h3><p data-i="f4_p">Benutzernamen von chess.com oder lichess eintragen – jede beendete Partie ist analysiert, bevor du zurück bist.</p></div>
         <div class="feature"><div class="sym" style="background:#5d6f7c">◎</div><h3><span data-i="f5_t">Insights und Baustellen</span><span class="pro">PRO</span></h3><p data-i="f5_p">Genauigkeit im Verlauf, Eröffnungs-Bilanz, Zeitnot-Fehler und deine drei größten Baustellen – mit konkreten Tipps.</p></div>
         <div class="feature"><div class="sym" style="background:var(--red)">↺</div><h3><span data-i="f6_t">Trainer aus eigenen Fehlern</span><span class="pro">PRO</span></h3><p data-i="f6_p">Deine Patzer werden zu Aufgaben. Gelöste Stellungen kommen nach 1, 3, 7, 14 Tagen wieder, bis sie sitzen.</p></div>
+        <div class="feature"><div class="sym" style="background:#3f7fb3">≈</div><h3 data-i="f7_t">Leistung und Fazit</h3><p data-i="f7_p">Nach jeder Partie: stärkste Phase, teuerster Zug und deine Leistung in Elo – nach einer offenen, nachvollziehbaren Formel statt einer Blackbox.</p></div>
+        <div class="feature"><div class="sym" style="background:#d6453d">!</div><h3 data-i="f8_t">Was droht?</h3><p data-i="f8_p">Ein Tipp auf das Warnsymbol (oder Taste T) zeigt, was dein Gegner als Nächstes vorhat – mit rotem Pfeil. So trainierst du den wichtigsten Blick vor jedem Zug.</p></div>
       </div>
     </div>
   </section>
@@ -239,11 +241,12 @@ footer a:hover { color: var(--ink); }
         <table class="cmp">
           <thead><tr><th></th><th>{{brand}}</th><th>chess.com Game Review</th><th>lichess</th></tr></thead>
           <tbody>
-            <tr><td data-i="c1">Partie-Reviews</td><td class="us" data-i="c1a">unbegrenzt, kostenlos</td><td data-i="c1b">kostenlos 1 pro Tag, unbegrenzt ab Platinum</td><td data-i="c1c">unbegrenzt, kostenlos</td></tr>
+            <tr><td data-i="c1">Partie-Reviews</td><td class="us" data-i="c1a">unbegrenzt, kostenlos</td><td data-i="c1b">kostenlos 1 volles Review pro Tag, mehr nur im Abo</td><td data-i="c1c">unbegrenzt, kostenlos</td></tr>
             <tr><td data-i="c2">Brillant / Großartig</td><td class="us" data-i="c2a">ja, Regeln offengelegt</td><td data-i="c2b">ja</td><td data-i="c2c">nein</td></tr>
             <tr><td data-i="c3">Bewertung, während du ziehst</td><td class="us" data-i="c3a">ja, jeder Zug sofort</td><td data-i="c3b">im Review nach der Partie</td><td data-i="c3c">Einstufung nach der Server-Analyse</td></tr>
             <tr><td data-i="c4">Erklärungen</td><td class="us" data-i="c4a">kostenlos</td><td data-i="c4b">Coach, voll erst mit Diamond</td><td data-i="c4c">–</td></tr>
             <tr><td data-i="c5">Zeitnot-Analyse</td><td class="us" data-i="c5a">Fehler in Zeitnot und nach ≤ 3 s</td><td data-i="c5b">Uhrzeiten sichtbar</td><td data-i="c5c">Zeitdiagramm</td></tr>
+            <tr><td data-i="c7">Genauigkeit und Leistung</td><td class="us" data-i="c7a">offene Formel, Leistungs-Elo pro Partie</td><td data-i="c7b">Game Rating, Formel nicht öffentlich</td><td data-i="c7c">Genauigkeit und ACPL, keine Elo-Schätzung</td></tr>
             <tr><td data-i="c6">Konto nötig</td><td class="us" data-i="c6a">nein</td><td data-i="c6b">ja</td><td data-i="c6c">für eigene Partien ja</td></tr>
           </tbody>
         </table>
@@ -313,6 +316,7 @@ footer a:hover { color: var(--ink); }
         <details><summary data-i="q3">Wo liegen meine Daten?</summary><p data-i="a3">Nur in deinem Browser. Es gibt kein Konto und keine Tracker. Deine Partien lädt {{brand}} über die öffentlichen Schnittstellen von chess.com und lichess, nur wenn du es auslöst.</p></details>
         <details><summary data-i="q4">Funktioniert es auf dem Handy?</summary><p data-i="a4">Ja. Öffne die App im Browser und wähle „Zum Home-Bildschirm“. Dann startet {{brand}} wie eine normale App, auch offline.</p></details>
         <details><summary data-i="q5">Wie stark ist die Engine?</summary><p data-i="a5">Stockfish 18 mit neuronalem Netz (NNUE) läuft direkt auf deinem Gerät. Das ist weit stärker als jeder Großmeister.</p></details>
+        <details><summary data-i="q7">Warum weicht meine Genauigkeit von chess.com ab?</summary><p data-i="a7">chess.com hält seine Formel geheim. Zugradar rechnet offen: Grundlage ist die Gewinnchance vor und nach jedem Zug (wie bei lichess), die Leistungs-Elo kommt aus dem durchschnittlichen Bauernverlust. Die Zahlen sind deshalb ähnlich, aber nicht identisch – und bei uns kannst du jede nachvollziehen.</p></details>
         <details><summary data-i="q6">Wie kündige ich Pro?</summary><p data-i="a6">Monats- und Jahresabos kannst du jederzeit über den Link in deiner Kauf-E-Mail kündigen. Die Einmal-Lizenz gilt dauerhaft.</p></details>
       </div>
     </div>
@@ -364,13 +368,16 @@ footer a:hover { color: var(--ink); }
     f4_t: 'Your games, automatically', f4_p: 'Enter your chess.com or lichess username – every finished game is analysed before you are back.',
     f5_t: 'Insights and weak spots', f5_p: 'Accuracy over time, opening results, time-trouble errors and your three biggest weak spots – with concrete tips.',
     f6_t: 'A trainer built from your mistakes', f6_p: 'Your blunders become puzzles. Solved positions return after 1, 3, 7, 14 days until they stick.',
+    f7_t: 'Performance and summary', f7_p: 'After every game: your strongest phase, your most costly move and your performance in Elo – from an open, traceable formula instead of a black box.',
+    f8_t: 'What\'s the threat?', f8_p: 'Tap the warning sign (or press T) to see what your opponent is planning next – with a red arrow. It trains the most important look before every move.',
     cmp_eyebrow: 'Comparison', cmp_title: 'What costs you a subscription elsewhere.',
-    c1: 'Game reviews', c1a: 'unlimited, free', c1b: 'free 1 per day, unlimited from Platinum', c1c: 'unlimited, free',
+    c1: 'Game reviews', c1a: 'unlimited, free', c1b: 'free: 1 full review per day, more only with a subscription', c1c: 'unlimited, free',
     c2: 'Brilliant / Great', c2a: 'yes, rules published', c2b: 'yes', c2c: 'no',
     c3: 'Rating while you move', c3a: 'yes, every move instantly', c3b: 'in the review after the game', c3c: 'after the server analysis',
     c4: 'Explanations', c4a: 'free', c4b: 'Coach, fully only with Diamond', c4c: '–',
     c5: 'Time-trouble analysis', c5a: 'errors in time trouble and after ≤ 3 s', c5b: 'clock times shown', c5c: 'time chart',
     c6: 'Account required', c6a: 'no', c6b: 'yes', c6c: 'for your own games, yes',
+    c7: 'Accuracy and performance', c7a: 'open formula, performance Elo per game', c7b: 'Game Rating, formula not public', c7c: 'accuracy and ACPL, no Elo estimate',
     cmp_fine: 'As of September 2026, based on the providers\' public information. chess.com and lichess are trademarks of their owners; Zugradar is not affiliated with them.',
     price_eyebrow: 'Pricing', price_title: 'Analyse for free. Improve on purpose with Pro.', price_sub: 'Try Pro free for 7 days, no payment details. Subscriptions can be cancelled any time.',
     p_f1: 'Live analysis with Stockfish 18', p_f2: 'All move ratings including brilliant', p_f3: 'Coach explanations and game reviews without limits',
@@ -388,6 +395,7 @@ footer a:hover { color: var(--ink); }
     q3: 'Where is my data?', a3: 'Only in your browser. No account, no trackers. Zugradar loads your games from the public chess.com and lichess APIs only when you ask it to.',
     q4: 'Does it work on my phone?', a4: 'Yes. Open the app in your browser and choose “Add to Home Screen”. Zugradar then starts like a normal app, even offline.',
     q5: 'How strong is the engine?', a5: 'Stockfish 18 with a neural network (NNUE) runs right on your device – far stronger than any grandmaster.',
+    q7: 'Why does my accuracy differ from chess.com?', a7: 'chess.com keeps its formula secret. Zugradar calculates in the open: it is based on the winning chances before and after every move (like lichess), and the performance Elo comes from the average centipawn loss. The numbers are therefore similar but not identical – and with us you can trace every one of them.',
     q6: 'How do I cancel Pro?', a6: 'Cancel monthly and yearly plans any time via the link in your purchase email. The one-time licence is yours for good.',
     final_title: 'Your next game deserves a review.', final_cta: 'Open Zugradar',
     ft_imprint: 'Legal notice', ft_privacy: 'Privacy', ft_terms: 'Terms of use', ft_licenses: 'Licences'

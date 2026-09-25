@@ -97,6 +97,81 @@
   function uciToMove(uci) { return { from: uci.slice(0, 2), to: uci.slice(2, 4), promotion: uci[4] || undefined }; }
   function terminalOf(fen) { return posInfo(fen).terminal; }
 
+  /* ---------- „Was droht?“: Nullzug-Analyse ----------
+     Dieselbe Stellung mit dem Gegner am Zug. Sein bester Zug dort ist die Drohung. */
+  var threatOn = false;
+  function nullFen(fen) {
+    var p = fen.split(' ');
+    p[1] = p[1] === 'w' ? 'b' : 'w'; p[3] = '-';
+    return p.join(' ');
+  }
+  function threatFen() {
+    if (!threatOn || train) return null;
+    var pi = posInfoAt(state.ply);
+    if (pi.terminal || pi.inCheck || !showEngineNow()) return null;
+    var nf = nullFen(fenAt(state.ply));
+    return L.validateFen(nf).ok ? nf : null;
+  }
+  // { uci, san, mate, gain } oder null, wenn (noch) nichts Ernstes droht
+  function threatInfo() {
+    var nf = threatFen();
+    if (!nf) return null;
+    var te = an.entry(nf), cur = entryAt(state.ply);
+    if (!te || !te.lines.length) return { pending: true };
+    var th = te.lines[0];
+    var now = cur && cur.lines.length ? C.negate(cur.lines[0].score) : { cp: 0 }; // aus Sicht des Gegners
+    var gain = C.scorePawns(th.score) - C.scorePawns(now);
+    var mate = th.score.mate != null && th.score.mate > 0 ? th.score.mate : null;
+    return { uci: th.uci, san: nota(uciSan(nf, th.uci)), mate: mate, gain: gain, serious: mate != null || gain >= 1 };
+  }
+
+  /* ---------- Remis durch Wiederholung und 50-Züge-Regel ----------
+     Beides hängt vom Partieverlauf ab, nicht nur von der Stellung. Pro Halbzug i:
+     occ = wie oft die Stellung seit dem letzten Bauernzug/Schlagen vorkam, draw = 'repetition' | 'fifty' | null,
+     hist = Zugfolge für Stockfish, falls sie die Bewertung ändern kann (sonst null). */
+  var repCache = { sig: null, arr: [] };
+  function hashStr(str) {
+    var h = 2166136261;
+    for (var i = 0; i < str.length; i++) { h ^= str.charCodeAt(i); h = Math.imul(h, 16777619); }
+    return (h >>> 0).toString(36);
+  }
+  function repInfo() {
+    var n = state.line.length;
+    var sig = state.startFen + '|' + n + '|' + (n ? state.line[0].id + '.' + state.line[n - 1].id : '');
+    if (repCache.sig === sig) return repCache.arr;
+    var arr = [], keys = [], start = 0;
+    for (var i = 0; i <= n; i++) {
+      var f = fenAt(i), hm = +(f.split(' ')[4] || 0);
+      if (i > 0 && hm === 0) start = i;
+      keys.push(E.posKey(f));
+      var cnt = {}, rel = false;
+      for (var j = start; j <= i; j++) { cnt[keys[j]] = (cnt[keys[j]] || 0) + 1; if (cnt[keys[j]] >= 2) rel = true; }
+      var hist = null;
+      if (rel) {
+        var ucis = [];
+        for (var k = start; k < i; k++) ucis.push(state.line[k].uci);
+        hist = { hk: hashStr(keys.slice(start, i + 1).join('|')), start: fenAt(start), moves: ucis };
+      }
+      arr.push({ occ: cnt[keys[i]], hist: hist, draw: cnt[keys[i]] >= 3 ? 'repetition' : hm >= 100 ? 'fifty' : null });
+    }
+    repCache = { sig: sig, arr: arr };
+    return arr;
+  }
+  function histAt(i) { var r = repInfo()[i]; return r ? r.hist : null; }
+  function hkAt(i) { var h = histAt(i); return h ? h.hk : ''; }
+  function entryAt(i) { return an.entry(fenAt(i), hkAt(i)); }
+  // Analyse der Stellung vor/nach einem Zug der Partie (mit Historie, falls nötig)
+  function entBefore(mv) { var i = state.line.indexOf(mv); return i >= 0 ? entryAt(i) : an.entry(mv.fenBefore); }
+  function entAfter(mv) { var i = state.line.indexOf(mv); return i >= 0 ? entryAt(i + 1) : an.entry(mv.fenAfter); }
+  // Stellungsinfo inklusive Remis durch dreifache Wiederholung bzw. 50-Züge-Regel
+  function posInfoAt(i) {
+    var p = posInfo(fenAt(i));
+    if (p.terminal) return p;
+    var r = repInfo()[i];
+    if (!r || !r.draw) return p;
+    return Object.assign({}, p, { terminal: 'draw', drawReason: r.draw });
+  }
+
   // SAN in der gewählten Notation (Deutsch: K D T L S)
   var DE = { K: 'K', Q: 'D', R: 'T', B: 'L', N: 'S' };
   function nota(san) {
@@ -141,8 +216,8 @@
 
   // Bewertung aus Weiß-Sicht
   function whiteScore(fen, score) { return posInfo(fen).turn === 'w' ? score : C.negate(score); }
-  function whiteWp(fen, entry) {
-    var pi = posInfo(fen);
+  function whiteWp(fen, entry, pi) {
+    pi = pi || posInfo(fen);
     if (pi.terminal === 'mate') return pi.turn === 'w' ? 0 : 100;
     if (pi.terminal === 'draw') return 50;
     if (!entry || !entry.lines.length) return null;
@@ -180,12 +255,13 @@
   };
 
   function updateEngine() {
-    var fen = viewFen(), pi = posInfo(fen);
+    var fen = viewFen(), pi = train ? posInfo(fen) : posInfoAt(state.ply);
     for (var i = 0; i <= state.line.length; i++) {
-      var f = fenAt(i), p = posInfo(f);
-      if (p.terminal) an.markTerminal(f, p.terminal);
+      var p = posInfoAt(i);
+      if (p.terminal) an.markTerminal(fenAt(i), p.terminal, hkAt(i));
     }
-    an.setFocus(fen, pi.terminal ? 0 : pi.legal);
+    an.setFocus(fen, pi.terminal ? 0 : pi.legal, train ? null : histAt(state.ply));
+    an.setThreat(threatFen());
     var items = [];
     var n = state.line.length;
     if (state.settings.autoReview) {
@@ -197,8 +273,8 @@
     // Stellungen rund um den gerade betrachteten Zug zuerst
     var ref = Math.max(0, state.ply - 1);
     items.sort(function (a, b) { return Math.abs(a - ref) - Math.abs(b - ref) || a - b; });
-    var queue = items.map(function (k) { var f2 = fenAt(k); return { fen: f2, legal: posInfo(f2).legal }; })
-      .filter(function (x) { return x.legal > 0 && !posInfo(x.fen).terminal; });
+    var queue = items.map(function (k) { var p2 = posInfoAt(k); return { fen: fenAt(k), legal: p2.legal, terminal: p2.terminal, hist: histAt(k) }; })
+      .filter(function (x) { return x.legal > 0 && !x.terminal; });
     // Danach die Serien-Analyse für Insights (niedrigere Tiefe)
     if (batch.cur) {
       batch.cur.fens.forEach(function (f3) {
@@ -221,15 +297,15 @@
       var mv = state.line[i];
       if (!mv.phase) mv.phase = CO.phaseOf(mv.fenBefore, chain && i > 0);
       chain = chain && !!SK.book.lookup(mv.fenAfter);
-      var r = classifyOne(mv, prev, i > 0 ? state.line[i - 1] : null, chain);
+      var r = classifyOne(mv, prev, i > 0 ? state.line[i - 1] : null, chain, i);
       out.push(r);
       prev = r;
     }
     return out;
   }
-  function classifyOne(mv, prev, lastMove, inBook) {
-    var eb = an.entry(mv.fenBefore), ea = an.entry(mv.fenAfter);
-    var pa = posInfo(mv.fenAfter);
+  function classifyOne(mv, prev, lastMove, inBook, i) {
+    var eb = entryAt(i), ea = entryAt(i + 1);
+    var pa = posInfoAt(i + 1);
     var after = pa.terminal ? { terminal: pa.terminal, lines: [], depth: 99 } : ea;
     // Theorie braucht keine Engine – die Bewertung wird nachgereicht, sobald sie da ist
     if (inBook && mv.legalCount > 1 && (!eb || eb.depth < MIN_D || !eb.lines.length)) {
@@ -241,7 +317,8 @@
       if (!inLines && !(after && (after.terminal || after.depth >= MIN_D_AFTER))) return null;
     }
     var prevLoss = prev && prev.loss != null ? Math.round(prev.loss) : null;
-    var key = [mv.id, eb ? eb.depth : 0, eb ? eb.lines.length : 0, after ? after.depth : 0, prevLoss, inBook ? 1 : 0].join('|');
+    var key = [mv.id, eb ? eb.depth : 0, eb ? eb.lines.length : 0, after ? after.depth : 0, prevLoss, inBook ? 1 : 0,
+               hkAt(i), hkAt(i + 1), pa.terminal || ''].join('|');
     var hit = clsMemo.get(key);
     if (hit !== undefined) return hit;
     var r = C.classifyMove({
@@ -268,7 +345,7 @@
   }
   function maybeAI() {
     if (state.mode !== 'play' || train || state.ply !== state.line.length || engine.state !== 'ready') { cancelAI(); return; }
-    var fen = fenAt(state.ply), pi = posInfo(fen);
+    var fen = fenAt(state.ply), pi = posInfoAt(state.ply), ply0 = state.ply;
     if (pi.terminal || pi.turn === state.settings.humanColor) { cancelAI(); return; }
     if (ai.fen === fen) return;
     cancelAI();
@@ -277,7 +354,7 @@
     // Erst kurz die Stellung analysieren (für die Bewertung deines Zuges), dann zieht die KI.
     (function wait() {
       if (ai.fen !== fen) return;
-      var e = an.entry(fen);
+      var e = entryAt(ply0);
       if ((e && e.depth >= MIN_D) || Date.now() - t0 > 2500) {
         ai.timer = null; ai.thinking = true; soon();
         var lv = level();
@@ -287,15 +364,38 @@
           ai.fen = null;
           var mv = bm && bm !== '(none)' ? makeMove(fen, uciToMove(bm)) : null;
           if (!mv) { soon(); return; }
+          mv = avoidDrawIfWinning(mv, ply0) || mv;
           mv.live = true;
           state.line.push(mv); state.ply++;
           animateNext = { from: mv.from, to: mv.to, capture: !!mv.captured };
           changed();
-        });
+        }, histAt(ply0));
         return;
       }
       ai.timer = setTimeout(wait, 120);
     })();
+  }
+  // Die KI soll eine gewonnene Stellung nicht durch Zugwiederholung verschenken
+  // (abgeschwächte Stufen wählen sonst gelegentlich einen Zug, der die Stellung zum dritten Mal herbeiführt).
+  function avoidDrawIfWinning(mv, ply0) {
+    var e = entryAt(ply0);
+    if (!e || !e.lines.length || C.scoreWp(e.lines[0].score) < 70) return null;
+    if (!drawsByRepetition(ply0, mv)) return null;
+    for (var i = 0; i < e.lines.length; i++) {
+      var alt = makeMove(mv.fenBefore, uciToMove(e.lines[i].uci));
+      if (alt && !drawsByRepetition(ply0, alt) && C.scoreWp(e.lines[i].score) >= 60) return alt;
+    }
+    return null;
+  }
+  function drawsByRepetition(ply0, mv) {
+    var k = E.posKey(mv.fenAfter), cnt = 1;
+    if (+(mv.fenAfter.split(' ')[4] || 0) === 0) return false;
+    for (var i = ply0; i >= 0; i--) {
+      var f = fenAt(i);
+      if (E.posKey(f) === k) cnt++;
+      if (+(f.split(' ')[4] || 0) === 0) break;
+    }
+    return cnt >= 3;
   }
 
   /* ---------- Zustand ändern ---------- */
@@ -566,7 +666,7 @@
 
   function showEngineNow() {
     if (state.mode !== 'play') return true;
-    var pi = posInfo(fenAt(state.ply));
+    var pi = posInfoAt(state.ply);
     if (pi.terminal || state.ply < state.line.length) return true;
     return state.settings.hints && pi.turn === state.settings.humanColor;
   }
@@ -576,7 +676,7 @@
     if (state.mode === 'insights') { renderInsightsView(); renderStatus(); return; }
     var results = classifyAll();
     if (train) { renderTrain(results); return; }
-    var fen = fenAt(state.ply), pi = posInfo(fen), entry = an.entry(fen);
+    var fen = fenAt(state.ply), pi = posInfoAt(state.ply), entry = entryAt(state.ply);
     var last = state.ply > 0 ? state.line[state.ply - 1] : null;
     var cls = last ? results[state.ply - 1] : null;
     var engineOn = showEngineNow();
@@ -596,6 +696,9 @@
     if (s.arrowBetter && cls && cls.bestUci && /inaccuracy|mistake|blunder|miss/.test(cls.key) && engineOn) {
       arrows.unshift(Object.assign(uciToMove(cls.bestUci), { kind: 'better', width: 13 }));
     }
+    var threat = threatInfo();
+    if (threat && threat.serious) arrows.push(Object.assign(uciToMove(threat.uci), { kind: 'threat', width: 13 }));
+    renderThreat(threat);
     var badge = null, tint = null;
     if (last && cls && cls.key) {
       var cat = C.CATS[cls.key];
@@ -725,7 +828,7 @@
           t('Bewertung danach {ev}.', { ev: '<b>' + fmtW(fb, cls.playedScore) + '</b>' });
       case 'great':
         var sec = null;
-        var eb = an.entry(fb);
+        var eb = entBefore(mv);
         if (eb && eb.lines[1]) sec = nota(uciSan(fb, eb.lines[1].uci)) + ' (' + fmtW(fb, eb.lines[1].score) + ')';
         var wp = cls.wpBefore;
         var goal = wp >= C.THRESHOLDS.winWp ? t('Der einzige Zug, der den Vorteil hält.') :
@@ -747,7 +850,7 @@
           t('Stark war {m} ({ev}). Gewinnchance −{loss} %.', { m: best, ev: bestEv, loss: lossTxt });
       default: // inaccuracy, mistake, blunder
         var thr = '';
-        var ea = an.entry(mv.fenAfter);
+        var ea = entAfter(mv);
         if ((cls.key === 'blunder' || cls.key === 'mistake') && ea && ea.lines[0] && !hasCoach) {
           thr = ' ' + t('Die Widerlegung: {pv}.', { pv: pvText(mv.fenAfter, ea.lines[0].pv, 4) });
         }
@@ -770,8 +873,11 @@
     var el = $('verdict'), html;
     if (pi.terminal) {
       var res = pi.terminal === 'mate' ? (pi.turn === 'w' ? t('Schwarz gewinnt') : t('Weiß gewinnt')) : t('Remis');
-      var why = pi.terminal === 'mate' ? t('Schachmatt') : (pi.legal === 0 ? t('Patt') : t('Ungenügendes Material'));
+      var why = pi.terminal === 'mate' ? t('Schachmatt') : pi.drawReason === 'repetition' ? t('Dreifache Stellungswiederholung')
+        : pi.drawReason === 'fifty' ? t('50-Züge-Regel') : (pi.legal === 0 ? t('Patt') : t('Ungenügendes Material'));
       var head = last && cls ? '<span class="san">' + esc(moveLabel(last)) + '</span> ' + article(cls.key) + '. ' : '';
+      // Remis verschenkt? Dann auch sagen, was besser war
+      if (last && cls && /inaccuracy|mistake|blunder|miss/.test(cls.key)) head += verdictText(last, cls, false) + ' ';
       html = '<div class="v-icon ' + (cls ? 'c-' + cls.key : 'neutral') + '">' + (cls ? C.CATS[cls.key].sym : '#') + '</div>' +
              '<div class="v-title">' + why + ' – ' + res + '</div>' +
              '<div class="v-text">' + head + (state.mode === 'play' ? t('Starte über „Neue Partie gegen KI“ die nächste Runde.') : '') + '</div>';
@@ -815,6 +921,29 @@
     if (!nps) return '';
     if (I.lang() === 'en') return (nps >= 1e6 ? (nps / 1e6).toFixed(1) + 'M' : Math.round(nps / 1000) + 'k') + ' nodes/s';
     return (nps >= 1e6 ? (nps / 1e6).toFixed(1).replace('.', ',') + ' Mio.' : Math.round(nps / 1000) + ' Tsd.') + ' Knoten/s';
+  }
+
+  function renderThreat(th) {
+    var el = $('threatLine'), btn = $('btnThreat');
+    btn.setAttribute('aria-pressed', String(threatOn));
+    btn.classList.toggle('on', threatOn);
+    el.hidden = !threatOn;
+    if (!threatOn) return;
+    var pi = posInfoAt(state.ply);
+    var opp = colorName(pi.turn === 'w' ? 'b' : 'w');
+    if (pi.terminal) { el.textContent = t('Partie beendet – keine Drohung.'); return; }
+    if (pi.inCheck) { el.textContent = t('Du stehst im Schach – das ist die Drohung.'); return; }
+    if (!th) { el.textContent = t('Drohungen erscheinen, sobald Hinweise sichtbar sind.'); return; }
+    if (th.pending) { el.innerHTML = '<span class="th-icon">!</span>' + t('Suche, was {c} droht …', { c: opp }); return; }
+    if (!th.serious) { el.innerHTML = '<span class="th-icon ok">✓</span>' + t('{c} droht gerade nichts Ernstes.', { c: opp }); return; }
+    el.innerHTML = '<span class="th-icon">!</span>' + (th.mate
+      ? t('{c} droht {m} – Matt in {n}.', { c: opp, m: '<b>' + esc(th.san) + '</b>', n: th.mate })
+      : t('{c} droht {m} (gewinnt etwa {p} Bauern).', { c: opp, m: '<b>' + esc(th.san) + '</b>', p: num1(Math.min(th.gain, 9)) }));
+  }
+  function toggleThreat() {
+    threatOn = !threatOn;
+    updateEngine();
+    render();
   }
 
   function renderEngine(fen, entry, pi, engineOn) {
@@ -880,7 +1009,7 @@
       html += '<div class="no">' + numv + '</div>' + cell(i) + (i + 1 < state.line.length ? cell(i + 1) : '<div class="mv"></div>');
       numv++;
     }
-    var pi = posInfo(fenAt(state.line.length));
+    var pi = posInfoAt(state.line.length);
     if (pi.terminal) html += '<div class="result">' + (pi.terminal === 'mate' ? (pi.turn === 'w' ? '0–1' : '1–0') : '½–½') + '</div>';
     else if (state.headers.Result && state.headers.Result !== '*' && !state.main) html += '<div class="result">' + esc(state.headers.Result) + '</div>';
     box.innerHTML = html;
@@ -918,11 +1047,15 @@
     reviewSig = sig;
     var sum = summaryFor(results);
     function box(c, name) {
-      var a = accuracyFor(c, results);
+      var a = accuracyFor(c, results), s2 = sum[c];
+      var perf = a != null && s2.elo != null
+        ? '<div class="perf" title="' + esc(t('Grobe Schätzung aus dem durchschnittlichen Bauernverlust pro Zug (ACPL {x}). Eine einzelne Partie ist nur ein Anhaltspunkt.', { x: Math.round(s2.acpl) })) + '">' +
+          t('Leistung ≈ {e}', { e: s2.elo }) + '</div>' : '';
       return '<div class="box"><div class="who"><span class="swatch sm ' + c + '"></span>' + esc(name) + '</div>' +
-             '<div class="num">' + (a == null ? '–' : num1(a)) + '<small>' + t('Genauigkeit') + '</small></div></div>';
+             '<div class="num">' + (a == null ? '–' : num1(a)) + '<small>' + t('Genauigkeit') + '</small></div>' + perf + '</div>';
     }
     $('acc').innerHTML = box('w', names.w) + box('b', names.b);
+    renderReviewSummary(results, sum, names);
     var rows = C.ORDER.filter(function (k) { return k !== 'forced'; }).map(function (k) {
       var w = sum.w.counts[k], b = sum.b.counts[k];
       return '<tr><td class="n' + (w ? '' : ' zero') + '">' + w + '</td><td class="lab"><span class="sym c-' + k + '">' + C.CATS[k].sym + '</span>' + catLabel(k) + '</td><td class="n' + (b ? '' : ' zero') + '">' + b + '</td></tr>';
@@ -940,7 +1073,7 @@
     var n = state.line.length;
     var pts = [];
     for (var i = 0; i <= n; i++) {
-      var f = fenAt(i), wp = whiteWp(f, an.entry(f));
+      var f = fenAt(i), wp = whiteWp(f, entryAt(i), posInfoAt(i));
       pts.push(wp);
     }
     var gsig = pts.map(function (v) { return v == null ? '' : v.toFixed(1); }).join(',') + '|' + state.ply + '|' + graphHover + '|' + W + '|' + (sumCache.sig || '');
@@ -971,7 +1104,7 @@
     var tip = '';
     if (graphHover != null && graphHover > 0) {
       var mv = state.line[graphHover - 1], rr = results[graphHover - 1];
-      var f2 = fenAt(graphHover), e2 = an.entry(f2), pi2 = posInfo(f2);
+      var f2 = fenAt(graphHover), e2 = entryAt(graphHover), pi2 = posInfoAt(graphHover);
       var ev = pi2.terminal ? (pi2.terminal === 'mate' ? '#' : '½') : (e2 && e2.lines[0] ? fmtW(f2, e2.lines[0].score) : '…');
       tip = '<div class="tip" style="left:' + Math.max(60, Math.min(W - 60, X(graphHover))) + 'px">' + esc(moveLabel(mv)) +
             (rr ? ' ' + C.CATS[rr.key].sym : '') + ' · ' + ev + '</div>';
@@ -984,8 +1117,9 @@
   var coachMemo = new Map();
   function coachFor(mv, cls) {
     if (!mv || !cls) return [];
-    var ea = an.entry(mv.fenAfter);
-    var k = mv.id + '|' + cls.key + '|' + (cls.depth || 0) + '|' + (ea ? ea.depth : 0) + '|' + state.settings.notation + '|' + I.lang();
+    var ea = entAfter(mv), idx = state.line.indexOf(mv);
+    var drawBy = idx >= 0 ? posInfoAt(idx + 1).drawReason : null;
+    var k = mv.id + '|' + cls.key + '|' + (cls.depth || 0) + '|' + (ea ? ea.depth : 0) + '|' + state.settings.notation + '|' + I.lang() + '|' + (drawBy || '');
     var hit = coachMemo.get(k);
     if (hit) return hit;
     var out = [];
@@ -994,6 +1128,12 @@
       out = CO.explain({ fenBefore: mv.fenBefore, fenAfter: mv.fenAfter, move: mv, cls: cls, after: ea, lang: I.lang(),
                          notation: state.settings.notation, clock: { left: mv.clock, spent: mv.spent }, base: tc ? tc.base : null });
     } catch (e) { out = []; }
+    // Remis durch Wiederholung oder 50-Züge-Regel, obwohl man besser stand
+    if (drawBy && cls.wpBefore != null && cls.wpBefore >= 60) {
+      out = [drawBy === 'repetition'
+        ? t('Damit steht dieselbe Stellung zum dritten Mal auf dem Brett – Remis, obwohl du besser standest.')
+        : t('Damit greift die 50-Züge-Regel – Remis, obwohl du besser standest. Ein Bauernzug oder Schlagzug hätte die Zählung zurückgesetzt.')].concat(out);
+    }
     if (coachMemo.size > 3000) coachMemo.clear();
     coachMemo.set(k, out);
     return out;
@@ -1025,6 +1165,48 @@
     if (acc >= 80) return { cls: 'ok', txt: t('gut') };
     if (acc >= 65) return { cls: 'mid', txt: t('okay') };
     return { cls: 'low', txt: t('schwach') };
+  }
+
+  // Fazit wie vom Trainer: stärkste Phase, teuerster Zug, Leistung – für dich (falls bekannt) oder beide Seiten
+  var PHASE_IN = { opening: 'in der Eröffnung', middlegame: 'im Mittelspiel', endgame: 'im Endspiel' };
+  function renderReviewSummary(results, sum, names) {
+    var el = $('reviewSummary');
+    var complete = accuracyFor('w', results) != null && accuracyFor('b', results) != null && state.line.length >= 10;
+    el.hidden = !complete;
+    if (!complete) { el.innerHTML = ''; return; }
+    var ps = phaseStats(results);
+    var who = state.user && state.user.color ? [state.user.color] : ['w', 'b'];
+    var paras = who.map(function (c) {
+      var mine = state.user && state.user.color === c, nm = esc(names[c]);
+      var out = [];
+      var phases = ['opening', 'middlegame', 'endgame'].filter(function (ph) { return ps[ph][c].acc != null && ps[ph][c].n >= 3; });
+      phases.sort(function (a, b) { return ps[b][c].acc - ps[a][c].acc; });
+      if (phases.length >= 2 && ps[phases[0]][c].acc - ps[phases[phases.length - 1]][c].acc >= 8) {
+        var bp = phases[0], wp = phases[phases.length - 1];
+        out.push(t(mine ? 'Am stärksten warst du {a} ({x}), am schwächsten {b} ({y}).' : '{n} war {a} am stärksten ({x}), {b} am schwächsten ({y}).',
+          { n: nm, a: t(PHASE_IN[bp]), x: Math.round(ps[bp][c].acc), b: t(PHASE_IN[wp]), y: Math.round(ps[wp][c].acc) }));
+      }
+      var worst = null;
+      state.line.forEach(function (m, i) {
+        var r = results[i];
+        if (m.color !== c || !r || r.loss == null || !/mistake|blunder|miss/.test(r.key)) return;
+        if (!worst || r.loss > worst.r.loss) worst = { m: m, r: r, ply: i + 1 };
+      });
+      if (worst) {
+        out.push(t(mine ? 'Dein teuerster Zug: {m} (Gewinnchance −{l} %).' : 'Teuerster Zug von {n}: {m} (Gewinnchance −{l} %).',
+          { n: nm, m: '<button type="button" class="linkish" data-ply="' + worst.ply + '">' + esc(moveLabel(worst.m)) + '</button>', l: Math.round(worst.r.loss) }));
+      } else {
+        out.push(t(mine ? 'Du hast keinen Fehler gemacht und keine Chance verpasst.' : '{n} hat keinen Fehler gemacht und keine Chance verpasst.', { n: nm }));
+      }
+      var br = sum[c].counts.brilliant, gr = sum[c].counts.great;
+      var good = [];
+      if (br) good.push(t('{n}× brillant', { n: br }));
+      if (gr) good.push(t('{n}× großartig', { n: gr }));
+      if (good.length) out.push(t('Dazu: {x}.', { x: good.join(', ') }));
+      if (sum[c].elo != null) out.push(t(mine ? 'Deine Leistung entsprach etwa {e} Elo.' : 'Leistung von {n}: etwa {e} Elo.', { n: nm, e: sum[c].elo }));
+      return '<p>' + out.join(' ') + '</p>';
+    });
+    el.innerHTML = '<div class="eyebrow">' + t('Fazit') + '</div>' + paras.join('');
   }
 
   function renderReviewExtras(results) {
@@ -1325,13 +1507,14 @@
   function siteName(site) { return site === 'lichess' ? 'lichess' : 'chess.com'; }
   function connFetch(limit) {
     var s = state.settings;
-    return SK.connect.fetchGames(s.connSite, s.connUser, { limit: limit || 20, months: limit > 30 ? 6 : 2 });
+    return SK.connect.fetchGames(s.connSite, s.connUser, { limit: limit || 20, months: limit > 30 ? 12 : 6 });
   }
   function connErrorText(e) {
     var site = siteName(state.settings.connSite);
     switch (e && e.code) {
-      case 'blocked': return t('Diese Seite darf keine Verbindung zu {s} aufbauen. Öffne Zugradar über die eigene Website oder lokal (siehe README). Alternativ: PGN einfügen.', { s: site });
-      case 'notfound': return t('Benutzer nicht gefunden.');
+      case 'blocked': return t('Diese Seite darf keine Verbindung zu {s} aufbauen (z. B. in einer Vorschau). Öffne Zugradar auf der eigenen Website – oder füge die PGN deiner Partie ein.', { s: site });
+      case 'notfound': return t('Benutzer „{u}“ gibt es auf {s} nicht. Stimmt die Schreibweise?', { u: SK.connect.normalizeUser(state.settings.connSite, state.settings.connUser), s: site });
+      case 'badname': return t('Das sieht nicht wie ein Benutzername aus. Gib nur den Namen ein (oder den Link zu deinem Profil).');
       case 'ratelimit': return t('Zu viele Anfragen – bitte eine Minute warten.');
       case 'network': return t('Keine Verbindung zu {s}.', { s: site });
       case 'input': return t('Bitte einen Benutzernamen eingeben.');
@@ -1340,8 +1523,10 @@
   }
   function connLoadList() {
     var s = state.settings;
-    s.connUser = $('connUser').value.trim();
     s.connSite = $('connSite').value;
+    // Profil-Links und „@name“ in den reinen Namen umwandeln
+    s.connUser = SK.connect.normalizeUser(s.connSite, $('connUser').value) || $('connUser').value.trim();
+    $('connUser').value = s.connUser;
     save();
     if (!s.connUser) { connStatus(t('Bitte deinen Benutzernamen eingeben.'), 'error'); return; }
     conn.busy = true;
@@ -1350,11 +1535,13 @@
     connFetch(20).then(function (games) {
       conn.busy = false; conn.games = games; conn.lastCheck = Date.now();
       if (games.length && !s.connLast) { s.connLast = games[0].end; save(); }
-      connStatus(games.length ? t('{n} beendete Partien von {u}.', { n: games.length, u: s.connUser }) : t('Keine beendeten Partien gefunden.'), games.length ? 'ok' : '');
+      connStatus(games.length ? t('{n} beendete Partien von {u}.', { n: games.length, u: s.connUser })
+        : t('Keine beendeten Partien von {u} in den letzten 6 Monaten gefunden.', { u: s.connUser }), games.length ? 'ok' : '');
       renderGames();
     }, function (e) {
       conn.busy = false;
       connStatus(connErrorText(e), 'error');
+      if (e && e.code === 'blocked') renderConnNote();
     });
   }
   function fmtTc(tc) {
@@ -1432,8 +1619,7 @@
     if (!key || savedFor === key || state.line.length < 6 || !state.settings.autoReview) return;
     var need = reviewDepth();
     for (var i = 0; i <= state.line.length; i++) {
-      var f = fenAt(i);
-      if (!posInfo(f).terminal && !an.ready(f, need)) return;
+      if (!posInfoAt(i).terminal && !an.ready(fenAt(i), need, hkAt(i))) return;
     }
     var entry = LIB.entryFrom(state.game, state.pgn || exportPgn(), state.headers);
     if (state.user && state.user.color && !entry.userColor) {
@@ -1442,8 +1628,16 @@
       entry.userResult = r === '1/2-1/2' ? 'draw' : r === '1-0' ? (entry.userColor === 'w' ? 'win' : 'loss') : r === '0-1' ? (entry.userColor === 'b' ? 'win' : 'loss') : null;
     }
     var tc = state.headers.TimeControl || (state.game && state.game.timeControl);
-    var analysis = INS.analyzeGame(state.line, function (f2) { return an.entry(f2); },
-      { minDepth: MIN_D, depth: reviewDepth(), timeControl: tc, gameId: entry.id, userColor: entry.userColor, terminal: terminalOf });
+    // Analyse und Partieende je Halbzug (Wiederholungen haben eigene Einträge)
+    var byFen = new Map(), termByFen = new Map();
+    for (var j = 0; j <= state.line.length; j++) {
+      byFen.set(fenAt(j), entryAt(j));
+      var pj = posInfoAt(j);
+      if (pj.terminal) termByFen.set(fenAt(j), pj.terminal);
+    }
+    var analysis = INS.analyzeGame(state.line, function (f2) { return byFen.has(f2) ? byFen.get(f2) : an.entry(f2); },
+      { minDepth: MIN_D, depth: reviewDepth(), timeControl: tc, gameId: entry.id, userColor: entry.userColor,
+        terminal: function (f3) { return termByFen.has(f3) ? termByFen.get(f3) : terminalOf(f3); } });
     if (!analysis) return;
     savedFor = key;
     entry.analysis = analysis; entry.opening = analysis.opening;
@@ -1881,7 +2075,7 @@
   function exportPgn() {
     var results = classifyAll();
     var h = Object.assign({ Event: 'Zugradar', Site: '?', Date: new Date().toISOString().slice(0, 10).replace(/-/g, '.'), White: '?', Black: '?', Result: '*' }, state.headers);
-    var pi = posInfo(fenAt(state.line.length));
+    var pi = posInfoAt(state.line.length);
     if (pi.terminal) h.Result = pi.terminal === 'mate' ? (pi.turn === 'w' ? '0-1' : '1-0') : '1/2-1/2';
     if (state.startFen !== START) { h.SetUp = '1'; h.FEN = state.startFen; }
     var order = ['Event', 'Site', 'Date', 'Round', 'White', 'Black', 'Result'];
@@ -1893,7 +2087,7 @@
       var r = results[i];
       var tk = (m.color === 'w' ? numv + '. ' : (i === 0 ? numv + '... ' : '')) +
               m.san + (r && C.CATS[r.key].nag ? C.CATS[r.key].nag : '');
-      var e = an.entry(m.fenAfter);
+      var e = entryAt(i + 1);
       var com = [];
       if (e && e.lines[0]) {
         var ws = whiteScore(m.fenAfter, e.lines[0].score);
@@ -1954,6 +2148,10 @@
       var c = e.target.closest('.mv[data-ply]');
       if (c && !train) go(+c.dataset.ply);
     });
+    $('reviewSummary').addEventListener('click', function (e) {
+      var b = e.target.closest('[data-ply]');
+      if (b && !train) go(+b.getAttribute('data-ply'));
+    });
     $('moments').addEventListener('click', function (e) {
       var c = e.target.closest('.km[data-ply]');
       if (c && !train) go(+c.dataset.ply);
@@ -1985,6 +2183,8 @@
     $('modeTrainer').onclick = function () { if (state.mode !== 'trainer') setMode('trainer'); };
     $('btnPlayNew').onclick = function () { state.mode = 'play'; newGame(); };
     $('btnPlayFrom').onclick = playFromStash;
+    $('btnThreat').onclick = toggleThreat;
+    $('connToPgn').onclick = function () { setImportTab('pgn'); $('importText').focus(); };
     $('helpBtn').onclick = openHelp;
     $('helpClose').onclick = closeHelp;
     $('helpBox').addEventListener('click', function (e) { if (e.target === $('helpBox')) closeHelp(); });
@@ -2184,6 +2384,7 @@
       else if (e.key === 'Home') { go(0); e.preventDefault(); }
       else if (e.key === 'End') { go(state.line.length); e.preventDefault(); }
       else if (e.key === 'f' || e.key === 'F') { $('btnFlip').click(); }
+      else if (e.key === 't' || e.key === 'T') { toggleThreat(); }
       else if (e.key === ' ' && !$('btnBest').disabled && e.target === document.body) { playBest(); e.preventDefault(); }
     });
   }
@@ -2220,7 +2421,7 @@
     $('helpLegend').innerHTML = C.ORDER.map(function (k) {
       return '<div class="hl"><span class="sym c-' + k + '">' + C.CATS[k].sym + '</span><b>' + esc(catLabel(k)) + '</b><span>' + esc(t(HELP_CATS[k])) + '</span></div>';
     }).join('');
-    var keys = [['← →', t('Zug zurück / vor')], [t('Pos1') + ' / ' + t('Ende'), t('Zum Anfang / zum Ende')], ['F', t('Brett drehen')],
+    var keys = [['← →', t('Zug zurück / vor')], [t('Pos1') + ' / ' + t('Ende'), t('Zum Anfang / zum Ende')], ['F', t('Brett drehen')], ['T', t('Was droht? (Drohung zeigen)')],
                 [t('Leertaste'), t('Besten Zug spielen')], ['Esc', t('Dialog oder Training beenden')]];
     $('helpKeys').innerHTML = keys.map(function (k) { return '<tr><td><kbd>' + esc(k[0]) + '</kbd></td><td>' + esc(k[1]) + '</td></tr>'; }).join('');
     var mail = (CFG.support && CFG.support.email) || '';
@@ -2298,9 +2499,25 @@
     try { history.replaceState(null, '', location.pathname + location.search); } catch (e) { /* egal */ }
   }
 
+  // Eingebettet (z. B. claude.ai-Vorschau) oder schon eine gesperrte Verbindung gesehen?
+  function connRestricted() {
+    var embedded = false;
+    try { embedded = window.top !== window.self; } catch (e) { embedded = true; }
+    return embedded || Object.keys(SK.connect._blocked).length > 0;
+  }
+  function renderConnNote() {
+    var show = connRestricted();
+    $('connEmbed').hidden = !show;
+    if (!show) return;
+    var site = (CFG.siteUrl || '').replace(/\/?$/, '/');
+    var link = $('connSiteLink');
+    link.hidden = !CFG.siteUrl;
+    if (CFG.siteUrl) link.href = site + 'zugradar.html#laden';
+  }
   function openImport(tab) {
     $('importError').hidden = true; $('importBox').hidden = false;
     setImportTab(tab || 'games');
+    renderConnNote();
   }
   function closeImport() { $('importBox').hidden = true; }
   function setImportTab(tab) {
@@ -2315,7 +2532,7 @@
 
   function playBest() {
     if (train) return;
-    var fen = fenAt(state.ply), e = an.entry(fen);
+    var e = entryAt(state.ply);
     if (!e || !e.lines.length) return;
     userMove(uciToMove(e.lines[0].uci));
   }
@@ -2362,7 +2579,8 @@
                           importText: importText, exportPgn: exportPgn, setMode: setMode, newGame: newGame, render: render,
                           startTraining: startTraining, startTrainer: startTrainer, trainMove: trainMove, train: function () { return train; },
                           connPoll: connPoll, coachFor: coachFor, batch: function () { return batch; }, batchStart: batchStart,
-                          openPro: openPro, applyLanguage: applyLanguage, openHelp: openHelp, handleHash: handleHash };
+                          openPro: openPro, applyLanguage: applyLanguage, openHelp: openHelp, handleHash: handleHash,
+                          repInfo: repInfo, posInfoAt: posInfoAt, entryAt: entryAt };
   }
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);

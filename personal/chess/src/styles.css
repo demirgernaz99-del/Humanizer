@@ -720,3 +720,16 @@ select {
   .help-legend .hl { grid-template-columns: 28px minmax(0, 1fr); }
   .help-legend .hl span:last-child { grid-column: 2; font-size: 13px; margin-top: -4px; }
 }
+.conn-note { border: 1px solid var(--accent); border-radius: 10px; padding: 12px 14px; margin-bottom: 12px; background: color-mix(in srgb, var(--accent) 7%, var(--panel)); display: grid; gap: 6px; }
+.conn-note p { margin: 0; font-size: 13.5px; color: var(--ink-2); line-height: 1.5; }
+.conn-note a.btn { text-decoration: none; }
+.acc .perf { margin-top: 6px; font: 600 12.5px/1.2 var(--f-mono); color: var(--ink-2); cursor: help; }
+.review-summary { margin: 12px 0 4px; padding: 12px 14px; border-radius: 10px; background: var(--panel-2); border: 1px solid var(--line); display: grid; gap: 6px; }
+.review-summary p { margin: 0; font-size: 14px; line-height: 1.55; color: var(--ink-2); }
+.linkish { border: 0; background: none; padding: 0; font: inherit; font-weight: 600; color: var(--ink); text-decoration: underline; text-underline-offset: 2px; cursor: pointer; }
+.arrow.threat { fill: #d6453d; opacity: .8; }
+.icon-btn.on { border-color: #d6453d; background: color-mix(in srgb, #d6453d 14%, var(--panel)); }
+.icon-btn.on svg { stroke: #d6453d; }
+.threat-line { margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--line); font-size: 14px; color: var(--ink-2); display: flex; align-items: center; gap: 8px; }
+.threat-line .th-icon { display: inline-grid; place-items: center; width: 20px; height: 20px; border-radius: 50%; background: #d6453d; color: #fff; font: 800 12px/1 var(--f-body); flex: none; }
+.threat-line .th-icon.ok { background: var(--c-best); }

@@ -51,6 +51,9 @@
           <button type="button" class="icon-btn" id="btnFlip" data-t-title="Brett drehen (F)" title="Brett drehen (F)" data-t-aria="Brett drehen" aria-label="Brett drehen">
             <svg viewBox="0 0 24 24"><path d="M7 4v13m0 0-3.5-3.5M7 17l3.5-3.5M17 20V7m0 0-3.5 3.5M17 7l3.5 3.5"/></svg>
           </button>
+          <button type="button" class="icon-btn" id="btnThreat" aria-pressed="false" data-t-title="Was droht? Zeigt den Zug, den der Gegner jetzt spielen würde (T)" title="Was droht? Zeigt den Zug, den der Gegner jetzt spielen würde (T)" data-t-aria="Drohung zeigen" aria-label="Drohung zeigen">
+            <svg viewBox="0 0 24 24"><path d="M12 3 2.5 20h19L12 3zM12 10v4.5M12 17.2v.3"/></svg>
+          </button>
           <span class="ctl-sep"></span>
           <button type="button" class="icon-btn" id="btnFirst" data-t-title="Zum Anfang (Pos1)" title="Zum Anfang (Pos1)" data-t-aria="Zum Anfang" aria-label="Zum Anfang">
             <svg viewBox="0 0 24 24"><path d="M6 5v14M18 6l-7 6 7 6"/></svg>
@@ -126,6 +129,7 @@
           <div class="engine-meta" id="engineMeta"></div>
         </div>
         <ol class="lines" id="lines"></ol>
+        <div class="threat-line" id="threatLine" hidden></div>
       </section>
 
       <section class="card sheet" id="sheetCard">
@@ -147,6 +151,7 @@
         </div>
         <div class="graph" id="graph"></div>
         <div class="acc" id="acc"></div>
+        <div class="review-summary" id="reviewSummary" hidden></div>
         <table class="counts" id="counts"></table>
         <h3 class="sub-head" data-t>Phasen</h3>
         <table class="phases" id="phases"></table>
@@ -241,6 +246,14 @@
         </div>
       </div>
       <div id="paneGames" class="pane">
+        <div class="conn-note" id="connEmbed" hidden>
+          <b data-t>Hier ist die Verbindung gesperrt</b>
+          <p data-t>In eingebetteten Vorschauen (z. B. auf claude.ai) blockiert der Browser jede Verbindung zu chess.com und lichess. Auf der Zugradar-Website lädt die App deine Partien direkt.</p>
+          <div class="play-actions">
+            <a class="btn accent small" id="connSiteLink" target="_blank" rel="noopener" data-t>Zugradar-Website öffnen</a>
+            <button type="button" class="btn ghost small" id="connToPgn" data-t>Stattdessen PGN einfügen</button>
+          </div>
+        </div>
         <div class="conn-form">
           <select id="connSite" data-t-aria="Plattform" aria-label="Plattform"><option value="chesscom">chess.com</option><option value="lichess">lichess</option></select>
           <input id="connUser" type="text" data-t-placeholder="Benutzername" placeholder="Benutzername" autocomplete="off" autocapitalize="off" spellcheck="false" data-t-aria="Benutzername" aria-label="Benutzername">
@@ -311,6 +324,8 @@
       </ol>
       <h3 data-t>Die Symbole</h3>
       <div class="help-legend" id="helpLegend"></div>
+      <h3 data-t>So rechnet Zugradar</h3>
+      <p data-t-html>Grundlage ist die <b>Gewinnchance</b> vor und nach jedem Zug (Formel wie bei lichess). Kostet ein Zug weniger als 2 % Gewinnchance, ist er exzellent; ab 20 % ist es ein Patzer. <b>Brillant</b> heißt: (fast) bester Zug mit einem echten Materialopfer, das Stockfish bestätigt. Die <b>Leistung</b> kommt aus dem durchschnittlichen Bauernverlust pro Zug (ACPL): Elo ≈ 3100 · e<sup>−ACPL/100</sup>. Stockfish kennt den Partieverlauf und damit auch Remis durch Zugwiederholung.</p>
       <h3 data-t>Tastenkürzel</h3>
       <table class="keys" id="helpKeys"></table>
       <h3 data-t>Deine Daten</h3>

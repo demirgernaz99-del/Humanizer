@@ -103,8 +103,12 @@ sorgfältige Vorlage, ersetzen aber keine Rechtsberatung. Lass sie prüfen, z. B
 
 ## Schritt 6 – Online stellen
 
-**Schnell und kostenlos:** GitHub → Repository → Settings → Pages → „Deploy from a branch“ → Branch wählen,
-Ordner `/ (root)` → Save. Die App liegt dann unter `…/personal/chess/`.
+**Wichtig – erst damit funktioniert die Verbindung zu chess.com und lichess:** In Vorschauen (z. B. claude.ai) sperrt
+der Browser alle fremden Verbindungen. Zugradar braucht eine eigene Website.
+
+**Schnell und kostenlos (1 Minute):** <https://github.com/demirgernaz99-del/Humanizer/settings/pages> öffnen →
+„Source: Deploy from a branch“ → Branch `claude/trusting-pascal-xy0947`, Ordner `/ (root)` → Save. Nach 1–2 Minuten
+läuft die App unter <https://demirgernaz99-del.github.io/Humanizer/personal/chess/zugradar.html>.
 
 **Besser für den Verkauf:** eine eigene Domain (z. B. `zugradar.de`). Den Ordner `personal/chess/` über GitHub Pages,
 Cloudflare Pages oder Netlify ausliefern. Danach `siteUrl` in `seller.json` anpassen und neu bauen.

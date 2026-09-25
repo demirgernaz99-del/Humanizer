@@ -1,7 +1,7 @@
 # Zugradar verkaufen – Leitfaden
 
 Dieser Leitfaden erklärt Preise, Recht und Marketing. Die konkreten Klicks bis zum ersten Verkauf stehen in
-**[LAUNCH.md](LAUNCH.md)**. Ob alles bereit ist, zeigt `python3 tools/launch_check.py`.
+**[LAUNCH.md](LAUNCH.md)**, die Konkurrenzanalyse mit Positionierung in **[KONKURRENZ.md](KONKURRENZ.md)**. Ob alles bereit ist, zeigt `python3 tools/launch_check.py`.
 Der Leitfaden ersetzt keine Rechts- oder Steuerberatung. Die markierten Punkte solltest du von Fachleuten prüfen lassen.
 
 ## 1. Was fertig ist

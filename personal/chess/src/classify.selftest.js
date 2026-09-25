@@ -126,6 +126,24 @@ eq(sum.w.n, 2, 'bewertete weiße Züge');
 ok(sum.w.accuracy > 99, 'Genauigkeit Weiß hoch');
 ok(sum.b.accuracy < 30, 'Genauigkeit Schwarz niedrig');
 
+/* ---------- Leistung (ACPL, Elo-Schätzung) ---------- */
+eq(C.eloFromAcpl(20), 2540, 'Elo-Schätzung ACPL 20');
+eq(C.eloFromAcpl(60), 1700, 'Elo-Schätzung ACPL 60');
+eq(C.eloFromAcpl(0), 3000, 'Elo-Schätzung nach oben begrenzt');
+eq(C.eloFromAcpl(500), 400, 'Elo-Schätzung nach unten begrenzt');
+var perf = [];
+for (var pi2 = 0; pi2 < 20; pi2++) {
+  perf.push({ color: pi2 % 2 ? 'b' : 'w', cls: { key: 'good', accuracy: 90, wpBefore: 50,
+    bestScore: { cp: 30 }, playedScore: pi2 % 2 ? { cp: -70 } : { cp: 10 } } });
+}
+perf.push({ color: 'w', cls: { key: 'blunder', accuracy: 10, wpBefore: 50, bestScore: { mate: 2 }, playedScore: { cp: -5000 } } });
+var ps = C.summarize(perf);
+eq(Math.round(ps.b.acpl), 100, 'ACPL Schwarz (100 cp pro Zug)');
+eq(Math.round(ps.w.acpl), Math.round((10 * 20 + 2000) / 11), 'ACPL Weiß: Matt und große Werte auf ±1000 begrenzt');
+eq(ps.b.elo, 1140, 'Elo-Schätzung Schwarz');
+ok(ps.b.elo > ps.w.elo, 'weniger Verlust → höhere Schätzung');
+eq(C.summarize(perf.slice(0, 6)).w.elo, null, 'zu wenige Züge → keine Schätzung');
+
 /* ---------- Eröffnungsbuch ---------- */
 var bad = 0;
 B.LINES.forEach(function (row) {

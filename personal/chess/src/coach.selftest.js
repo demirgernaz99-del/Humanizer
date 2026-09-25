@@ -99,7 +99,18 @@ var LI = [
 ].map(function (g) { return JSON.stringify(g); }).join('\n') + '\n';
 var li = fakeFetch({ 'https://lichess.org/api/games/user/demo_user': LI });
 
+// Benutzername aus Profil-Links und „@name“
+eq(CN.normalizeUser('chesscom', 'https://www.chess.com/member/Demo_User'), 'Demo_User', 'chess.com-Profillink → Name');
+eq(CN.normalizeUser('chesscom', 'chess.com/de/member/demo_user?ref=x'), 'demo_user', 'chess.com-Link mit Sprache und Parameter');
+eq(CN.normalizeUser('chesscom', ' @Demo_User '), 'Demo_User', '„@name“ und Leerzeichen');
+eq(CN.normalizeUser('lichess', 'https://lichess.org/@/demo_user/all'), 'demo_user', 'lichess-Profillink → Name');
+
 Promise.all([
+  CN.fetchGames('chesscom', 'https://www.chess.com/member/Demo_User', { limit: 10 }, cc).then(function (games) {
+    eq(games.length, 2, 'chess.com: Profillink funktioniert wie der Name');
+  }),
+  CN.fetchGames('chesscom', 'Max Mustermann', {}, cc).then(function () { ok(false, 'Leerzeichen im Namen sollte fehlschlagen'); },
+    function (e) { eq(e.code, 'badname', 'ungültiger Benutzername abgefangen'); }),
   CN.fetchGames('chesscom', 'Demo_User', { limit: 10 }, cc).then(function (games) {
     eq(games.length, 2, 'chess.com: nur Standardschach');
     eq(games[0].id, 'u2', 'chess.com: neueste zuerst');
@@ -122,7 +133,7 @@ Promise.all([
     function (e) { eq(e.code, 'notfound', '404 → Benutzer nicht gefunden'); }),
   CN.fetchGames('chesscom', '  ', {}, cc).then(function () { ok(false, 'leerer Name sollte fehlschlagen'); },
     function (e) { eq(e.code, 'input', 'leerer Benutzername abgefangen'); }),
-  CN.fetchGames('lichess', 'x', {}, fakeFetch({ 'https://lichess.org/': 'NETWORK' })).then(function () { ok(false, 'Netzfehler sollte fehlschlagen'); },
+  CN.fetchGames('lichess', 'xy', {}, fakeFetch({ 'https://lichess.org/': 'NETWORK' })).then(function () { ok(false, 'Netzfehler sollte fehlschlagen'); },
     function (e) { eq(e.code, 'network', 'Netzfehler nach Wiederholungen gemeldet'); }),
   (function () {
     // chess.com liefert zweimal einen Netzfehler (fehlender CORS-Header), dann klappt es

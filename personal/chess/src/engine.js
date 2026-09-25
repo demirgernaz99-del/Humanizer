@@ -39,6 +39,10 @@
 
   // Schlüssel ohne Zugzähler: gleiche Stellung → gleiche Analyse
   function posKey(fen) { return fen.split(' ').slice(0, 4).join(' '); }
+  /* Zughistorie: hist = { hk, start, moves } nur dann, wenn sie die Bewertung ändern kann
+     (eine Stellung seit dem letzten Bauernzug/Schlagen kam schon zweimal vor → dritte Wiederholung = Remis).
+     Dann bekommt die Stellung einen eigenen Cache-Eintrag (Schlüssel + '#' + hk). */
+  function akey(fen, hk) { return posKey(fen) + (hk ? '#' + hk : ''); }
 
   /* ---------- Low-Level: ein Worker, ein UCI-Strom ---------- */
 
@@ -149,7 +153,7 @@
   };
   Engine.prototype.has = function (name) { return !!this.options[name]; };
 
-  /* job = { fen, multipv, depth?, movetime?, infinite?, strength?, onInfo(info, job), onDone(bestmove, job) } */
+  /* job = { fen, hist?, multipv, depth?, movetime?, infinite?, strength?, onInfo(info, job), onDone(bestmove, job) } */
   Engine.prototype.run = function (job) {
     if (this.state !== 'ready') return false;
     if (this.current) {
@@ -184,7 +188,9 @@
       this._opt('UCI_LimitStrength', 'false');
       this._opt('Skill Level', 20);
     }
-    this._send('position fen ' + job.fen);
+    // Mit Zughistorie erkennt Stockfish Stellungswiederholungen (und vermeidet sie, wenn es auf Gewinn steht)
+    if (job.hist && job.hist.moves && job.hist.moves.length) this._send('position fen ' + job.hist.start + ' moves ' + job.hist.moves.join(' '));
+    else this._send('position fen ' + job.fen);
     if (job.movetime) this._send('go movetime ' + job.movetime);
     else if (job.infinite) this._send('go infinite');
     else this._send('go depth ' + (job.depth || 18));
@@ -213,35 +219,46 @@
     this.focus = null;          // { fen, key, legal }
     this.queue = [];            // [{ fen, key, legal }]
     this.play = null;           // { fen, strength, movetime, cb }
-    this.cfg = Object.assign({ liveMin: 16, liveMax: 24, reviewDepth: 16, liveMpv: 3, reviewMpv: 2 }, opts || {});
+    this.threat = null;         // { fen, key } – Stellung mit „Nullzug“: Was würde der Gegner jetzt spielen?
+    this.cfg = Object.assign({ liveMin: 16, liveMax: 24, reviewDepth: 16, liveMpv: 3, reviewMpv: 2, threatDepth: 14 }, opts || {});
     this.onUpdate = null;       // (key, entry)
     this.onActivity = null;     // (text)
     this.job = null;
     this.paused = false;
   }
 
-  Analyzer.prototype.entry = function (fen) { return this.cache.get(posKey(fen)) || null; };
+  Analyzer.prototype.entry = function (fen, hk) { return this.cache.get(akey(fen, hk)) || null; };
 
-  Analyzer.prototype.setFocus = function (fen, legal) {
-    var key = posKey(fen);
+  Analyzer.prototype.setFocus = function (fen, legal, hist) {
+    var key = akey(fen, hist && hist.hk);
     if (this.focus && this.focus.key === key) return;
-    this.focus = { fen: fen, key: key, legal: legal };
+    this.focus = { fen: fen, key: key, legal: legal, hist: hist || null };
     this.schedule(true);
   };
 
   Analyzer.prototype.setQueue = function (items) {
     // depth: Zieltiefe je Eintrag (Standard: Review-Tiefe); batch: gehört zur Serien-Analyse
-    this.queue = items.map(function (x) { return { fen: x.fen, key: posKey(x.fen), legal: x.legal, depth: x.depth || 0, batch: !!x.batch }; });
+    this.queue = items.map(function (x) {
+      return { fen: x.fen, key: akey(x.fen, x.hist && x.hist.hk), hist: x.hist || null, legal: x.legal, depth: x.depth || 0, batch: !!x.batch };
+    });
     this.schedule(false);
   };
 
-  Analyzer.prototype.markTerminal = function (fen, kind) {
-    var key = posKey(fen);
+  Analyzer.prototype.markTerminal = function (fen, kind, hk) {
+    var key = akey(fen, hk);
     if (!this.cache.has(key)) this.cache.set(key, { key: key, fen: fen, depth: 99, lines: [], terminal: kind });
   };
 
-  Analyzer.prototype.requestMove = function (fen, strength, movetime, cb) {
-    this.play = { fen: fen, strength: strength, movetime: movetime, cb: cb };
+  // Drohung: dieselbe Stellung, aber der Gegner ist am Zug (null = aus)
+  Analyzer.prototype.setThreat = function (fen) {
+    var key = fen ? akey(fen) : null;
+    if ((this.threat && this.threat.key) === key) return;
+    this.threat = fen ? { fen: fen, key: key } : null;
+    this.schedule(true);
+  };
+
+  Analyzer.prototype.requestMove = function (fen, strength, movetime, cb, hist) {
+    this.play = { fen: fen, strength: strength, movetime: movetime, cb: cb, hist: hist || null };
     this.schedule(true);
   };
   Analyzer.prototype.cancelMove = function () {
@@ -269,8 +286,8 @@
   };
 
   // Genug analysiert für die Bewertung?
-  Analyzer.prototype.ready = function (fen, depth) {
-    var e = this.cache.get(posKey(fen));
+  Analyzer.prototype.ready = function (fen, depth, hk) {
+    var e = this.cache.get(akey(fen, hk));
     return !!e && (!!e.terminal || e.depth >= depth);
   };
 
@@ -287,6 +304,8 @@
   // Was soll die Engine als Nächstes tun?
   Analyzer.prototype._pick = function () {
     if (this.play) return { kind: 'play' };
+    var th = this.threat, te = th ? this.cache.get(th.key) : null;
+    if (th && !(te && (te.terminal || te.depth >= this.cfg.threatDepth))) return { kind: 'threat' };
     var f = this.focus, fe = f ? this.cache.get(f.key) : null;
     var focusDepth = fe ? fe.depth : 0;
     var focusTodo = f && !(fe && fe.terminal) && f.legal !== 0;
@@ -304,6 +323,7 @@
     if (job && !job.finished && want) {
       var same = (want.kind === 'play' && job.kind === 'play' && job.playRef === this.play) ||
                  (want.kind === 'focus' && job.kind === 'focus' && this.focus && job.key === this.focus.key) ||
+                 (want.kind === 'threat' && job.kind === 'threat' && this.threat && job.key === this.threat.key) ||
                  (want.kind === 'review' && job.kind === 'review' && job.key === want.item.key);
       if (same) return;
     }
@@ -316,10 +336,10 @@
   };
 
   Analyzer.prototype._start = function (want) {
-    var self = this, fen, key, mpv, depth, legal;
+    var self = this, fen, key, mpv, depth, legal, hist;
     if (want.kind === 'play') {
       var p = this.play;
-      var job = { kind: 'play', playRef: p, fen: p.fen, key: posKey(p.fen), strength: p.strength, movetime: p.movetime,
+      var job = { kind: 'play', playRef: p, fen: p.fen, hist: p.hist, key: akey(p.fen, p.hist && p.hist.hk), strength: p.strength, movetime: p.movetime,
                   onInfo: function () {}, onDone: function (bm, j) {
                     j.finished = true;
                     if (self.job === j) self.job = null;
@@ -332,13 +352,15 @@
       return;
     }
     if (want.kind === 'focus') {
-      fen = this.focus.fen; key = this.focus.key; legal = this.focus.legal;
+      fen = this.focus.fen; key = this.focus.key; legal = this.focus.legal; hist = this.focus.hist;
       mpv = Math.min(this.cfg.liveMpv, legal || 9); depth = this.cfg.liveMax;
+    } else if (want.kind === 'threat') {
+      fen = this.threat.fen; key = this.threat.key; legal = 9; hist = null; mpv = 1; depth = this.cfg.threatDepth;
     } else {
-      fen = want.item.fen; key = want.item.key; legal = want.item.legal;
+      fen = want.item.fen; key = want.item.key; legal = want.item.legal; hist = want.item.hist;
       mpv = Math.min(this.cfg.reviewMpv, legal || 9); depth = want.item.depth || this.cfg.reviewDepth;
     }
-    var j2 = { kind: want.kind, fen: fen, key: key, multipv: mpv, depth: depth, lines: [],
+    var j2 = { kind: want.kind, fen: fen, hist: hist, key: key, multipv: mpv, depth: depth, lines: [],
                onInfo: function (info, j) { self._info(info, j); },
                onDone: function (bm, j) {
                  j.finished = true;
@@ -380,6 +402,6 @@
     if (job.kind === 'focus' && d >= this.cfg.liveMin && this._reviewTodo() && !job.stopping) this.schedule(false);
   };
 
-  root.SK.engine = { Engine: Engine, Analyzer: Analyzer, parseInfo: parseInfo, posKey: posKey, CANDIDATES: CANDIDATES };
+  root.SK.engine = { Engine: Engine, Analyzer: Analyzer, parseInfo: parseInfo, posKey: posKey, akey: akey, CANDIDATES: CANDIDATES };
 })();
 if (typeof module !== 'undefined') module.exports = (typeof window !== 'undefined' ? window : globalThis).SK.engine;

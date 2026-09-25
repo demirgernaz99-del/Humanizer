@@ -737,6 +737,19 @@ select {
   .help-legend .hl { grid-template-columns: 28px minmax(0, 1fr); }
   .help-legend .hl span:last-child { grid-column: 2; font-size: 13px; margin-top: -4px; }
 }
+.conn-note { border: 1px solid var(--accent); border-radius: 10px; padding: 12px 14px; margin-bottom: 12px; background: color-mix(in srgb, var(--accent) 7%, var(--panel)); display: grid; gap: 6px; }
+.conn-note p { margin: 0; font-size: 13.5px; color: var(--ink-2); line-height: 1.5; }
+.conn-note a.btn { text-decoration: none; }
+.acc .perf { margin-top: 6px; font: 600 12.5px/1.2 var(--f-mono); color: var(--ink-2); cursor: help; }
+.review-summary { margin: 12px 0 4px; padding: 12px 14px; border-radius: 10px; background: var(--panel-2); border: 1px solid var(--line); display: grid; gap: 6px; }
+.review-summary p { margin: 0; font-size: 14px; line-height: 1.55; color: var(--ink-2); }
+.linkish { border: 0; background: none; padding: 0; font: inherit; font-weight: 600; color: var(--ink); text-decoration: underline; text-underline-offset: 2px; cursor: pointer; }
+.arrow.threat { fill: #d6453d; opacity: .8; }
+.icon-btn.on { border-color: #d6453d; background: color-mix(in srgb, #d6453d 14%, var(--panel)); }
+.icon-btn.on svg { stroke: #d6453d; }
+.threat-line { margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--line); font-size: 14px; color: var(--ink-2); display: flex; align-items: center; gap: 8px; }
+.threat-line .th-icon { display: inline-grid; place-items: center; width: 20px; height: 20px; border-radius: 50%; background: #d6453d; color: #fff; font: 800 12px/1 var(--f-body); flex: none; }
+.threat-line .th-icon.ok { background: var(--c-best); }
 
 /* Figuren: cburnett-Satz (Colin M.L. Burnett, GPLv2+), entnommen aus lichess chessground (GPLv3). */
 .pc.wp{background-image:url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0NSIgaGVpZ2h0PSI0NSI+PHBhdGggZD0iTTIyLjUgOWMtMi4yMSAwLTQgMS43OS00IDQgMCAuODkuMjkgMS43MS43OCAyLjM4QzE3LjMzIDE2LjUgMTYgMTguNTkgMTYgMjFjMCAyLjAzLjk0IDMuODQgMi40MSA1LjAzLTMgMS4wNi03LjQxIDUuNTUtNy40MSAxMy40N2gyM2MwLTcuOTItNC40MS0xMi40MS03LjQxLTEzLjQ3IDEuNDctMS4xOSAyLjQxLTMgMi40MS01LjAzIDAtMi40MS0xLjMzLTQuNS0zLjI4LTUuNjIuNDktLjY3Ljc4LTEuNDkuNzgtMi4zOCAwLTIuMjEtMS43OS00LTQtNHoiIGZpbGw9IiNmZmYiIHN0cm9rZT0iIzAwMCIgc3Ryb2tlLXdpZHRoPSIxLjUiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPjwvc3ZnPg==')}
@@ -795,6 +808,9 @@ select {
         <div class="controls">
           <button type="button" class="icon-btn" id="btnFlip" data-t-title="Brett drehen (F)" title="Brett drehen (F)" data-t-aria="Brett drehen" aria-label="Brett drehen">
             <svg viewBox="0 0 24 24"><path d="M7 4v13m0 0-3.5-3.5M7 17l3.5-3.5M17 20V7m0 0-3.5 3.5M17 7l3.5 3.5"/></svg>
+          </button>
+          <button type="button" class="icon-btn" id="btnThreat" aria-pressed="false" data-t-title="Was droht? Zeigt den Zug, den der Gegner jetzt spielen würde (T)" title="Was droht? Zeigt den Zug, den der Gegner jetzt spielen würde (T)" data-t-aria="Drohung zeigen" aria-label="Drohung zeigen">
+            <svg viewBox="0 0 24 24"><path d="M12 3 2.5 20h19L12 3zM12 10v4.5M12 17.2v.3"/></svg>
           </button>
           <span class="ctl-sep"></span>
           <button type="button" class="icon-btn" id="btnFirst" data-t-title="Zum Anfang (Pos1)" title="Zum Anfang (Pos1)" data-t-aria="Zum Anfang" aria-label="Zum Anfang">
@@ -871,6 +887,7 @@ select {
           <div class="engine-meta" id="engineMeta"></div>
         </div>
         <ol class="lines" id="lines"></ol>
+        <div class="threat-line" id="threatLine" hidden></div>
       </section>
 
       <section class="card sheet" id="sheetCard">
@@ -892,6 +909,7 @@ select {
         </div>
         <div class="graph" id="graph"></div>
         <div class="acc" id="acc"></div>
+        <div class="review-summary" id="reviewSummary" hidden></div>
         <table class="counts" id="counts"></table>
         <h3 class="sub-head" data-t>Phasen</h3>
         <table class="phases" id="phases"></table>
@@ -986,6 +1004,14 @@ select {
         </div>
       </div>
       <div id="paneGames" class="pane">
+        <div class="conn-note" id="connEmbed" hidden>
+          <b data-t>Hier ist die Verbindung gesperrt</b>
+          <p data-t>In eingebetteten Vorschauen (z. B. auf claude.ai) blockiert der Browser jede Verbindung zu chess.com und lichess. Auf der Zugradar-Website lädt die App deine Partien direkt.</p>
+          <div class="play-actions">
+            <a class="btn accent small" id="connSiteLink" target="_blank" rel="noopener" data-t>Zugradar-Website öffnen</a>
+            <button type="button" class="btn ghost small" id="connToPgn" data-t>Stattdessen PGN einfügen</button>
+          </div>
+        </div>
         <div class="conn-form">
           <select id="connSite" data-t-aria="Plattform" aria-label="Plattform"><option value="chesscom">chess.com</option><option value="lichess">lichess</option></select>
           <input id="connUser" type="text" data-t-placeholder="Benutzername" placeholder="Benutzername" autocomplete="off" autocapitalize="off" spellcheck="false" data-t-aria="Benutzername" aria-label="Benutzername">
@@ -1056,6 +1082,8 @@ select {
       </ol>
       <h3 data-t>Die Symbole</h3>
       <div class="help-legend" id="helpLegend"></div>
+      <h3 data-t>So rechnet Zugradar</h3>
+      <p data-t-html>Grundlage ist die <b>Gewinnchance</b> vor und nach jedem Zug (Formel wie bei lichess). Kostet ein Zug weniger als 2 % Gewinnchance, ist er exzellent; ab 20 % ist es ein Patzer. <b>Brillant</b> heißt: (fast) bester Zug mit einem echten Materialopfer, das Stockfish bestätigt. Die <b>Leistung</b> kommt aus dem durchschnittlichen Bauernverlust pro Zug (ACPL): Elo ≈ 3100 · e<sup>−ACPL/100</sup>. Stockfish kennt den Partieverlauf und damit auch Remis durch Zugwiederholung.</p>
       <h3 data-t>Tastenkürzel</h3>
       <table class="keys" id="helpKeys"></table>
       <h3 data-t>Deine Daten</h3>
@@ -1073,7 +1101,7 @@ select {
 </div>
 
 <script>
-(function(){var r=typeof window!=='undefined'?window:globalThis;r.SK=r.SK||{};r.SK.seller={"_hinweis": "Deine Geschäftsdaten. Nach Änderungen: python3 build.py. Leere Felder erscheinen auf der Website als [bitte ausfüllen].", "brand": "Zugradar", "siteUrl": "https://demirgernaz99-del.github.io/Humanizer/personal/chess/", "checkoutUrl": "", "prices": {"monthly": "4,99 €", "yearly": "34,99 €", "lifetime": "69 €"}, "pricesEn": {"monthly": "€4.99", "yearly": "€34.99", "lifetime": "€69"}, "license": {"provider": "lemonsqueezy", "storeId": null, "productIds": [], "organizationId": "", "benefitIds": [], "api": ""}, "legal": {"name": "", "street": "", "city": "", "country": "Deutschland", "email": "", "phone": "", "vatId": ""}, "merchantOfRecord": "Lemon Squeezy (Lemon Squeezy LLC)", "_hinweis_license": "provider: 'lemonsqueezy' (storeId, productIds) oder 'polar' (organizationId, optional benefitIds). api nur bei Proxy ausfüllen."};r.SK.build={"version": "1.0 (805d754)"};})();
+(function(){var r=typeof window!=='undefined'?window:globalThis;r.SK=r.SK||{};r.SK.seller={"_hinweis": "Deine Geschäftsdaten. Nach Änderungen: python3 build.py. Leere Felder erscheinen auf der Website als [bitte ausfüllen].", "brand": "Zugradar", "siteUrl": "https://demirgernaz99-del.github.io/Humanizer/personal/chess/", "checkoutUrl": "", "prices": {"monthly": "4,99 €", "yearly": "34,99 €", "lifetime": "69 €"}, "pricesEn": {"monthly": "€4.99", "yearly": "€34.99", "lifetime": "€69"}, "license": {"provider": "lemonsqueezy", "storeId": null, "productIds": [], "organizationId": "", "benefitIds": [], "api": ""}, "legal": {"name": "", "street": "", "city": "", "country": "Deutschland", "email": "", "phone": "", "vatId": ""}, "merchantOfRecord": "Lemon Squeezy (Lemon Squeezy LLC)", "_hinweis_license": "provider: 'lemonsqueezy' (storeId, productIds) oder 'polar' (organizationId, optional benefitIds). api nur bei Proxy ausfüllen."};r.SK.build={"version": "1.0 (a459830)"};})();
 </script>
 <script>
 /* SK.i18n – Deutsch/Englisch. Der deutsche Text ist zugleich der Schlüssel (wie gettext):
@@ -1589,7 +1617,48 @@ if (typeof module !== 'undefined') module.exports = (typeof window !== 'undefine
   "Kleiner Verlust an Gewinnchance.": "A small loss of winning chances.",
   "Deutlicher Verlust an Gewinnchance.": "A clear loss of winning chances.",
   "Ein Matt oder ein Fehler des Gegners wurde nicht genutzt.": "A mate or an opponent's mistake was not taken.",
-  "Schwerer Fehler, der oft die Partie kostet.": "A serious mistake that often costs the game."
+  "Schwerer Fehler, der oft die Partie kostet.": "A serious mistake that often costs the game.",
+  "Dreifache Stellungswiederholung": "Threefold repetition",
+  "50-Züge-Regel": "50-move rule",
+  "Damit steht dieselbe Stellung zum dritten Mal auf dem Brett – Remis, obwohl du besser standest.": "This brings the same position onto the board for the third time – a draw, although you were better.",
+  "Damit greift die 50-Züge-Regel – Remis, obwohl du besser standest. Ein Bauernzug oder Schlagzug hätte die Zählung zurückgesetzt.": "This triggers the 50-move rule – a draw, although you were better. A pawn move or capture would have reset the count.",
+  "Hier ist die Verbindung gesperrt": "Connections are blocked here",
+  "In eingebetteten Vorschauen (z. B. auf claude.ai) blockiert der Browser jede Verbindung zu chess.com und lichess. Auf der Zugradar-Website lädt die App deine Partien direkt.": "In embedded previews (e.g. on claude.ai) the browser blocks every connection to chess.com and lichess. On the Zugradar website the app loads your games directly.",
+  "Zugradar-Website öffnen": "Open the Zugradar website",
+  "Stattdessen PGN einfügen": "Paste a PGN instead",
+  "Diese Seite darf keine Verbindung zu {s} aufbauen (z. B. in einer Vorschau). Öffne Zugradar auf der eigenen Website – oder füge die PGN deiner Partie ein.": "This page is not allowed to connect to {s} (e.g. in a preview). Open Zugradar on its own website – or paste your game's PGN.",
+  "Benutzer „{u}“ gibt es auf {s} nicht. Stimmt die Schreibweise?": "There is no user “{u}” on {s}. Is the spelling right?",
+  "Das sieht nicht wie ein Benutzername aus. Gib nur den Namen ein (oder den Link zu deinem Profil).": "That doesn't look like a username. Enter just the name (or the link to your profile).",
+  "Keine beendeten Partien von {u} in den letzten 6 Monaten gefunden.": "No finished games by {u} in the last 6 months.",
+  "Grobe Schätzung aus dem durchschnittlichen Bauernverlust pro Zug (ACPL {x}). Eine einzelne Partie ist nur ein Anhaltspunkt.": "Rough estimate from the average centipawn loss per move (ACPL {x}). A single game is only an indication.",
+  "Leistung ≈ {e}": "Performance ≈ {e}",
+  "Fazit": "Summary",
+  "in der Eröffnung": "in the opening",
+  "im Mittelspiel": "in the middlegame",
+  "im Endspiel": "in the endgame",
+  "Am stärksten warst du {a} ({x}), am schwächsten {b} ({y}).": "You were strongest {a} ({x}) and weakest {b} ({y}).",
+  "{n} war {a} am stärksten ({x}), {b} am schwächsten ({y}).": "{n} was strongest {a} ({x}) and weakest {b} ({y}).",
+  "Dein teuerster Zug: {m} (Gewinnchance −{l} %).": "Your most costly move: {m} (winning chances −{l}%).",
+  "Teuerster Zug von {n}: {m} (Gewinnchance −{l} %).": "Most costly move by {n}: {m} (winning chances −{l}%).",
+  "Du hast keinen Fehler gemacht und keine Chance verpasst.": "You made no mistakes and missed no chances.",
+  "{n} hat keinen Fehler gemacht und keine Chance verpasst.": "{n} made no mistakes and missed no chances.",
+  "Dazu: {x}.": "Plus: {x}.",
+  "{n}× brillant": "{n}× brilliant",
+  "{n}× großartig": "{n}× great",
+  "Deine Leistung entsprach etwa {e} Elo.": "Your play was worth about {e} Elo.",
+  "Leistung von {n}: etwa {e} Elo.": "Performance of {n}: about {e} Elo.",
+  "Was droht? Zeigt den Zug, den der Gegner jetzt spielen würde (T)": "What's the threat? Shows the move your opponent would play now (T)",
+  "Drohung zeigen": "Show threat",
+  "Was droht? (Drohung zeigen)": "What's the threat? (show threat)",
+  "Partie beendet – keine Drohung.": "Game over – no threat.",
+  "Du stehst im Schach – das ist die Drohung.": "You are in check – that is the threat.",
+  "Drohungen erscheinen, sobald Hinweise sichtbar sind.": "Threats appear as soon as hints are visible.",
+  "Suche, was {c} droht …": "Looking for what {c} threatens …",
+  "{c} droht gerade nichts Ernstes.": "{c} is not threatening anything serious right now.",
+  "{c} droht {m} – Matt in {n}.": "{c} threatens {m} – mate in {n}.",
+  "{c} droht {m} (gewinnt etwa {p} Bauern).": "{c} threatens {m} (wins about {p} pawns).",
+  "So rechnet Zugradar": "How Zugradar calculates",
+  "Grundlage ist die <b>Gewinnchance</b> vor und nach jedem Zug (Formel wie bei lichess). Kostet ein Zug weniger als 2 % Gewinnchance, ist er exzellent; ab 20 % ist es ein Patzer. <b>Brillant</b> heißt: (fast) bester Zug mit einem echten Materialopfer, das Stockfish bestätigt. Die <b>Leistung</b> kommt aus dem durchschnittlichen Bauernverlust pro Zug (ACPL): Elo ≈ 3100 · e<sup>−ACPL/100</sup>. Stockfish kennt den Partieverlauf und damit auch Remis durch Zugwiederholung.": "Everything is based on the <b>winning chances</b> before and after each move (same formula as lichess). A move that costs less than 2% is excellent; 20% or more is a blunder. <b>Brilliant</b> means: the (nearly) best move with a real material sacrifice that Stockfish confirms. <b>Performance</b> comes from the average centipawn loss per move (ACPL): Elo ≈ 3100 · e<sup>−ACPL/100</sup>. Stockfish knows the game history and therefore draws by repetition too."
 };
 })();
 
@@ -5583,11 +5652,25 @@ if (typeof module !== 'undefined') module.exports = (typeof window !== 'undefine
   /* moves: [{color:'w'|'b', cls:{key, accuracy, wpBefore, wpAfter}}] (cls darf null sein)
      → { w:{counts, accuracy, n}, b:{...} }  Genauigkeit nach Lichess: Mittel aus
      volatilitätsgewichtetem und harmonischem Mittel. */
+  /* Leistung einer Partie: durchschnittlicher Zentibauern-Verlust (ACPL, wie bei lichess: Bewertungen auf ±1000
+     begrenzt, Matt = ±1000) und daraus eine grobe Elo-Schätzung. Die Formel ist offen und bewusst einfach:
+     Elo ≈ 3100 · e^(−ACPL/100), begrenzt auf 400–3000 (ACPL 20 ≈ 2540, 40 ≈ 2080, 60 ≈ 1700, 100 ≈ 1140).
+     Eine einzelne Partie ist nur ein Anhaltspunkt. */
+  function cpCapped(s) {
+    if (!s) return null;
+    if (s.mate != null) return s.mate > 0 ? 1000 : -1000;
+    return Math.max(-1000, Math.min(1000, s.cp));
+  }
+  function eloFromAcpl(acpl) {
+    return Math.round(Math.max(400, Math.min(3000, 3100 * Math.exp(-acpl / 100))) / 10) * 10;
+  }
+  var MIN_PERF_MOVES = 8;
+
   function summarize(moves) {
     var out = {};
     ['w', 'b'].forEach(function (c) {
       var counts = {}; ORDER.forEach(function (k) { counts[k] = 0; });
-      out[c] = { counts: counts, accuracy: null, n: 0 };
+      out[c] = { counts: counts, accuracy: null, n: 0, acpl: null, elo: null };
     });
     // Gewinnchancen-Reihe (Weiß-Sicht) für die Gewichte
     var wps = [], i;
@@ -5597,12 +5680,14 @@ if (typeof module !== 'undefined') module.exports = (typeof window !== 'undefine
       wps.push(moves[i].color === 'w' ? cl.wpBefore : 100 - cl.wpBefore);
     }
     var win = Math.max(2, Math.min(8, Math.floor(moves.length / 10)));
-    var acc = { w: [], b: [] };
+    var acc = { w: [], b: [] }, cpl = { w: [], b: [] };
     for (i = 0; i < moves.length; i++) {
       var m = moves[i];
       if (!m.cls || !m.cls.key) continue;
       out[m.color].counts[m.cls.key]++;
       out[m.color].n++;
+      var cb = cpCapped(m.cls.bestScore), cp = cpCapped(m.cls.playedScore);
+      if (cb != null && cp != null && m.cls.key !== 'book' && m.cls.key !== 'forced') cpl[m.color].push(Math.max(0, cb - cp));
       if (m.cls.accuracy == null) continue;
       var lo = Math.max(0, i - win + 1), hi = Math.min(moves.length, lo + win);
       var seg = wps.slice(lo, hi).filter(function (x) { return x != null; });
@@ -5610,6 +5695,11 @@ if (typeof module !== 'undefined') module.exports = (typeof window !== 'undefine
       acc[m.color].push({ a: m.cls.accuracy, w: w });
     }
     ['w', 'b'].forEach(function (c) {
+      var l = cpl[c];
+      if (l.length >= MIN_PERF_MOVES) {
+        out[c].acpl = l.reduce(function (p, q) { return p + q; }, 0) / l.length;
+        out[c].elo = eloFromAcpl(out[c].acpl);
+      }
       var arr = acc[c];
       if (!arr.length) return;
       var sw = 0, swa = 0, sh = 0;
@@ -5624,7 +5714,7 @@ if (typeof module !== 'undefined') module.exports = (typeof window !== 'undefine
     CATS: CATS, ORDER: ORDER, THRESHOLDS: T, VAL: VAL,
     cpToWp: cpToWp, scoreWp: scoreWp, negate: negate, fmtScore: fmtScore, scorePawns: scorePawns,
     moveAccuracy: moveAccuracy, see: see, hanging: hanging, material: material,
-    detectSacrifice: detectSacrifice, classifyMove: classifyMove, summarize: summarize, uciOf: uciOf
+    detectSacrifice: detectSacrifice, classifyMove: classifyMove, summarize: summarize, uciOf: uciOf, eloFromAcpl: eloFromAcpl
   };
 })();
 if (typeof module !== 'undefined') module.exports = (typeof window !== 'undefined' ? window : globalThis).SK.classify;
@@ -5956,6 +6046,18 @@ if (typeof module !== 'undefined') module.exports = (typeof window !== 'undefine
     });
   }
 
+  /* Benutzername aus Eingabe lesen: erlaubt auch „@name“ und Profil-Links wie
+     https://www.chess.com/member/name, chess.com/de/member/name oder https://lichess.org/@/name */
+  function normalizeUser(site, input) {
+    var u = String(input || '').trim();
+    var m = u.match(/chess\.com\/(?:[a-z]{2}(?:-[a-z]{2})?\/)?(?:member|members|player|players|profile|stats\/[a-z]+\/[a-z]+)\/([^\/?#\s]+)/i) ||
+            u.match(/lichess\.org\/@\/([^\/?#\s]+)/i);
+    if (m) u = decodeURIComponent(m[1]);
+    u = u.replace(/^@+/, '').trim();
+    return u;
+  }
+  function validUser(u) { return /^[A-Za-z0-9_-]{2,30}$/.test(u); }
+
   function resultOf(w, b) {
     if (w === 'win') return '1-0';
     if (b === 'win') return '0-1';
@@ -5976,7 +6078,8 @@ if (typeof module !== 'undefined') module.exports = (typeof window !== 'undefine
     return g;
   }
 
-  /* chess.com: Monatsarchive (nur beendete Partien), neueste zuerst */
+  /* chess.com: Monatsarchive (nur beendete Partien), neueste zuerst.
+     Es wird Monat für Monat zurückgegangen, bis genug Partien da sind (höchstens opts.months Monate). */
   function chesscom(user, opts, fetchImpl) {
     opts = opts || {};
     var limit = opts.limit || 20, name = encodeURIComponent(user.trim().toLowerCase());
@@ -5985,7 +6088,7 @@ if (typeof module !== 'undefined') module.exports = (typeof window !== 'undefine
       var archives = (JSON.parse(t).archives || []).slice().reverse();
       var games = [];
       function next(i) {
-        if (i >= archives.length || i >= (opts.months || 2) || games.length >= limit) return Promise.resolve(games);
+        if (i >= archives.length || i >= (opts.months || 6) || games.length >= limit) return Promise.resolve(games);
         return chesscomText(archives[i], fetchImpl).then(function (t2) {
           (JSON.parse(t2).games || []).forEach(function (g) {
             if (g.rules && g.rules !== 'chess') return;
@@ -6032,13 +6135,16 @@ if (typeof module !== 'undefined') module.exports = (typeof window !== 'undefine
   }
 
   function fetchGames(site, user, opts, fetchImpl) {
-    if (!user || !user.trim()) return Promise.reject(ConnectError('input', 'Bitte einen Benutzernamen eingeben.'));
+    user = normalizeUser(site, user);
+    if (!user) return Promise.reject(ConnectError('input', 'Bitte einen Benutzernamen eingeben.'));
+    if (!validUser(user)) return Promise.reject(ConnectError('badname', 'Das sieht nicht wie ein Benutzername aus.'));
     return site === 'lichess' ? lichess(user, opts, fetchImpl) : chesscom(user, opts, fetchImpl);
   }
 
   var SPEED = { bullet: 'Bullet', blitz: 'Blitz', rapid: 'Schnellschach', classical: 'Klassisch', daily: 'Fernschach', correspondence: 'Fernschach', ultraBullet: 'Bullet' };
 
-  root.SK.connect = { fetchGames: fetchGames, chesscom: chesscom, lichess: lichess, SPEED: SPEED, _blocked: blockedHosts, _retryMs: 400 };
+  root.SK.connect = { fetchGames: fetchGames, chesscom: chesscom, lichess: lichess, normalizeUser: normalizeUser, SPEED: SPEED,
+                      _blocked: blockedHosts, _retryMs: 400 };
 })();
 if (typeof module !== 'undefined') module.exports = (typeof window !== 'undefined' ? window : globalThis).SK.connect;
 
@@ -6834,6 +6940,10 @@ if (typeof module !== 'undefined') module.exports = (typeof window !== 'undefine
 
   // Schlüssel ohne Zugzähler: gleiche Stellung → gleiche Analyse
   function posKey(fen) { return fen.split(' ').slice(0, 4).join(' '); }
+  /* Zughistorie: hist = { hk, start, moves } nur dann, wenn sie die Bewertung ändern kann
+     (eine Stellung seit dem letzten Bauernzug/Schlagen kam schon zweimal vor → dritte Wiederholung = Remis).
+     Dann bekommt die Stellung einen eigenen Cache-Eintrag (Schlüssel + '#' + hk). */
+  function akey(fen, hk) { return posKey(fen) + (hk ? '#' + hk : ''); }
 
   /* ---------- Low-Level: ein Worker, ein UCI-Strom ---------- */
 
@@ -6944,7 +7054,7 @@ if (typeof module !== 'undefined') module.exports = (typeof window !== 'undefine
   };
   Engine.prototype.has = function (name) { return !!this.options[name]; };
 
-  /* job = { fen, multipv, depth?, movetime?, infinite?, strength?, onInfo(info, job), onDone(bestmove, job) } */
+  /* job = { fen, hist?, multipv, depth?, movetime?, infinite?, strength?, onInfo(info, job), onDone(bestmove, job) } */
   Engine.prototype.run = function (job) {
     if (this.state !== 'ready') return false;
     if (this.current) {
@@ -6979,7 +7089,9 @@ if (typeof module !== 'undefined') module.exports = (typeof window !== 'undefine
       this._opt('UCI_LimitStrength', 'false');
       this._opt('Skill Level', 20);
     }
-    this._send('position fen ' + job.fen);
+    // Mit Zughistorie erkennt Stockfish Stellungswiederholungen (und vermeidet sie, wenn es auf Gewinn steht)
+    if (job.hist && job.hist.moves && job.hist.moves.length) this._send('position fen ' + job.hist.start + ' moves ' + job.hist.moves.join(' '));
+    else this._send('position fen ' + job.fen);
     if (job.movetime) this._send('go movetime ' + job.movetime);
     else if (job.infinite) this._send('go infinite');
     else this._send('go depth ' + (job.depth || 18));
@@ -7008,35 +7120,46 @@ if (typeof module !== 'undefined') module.exports = (typeof window !== 'undefine
     this.focus = null;          // { fen, key, legal }
     this.queue = [];            // [{ fen, key, legal }]
     this.play = null;           // { fen, strength, movetime, cb }
-    this.cfg = Object.assign({ liveMin: 16, liveMax: 24, reviewDepth: 16, liveMpv: 3, reviewMpv: 2 }, opts || {});
+    this.threat = null;         // { fen, key } – Stellung mit „Nullzug“: Was würde der Gegner jetzt spielen?
+    this.cfg = Object.assign({ liveMin: 16, liveMax: 24, reviewDepth: 16, liveMpv: 3, reviewMpv: 2, threatDepth: 14 }, opts || {});
     this.onUpdate = null;       // (key, entry)
     this.onActivity = null;     // (text)
     this.job = null;
     this.paused = false;
   }
 
-  Analyzer.prototype.entry = function (fen) { return this.cache.get(posKey(fen)) || null; };
+  Analyzer.prototype.entry = function (fen, hk) { return this.cache.get(akey(fen, hk)) || null; };
 
-  Analyzer.prototype.setFocus = function (fen, legal) {
-    var key = posKey(fen);
+  Analyzer.prototype.setFocus = function (fen, legal, hist) {
+    var key = akey(fen, hist && hist.hk);
     if (this.focus && this.focus.key === key) return;
-    this.focus = { fen: fen, key: key, legal: legal };
+    this.focus = { fen: fen, key: key, legal: legal, hist: hist || null };
     this.schedule(true);
   };
 
   Analyzer.prototype.setQueue = function (items) {
     // depth: Zieltiefe je Eintrag (Standard: Review-Tiefe); batch: gehört zur Serien-Analyse
-    this.queue = items.map(function (x) { return { fen: x.fen, key: posKey(x.fen), legal: x.legal, depth: x.depth || 0, batch: !!x.batch }; });
+    this.queue = items.map(function (x) {
+      return { fen: x.fen, key: akey(x.fen, x.hist && x.hist.hk), hist: x.hist || null, legal: x.legal, depth: x.depth || 0, batch: !!x.batch };
+    });
     this.schedule(false);
   };
 
-  Analyzer.prototype.markTerminal = function (fen, kind) {
-    var key = posKey(fen);
+  Analyzer.prototype.markTerminal = function (fen, kind, hk) {
+    var key = akey(fen, hk);
     if (!this.cache.has(key)) this.cache.set(key, { key: key, fen: fen, depth: 99, lines: [], terminal: kind });
   };
 
-  Analyzer.prototype.requestMove = function (fen, strength, movetime, cb) {
-    this.play = { fen: fen, strength: strength, movetime: movetime, cb: cb };
+  // Drohung: dieselbe Stellung, aber der Gegner ist am Zug (null = aus)
+  Analyzer.prototype.setThreat = function (fen) {
+    var key = fen ? akey(fen) : null;
+    if ((this.threat && this.threat.key) === key) return;
+    this.threat = fen ? { fen: fen, key: key } : null;
+    this.schedule(true);
+  };
+
+  Analyzer.prototype.requestMove = function (fen, strength, movetime, cb, hist) {
+    this.play = { fen: fen, strength: strength, movetime: movetime, cb: cb, hist: hist || null };
     this.schedule(true);
   };
   Analyzer.prototype.cancelMove = function () {
@@ -7064,8 +7187,8 @@ if (typeof module !== 'undefined') module.exports = (typeof window !== 'undefine
   };
 
   // Genug analysiert für die Bewertung?
-  Analyzer.prototype.ready = function (fen, depth) {
-    var e = this.cache.get(posKey(fen));
+  Analyzer.prototype.ready = function (fen, depth, hk) {
+    var e = this.cache.get(akey(fen, hk));
     return !!e && (!!e.terminal || e.depth >= depth);
   };
 
@@ -7082,6 +7205,8 @@ if (typeof module !== 'undefined') module.exports = (typeof window !== 'undefine
   // Was soll die Engine als Nächstes tun?
   Analyzer.prototype._pick = function () {
     if (this.play) return { kind: 'play' };
+    var th = this.threat, te = th ? this.cache.get(th.key) : null;
+    if (th && !(te && (te.terminal || te.depth >= this.cfg.threatDepth))) return { kind: 'threat' };
     var f = this.focus, fe = f ? this.cache.get(f.key) : null;
     var focusDepth = fe ? fe.depth : 0;
     var focusTodo = f && !(fe && fe.terminal) && f.legal !== 0;
@@ -7099,6 +7224,7 @@ if (typeof module !== 'undefined') module.exports = (typeof window !== 'undefine
     if (job && !job.finished && want) {
       var same = (want.kind === 'play' && job.kind === 'play' && job.playRef === this.play) ||
                  (want.kind === 'focus' && job.kind === 'focus' && this.focus && job.key === this.focus.key) ||
+                 (want.kind === 'threat' && job.kind === 'threat' && this.threat && job.key === this.threat.key) ||
                  (want.kind === 'review' && job.kind === 'review' && job.key === want.item.key);
       if (same) return;
     }
@@ -7111,10 +7237,10 @@ if (typeof module !== 'undefined') module.exports = (typeof window !== 'undefine
   };
 
   Analyzer.prototype._start = function (want) {
-    var self = this, fen, key, mpv, depth, legal;
+    var self = this, fen, key, mpv, depth, legal, hist;
     if (want.kind === 'play') {
       var p = this.play;
-      var job = { kind: 'play', playRef: p, fen: p.fen, key: posKey(p.fen), strength: p.strength, movetime: p.movetime,
+      var job = { kind: 'play', playRef: p, fen: p.fen, hist: p.hist, key: akey(p.fen, p.hist && p.hist.hk), strength: p.strength, movetime: p.movetime,
                   onInfo: function () {}, onDone: function (bm, j) {
                     j.finished = true;
                     if (self.job === j) self.job = null;
@@ -7127,13 +7253,15 @@ if (typeof module !== 'undefined') module.exports = (typeof window !== 'undefine
       return;
     }
     if (want.kind === 'focus') {
-      fen = this.focus.fen; key = this.focus.key; legal = this.focus.legal;
+      fen = this.focus.fen; key = this.focus.key; legal = this.focus.legal; hist = this.focus.hist;
       mpv = Math.min(this.cfg.liveMpv, legal || 9); depth = this.cfg.liveMax;
+    } else if (want.kind === 'threat') {
+      fen = this.threat.fen; key = this.threat.key; legal = 9; hist = null; mpv = 1; depth = this.cfg.threatDepth;
     } else {
-      fen = want.item.fen; key = want.item.key; legal = want.item.legal;
+      fen = want.item.fen; key = want.item.key; legal = want.item.legal; hist = want.item.hist;
       mpv = Math.min(this.cfg.reviewMpv, legal || 9); depth = want.item.depth || this.cfg.reviewDepth;
     }
-    var j2 = { kind: want.kind, fen: fen, key: key, multipv: mpv, depth: depth, lines: [],
+    var j2 = { kind: want.kind, fen: fen, hist: hist, key: key, multipv: mpv, depth: depth, lines: [],
                onInfo: function (info, j) { self._info(info, j); },
                onDone: function (bm, j) {
                  j.finished = true;
@@ -7175,7 +7303,7 @@ if (typeof module !== 'undefined') module.exports = (typeof window !== 'undefine
     if (job.kind === 'focus' && d >= this.cfg.liveMin && this._reviewTodo() && !job.stopping) this.schedule(false);
   };
 
-  root.SK.engine = { Engine: Engine, Analyzer: Analyzer, parseInfo: parseInfo, posKey: posKey, CANDIDATES: CANDIDATES };
+  root.SK.engine = { Engine: Engine, Analyzer: Analyzer, parseInfo: parseInfo, posKey: posKey, akey: akey, CANDIDATES: CANDIDATES };
 })();
 if (typeof module !== 'undefined') module.exports = (typeof window !== 'undefined' ? window : globalThis).SK.engine;
 
@@ -7569,6 +7697,81 @@ if (typeof module !== 'undefined') module.exports = (typeof window !== 'undefine
   function uciToMove(uci) { return { from: uci.slice(0, 2), to: uci.slice(2, 4), promotion: uci[4] || undefined }; }
   function terminalOf(fen) { return posInfo(fen).terminal; }
 
+  /* ---------- „Was droht?“: Nullzug-Analyse ----------
+     Dieselbe Stellung mit dem Gegner am Zug. Sein bester Zug dort ist die Drohung. */
+  var threatOn = false;
+  function nullFen(fen) {
+    var p = fen.split(' ');
+    p[1] = p[1] === 'w' ? 'b' : 'w'; p[3] = '-';
+    return p.join(' ');
+  }
+  function threatFen() {
+    if (!threatOn || train) return null;
+    var pi = posInfoAt(state.ply);
+    if (pi.terminal || pi.inCheck || !showEngineNow()) return null;
+    var nf = nullFen(fenAt(state.ply));
+    return L.validateFen(nf).ok ? nf : null;
+  }
+  // { uci, san, mate, gain } oder null, wenn (noch) nichts Ernstes droht
+  function threatInfo() {
+    var nf = threatFen();
+    if (!nf) return null;
+    var te = an.entry(nf), cur = entryAt(state.ply);
+    if (!te || !te.lines.length) return { pending: true };
+    var th = te.lines[0];
+    var now = cur && cur.lines.length ? C.negate(cur.lines[0].score) : { cp: 0 }; // aus Sicht des Gegners
+    var gain = C.scorePawns(th.score) - C.scorePawns(now);
+    var mate = th.score.mate != null && th.score.mate > 0 ? th.score.mate : null;
+    return { uci: th.uci, san: nota(uciSan(nf, th.uci)), mate: mate, gain: gain, serious: mate != null || gain >= 1 };
+  }
+
+  /* ---------- Remis durch Wiederholung und 50-Züge-Regel ----------
+     Beides hängt vom Partieverlauf ab, nicht nur von der Stellung. Pro Halbzug i:
+     occ = wie oft die Stellung seit dem letzten Bauernzug/Schlagen vorkam, draw = 'repetition' | 'fifty' | null,
+     hist = Zugfolge für Stockfish, falls sie die Bewertung ändern kann (sonst null). */
+  var repCache = { sig: null, arr: [] };
+  function hashStr(str) {
+    var h = 2166136261;
+    for (var i = 0; i < str.length; i++) { h ^= str.charCodeAt(i); h = Math.imul(h, 16777619); }
+    return (h >>> 0).toString(36);
+  }
+  function repInfo() {
+    var n = state.line.length;
+    var sig = state.startFen + '|' + n + '|' + (n ? state.line[0].id + '.' + state.line[n - 1].id : '');
+    if (repCache.sig === sig) return repCache.arr;
+    var arr = [], keys = [], start = 0;
+    for (var i = 0; i <= n; i++) {
+      var f = fenAt(i), hm = +(f.split(' ')[4] || 0);
+      if (i > 0 && hm === 0) start = i;
+      keys.push(E.posKey(f));
+      var cnt = {}, rel = false;
+      for (var j = start; j <= i; j++) { cnt[keys[j]] = (cnt[keys[j]] || 0) + 1; if (cnt[keys[j]] >= 2) rel = true; }
+      var hist = null;
+      if (rel) {
+        var ucis = [];
+        for (var k = start; k < i; k++) ucis.push(state.line[k].uci);
+        hist = { hk: hashStr(keys.slice(start, i + 1).join('|')), start: fenAt(start), moves: ucis };
+      }
+      arr.push({ occ: cnt[keys[i]], hist: hist, draw: cnt[keys[i]] >= 3 ? 'repetition' : hm >= 100 ? 'fifty' : null });
+    }
+    repCache = { sig: sig, arr: arr };
+    return arr;
+  }
+  function histAt(i) { var r = repInfo()[i]; return r ? r.hist : null; }
+  function hkAt(i) { var h = histAt(i); return h ? h.hk : ''; }
+  function entryAt(i) { return an.entry(fenAt(i), hkAt(i)); }
+  // Analyse der Stellung vor/nach einem Zug der Partie (mit Historie, falls nötig)
+  function entBefore(mv) { var i = state.line.indexOf(mv); return i >= 0 ? entryAt(i) : an.entry(mv.fenBefore); }
+  function entAfter(mv) { var i = state.line.indexOf(mv); return i >= 0 ? entryAt(i + 1) : an.entry(mv.fenAfter); }
+  // Stellungsinfo inklusive Remis durch dreifache Wiederholung bzw. 50-Züge-Regel
+  function posInfoAt(i) {
+    var p = posInfo(fenAt(i));
+    if (p.terminal) return p;
+    var r = repInfo()[i];
+    if (!r || !r.draw) return p;
+    return Object.assign({}, p, { terminal: 'draw', drawReason: r.draw });
+  }
+
   // SAN in der gewählten Notation (Deutsch: K D T L S)
   var DE = { K: 'K', Q: 'D', R: 'T', B: 'L', N: 'S' };
   function nota(san) {
@@ -7613,8 +7816,8 @@ if (typeof module !== 'undefined') module.exports = (typeof window !== 'undefine
 
   // Bewertung aus Weiß-Sicht
   function whiteScore(fen, score) { return posInfo(fen).turn === 'w' ? score : C.negate(score); }
-  function whiteWp(fen, entry) {
-    var pi = posInfo(fen);
+  function whiteWp(fen, entry, pi) {
+    pi = pi || posInfo(fen);
     if (pi.terminal === 'mate') return pi.turn === 'w' ? 0 : 100;
     if (pi.terminal === 'draw') return 50;
     if (!entry || !entry.lines.length) return null;
@@ -7652,12 +7855,13 @@ if (typeof module !== 'undefined') module.exports = (typeof window !== 'undefine
   };
 
   function updateEngine() {
-    var fen = viewFen(), pi = posInfo(fen);
+    var fen = viewFen(), pi = train ? posInfo(fen) : posInfoAt(state.ply);
     for (var i = 0; i <= state.line.length; i++) {
-      var f = fenAt(i), p = posInfo(f);
-      if (p.terminal) an.markTerminal(f, p.terminal);
+      var p = posInfoAt(i);
+      if (p.terminal) an.markTerminal(fenAt(i), p.terminal, hkAt(i));
     }
-    an.setFocus(fen, pi.terminal ? 0 : pi.legal);
+    an.setFocus(fen, pi.terminal ? 0 : pi.legal, train ? null : histAt(state.ply));
+    an.setThreat(threatFen());
     var items = [];
     var n = state.line.length;
     if (state.settings.autoReview) {
@@ -7669,8 +7873,8 @@ if (typeof module !== 'undefined') module.exports = (typeof window !== 'undefine
     // Stellungen rund um den gerade betrachteten Zug zuerst
     var ref = Math.max(0, state.ply - 1);
     items.sort(function (a, b) { return Math.abs(a - ref) - Math.abs(b - ref) || a - b; });
-    var queue = items.map(function (k) { var f2 = fenAt(k); return { fen: f2, legal: posInfo(f2).legal }; })
-      .filter(function (x) { return x.legal > 0 && !posInfo(x.fen).terminal; });
+    var queue = items.map(function (k) { var p2 = posInfoAt(k); return { fen: fenAt(k), legal: p2.legal, terminal: p2.terminal, hist: histAt(k) }; })
+      .filter(function (x) { return x.legal > 0 && !x.terminal; });
     // Danach die Serien-Analyse für Insights (niedrigere Tiefe)
     if (batch.cur) {
       batch.cur.fens.forEach(function (f3) {
@@ -7693,15 +7897,15 @@ if (typeof module !== 'undefined') module.exports = (typeof window !== 'undefine
       var mv = state.line[i];
       if (!mv.phase) mv.phase = CO.phaseOf(mv.fenBefore, chain && i > 0);
       chain = chain && !!SK.book.lookup(mv.fenAfter);
-      var r = classifyOne(mv, prev, i > 0 ? state.line[i - 1] : null, chain);
+      var r = classifyOne(mv, prev, i > 0 ? state.line[i - 1] : null, chain, i);
       out.push(r);
       prev = r;
     }
     return out;
   }
-  function classifyOne(mv, prev, lastMove, inBook) {
-    var eb = an.entry(mv.fenBefore), ea = an.entry(mv.fenAfter);
-    var pa = posInfo(mv.fenAfter);
+  function classifyOne(mv, prev, lastMove, inBook, i) {
+    var eb = entryAt(i), ea = entryAt(i + 1);
+    var pa = posInfoAt(i + 1);
     var after = pa.terminal ? { terminal: pa.terminal, lines: [], depth: 99 } : ea;
     // Theorie braucht keine Engine – die Bewertung wird nachgereicht, sobald sie da ist
     if (inBook && mv.legalCount > 1 && (!eb || eb.depth < MIN_D || !eb.lines.length)) {
@@ -7713,7 +7917,8 @@ if (typeof module !== 'undefined') module.exports = (typeof window !== 'undefine
       if (!inLines && !(after && (after.terminal || after.depth >= MIN_D_AFTER))) return null;
     }
     var prevLoss = prev && prev.loss != null ? Math.round(prev.loss) : null;
-    var key = [mv.id, eb ? eb.depth : 0, eb ? eb.lines.length : 0, after ? after.depth : 0, prevLoss, inBook ? 1 : 0].join('|');
+    var key = [mv.id, eb ? eb.depth : 0, eb ? eb.lines.length : 0, after ? after.depth : 0, prevLoss, inBook ? 1 : 0,
+               hkAt(i), hkAt(i + 1), pa.terminal || ''].join('|');
     var hit = clsMemo.get(key);
     if (hit !== undefined) return hit;
     var r = C.classifyMove({
@@ -7740,7 +7945,7 @@ if (typeof module !== 'undefined') module.exports = (typeof window !== 'undefine
   }
   function maybeAI() {
     if (state.mode !== 'play' || train || state.ply !== state.line.length || engine.state !== 'ready') { cancelAI(); return; }
-    var fen = fenAt(state.ply), pi = posInfo(fen);
+    var fen = fenAt(state.ply), pi = posInfoAt(state.ply), ply0 = state.ply;
     if (pi.terminal || pi.turn === state.settings.humanColor) { cancelAI(); return; }
     if (ai.fen === fen) return;
     cancelAI();
@@ -7749,7 +7954,7 @@ if (typeof module !== 'undefined') module.exports = (typeof window !== 'undefine
     // Erst kurz die Stellung analysieren (für die Bewertung deines Zuges), dann zieht die KI.
     (function wait() {
       if (ai.fen !== fen) return;
-      var e = an.entry(fen);
+      var e = entryAt(ply0);
       if ((e && e.depth >= MIN_D) || Date.now() - t0 > 2500) {
         ai.timer = null; ai.thinking = true; soon();
         var lv = level();
@@ -7759,15 +7964,38 @@ if (typeof module !== 'undefined') module.exports = (typeof window !== 'undefine
           ai.fen = null;
           var mv = bm && bm !== '(none)' ? makeMove(fen, uciToMove(bm)) : null;
           if (!mv) { soon(); return; }
+          mv = avoidDrawIfWinning(mv, ply0) || mv;
           mv.live = true;
           state.line.push(mv); state.ply++;
           animateNext = { from: mv.from, to: mv.to, capture: !!mv.captured };
           changed();
-        });
+        }, histAt(ply0));
         return;
       }
       ai.timer = setTimeout(wait, 120);
     })();
+  }
+  // Die KI soll eine gewonnene Stellung nicht durch Zugwiederholung verschenken
+  // (abgeschwächte Stufen wählen sonst gelegentlich einen Zug, der die Stellung zum dritten Mal herbeiführt).
+  function avoidDrawIfWinning(mv, ply0) {
+    var e = entryAt(ply0);
+    if (!e || !e.lines.length || C.scoreWp(e.lines[0].score) < 70) return null;
+    if (!drawsByRepetition(ply0, mv)) return null;
+    for (var i = 0; i < e.lines.length; i++) {
+      var alt = makeMove(mv.fenBefore, uciToMove(e.lines[i].uci));
+      if (alt && !drawsByRepetition(ply0, alt) && C.scoreWp(e.lines[i].score) >= 60) return alt;
+    }
+    return null;
+  }
+  function drawsByRepetition(ply0, mv) {
+    var k = E.posKey(mv.fenAfter), cnt = 1;
+    if (+(mv.fenAfter.split(' ')[4] || 0) === 0) return false;
+    for (var i = ply0; i >= 0; i--) {
+      var f = fenAt(i);
+      if (E.posKey(f) === k) cnt++;
+      if (+(f.split(' ')[4] || 0) === 0) break;
+    }
+    return cnt >= 3;
   }
 
   /* ---------- Zustand ändern ---------- */
@@ -8038,7 +8266,7 @@ if (typeof module !== 'undefined') module.exports = (typeof window !== 'undefine
 
   function showEngineNow() {
     if (state.mode !== 'play') return true;
-    var pi = posInfo(fenAt(state.ply));
+    var pi = posInfoAt(state.ply);
     if (pi.terminal || state.ply < state.line.length) return true;
     return state.settings.hints && pi.turn === state.settings.humanColor;
   }
@@ -8048,7 +8276,7 @@ if (typeof module !== 'undefined') module.exports = (typeof window !== 'undefine
     if (state.mode === 'insights') { renderInsightsView(); renderStatus(); return; }
     var results = classifyAll();
     if (train) { renderTrain(results); return; }
-    var fen = fenAt(state.ply), pi = posInfo(fen), entry = an.entry(fen);
+    var fen = fenAt(state.ply), pi = posInfoAt(state.ply), entry = entryAt(state.ply);
     var last = state.ply > 0 ? state.line[state.ply - 1] : null;
     var cls = last ? results[state.ply - 1] : null;
     var engineOn = showEngineNow();
@@ -8068,6 +8296,9 @@ if (typeof module !== 'undefined') module.exports = (typeof window !== 'undefine
     if (s.arrowBetter && cls && cls.bestUci && /inaccuracy|mistake|blunder|miss/.test(cls.key) && engineOn) {
       arrows.unshift(Object.assign(uciToMove(cls.bestUci), { kind: 'better', width: 13 }));
     }
+    var threat = threatInfo();
+    if (threat && threat.serious) arrows.push(Object.assign(uciToMove(threat.uci), { kind: 'threat', width: 13 }));
+    renderThreat(threat);
     var badge = null, tint = null;
     if (last && cls && cls.key) {
       var cat = C.CATS[cls.key];
@@ -8197,7 +8428,7 @@ if (typeof module !== 'undefined') module.exports = (typeof window !== 'undefine
           t('Bewertung danach {ev}.', { ev: '<b>' + fmtW(fb, cls.playedScore) + '</b>' });
       case 'great':
         var sec = null;
-        var eb = an.entry(fb);
+        var eb = entBefore(mv);
         if (eb && eb.lines[1]) sec = nota(uciSan(fb, eb.lines[1].uci)) + ' (' + fmtW(fb, eb.lines[1].score) + ')';
         var wp = cls.wpBefore;
         var goal = wp >= C.THRESHOLDS.winWp ? t('Der einzige Zug, der den Vorteil hält.') :
@@ -8219,7 +8450,7 @@ if (typeof module !== 'undefined') module.exports = (typeof window !== 'undefine
           t('Stark war {m} ({ev}). Gewinnchance −{loss} %.', { m: best, ev: bestEv, loss: lossTxt });
       default: // inaccuracy, mistake, blunder
         var thr = '';
-        var ea = an.entry(mv.fenAfter);
+        var ea = entAfter(mv);
         if ((cls.key === 'blunder' || cls.key === 'mistake') && ea && ea.lines[0] && !hasCoach) {
           thr = ' ' + t('Die Widerlegung: {pv}.', { pv: pvText(mv.fenAfter, ea.lines[0].pv, 4) });
         }
@@ -8242,8 +8473,11 @@ if (typeof module !== 'undefined') module.exports = (typeof window !== 'undefine
     var el = $('verdict'), html;
     if (pi.terminal) {
       var res = pi.terminal === 'mate' ? (pi.turn === 'w' ? t('Schwarz gewinnt') : t('Weiß gewinnt')) : t('Remis');
-      var why = pi.terminal === 'mate' ? t('Schachmatt') : (pi.legal === 0 ? t('Patt') : t('Ungenügendes Material'));
+      var why = pi.terminal === 'mate' ? t('Schachmatt') : pi.drawReason === 'repetition' ? t('Dreifache Stellungswiederholung')
+        : pi.drawReason === 'fifty' ? t('50-Züge-Regel') : (pi.legal === 0 ? t('Patt') : t('Ungenügendes Material'));
       var head = last && cls ? '<span class="san">' + esc(moveLabel(last)) + '</span> ' + article(cls.key) + '. ' : '';
+      // Remis verschenkt? Dann auch sagen, was besser war
+      if (last && cls && /inaccuracy|mistake|blunder|miss/.test(cls.key)) head += verdictText(last, cls, false) + ' ';
       html = '<div class="v-icon ' + (cls ? 'c-' + cls.key : 'neutral') + '">' + (cls ? C.CATS[cls.key].sym : '#') + '</div>' +
              '<div class="v-title">' + why + ' – ' + res + '</div>' +
              '<div class="v-text">' + head + (state.mode === 'play' ? t('Starte über „Neue Partie gegen KI“ die nächste Runde.') : '') + '</div>';
@@ -8287,6 +8521,29 @@ if (typeof module !== 'undefined') module.exports = (typeof window !== 'undefine
     if (!nps) return '';
     if (I.lang() === 'en') return (nps >= 1e6 ? (nps / 1e6).toFixed(1) + 'M' : Math.round(nps / 1000) + 'k') + ' nodes/s';
     return (nps >= 1e6 ? (nps / 1e6).toFixed(1).replace('.', ',') + ' Mio.' : Math.round(nps / 1000) + ' Tsd.') + ' Knoten/s';
+  }
+
+  function renderThreat(th) {
+    var el = $('threatLine'), btn = $('btnThreat');
+    btn.setAttribute('aria-pressed', String(threatOn));
+    btn.classList.toggle('on', threatOn);
+    el.hidden = !threatOn;
+    if (!threatOn) return;
+    var pi = posInfoAt(state.ply);
+    var opp = colorName(pi.turn === 'w' ? 'b' : 'w');
+    if (pi.terminal) { el.textContent = t('Partie beendet – keine Drohung.'); return; }
+    if (pi.inCheck) { el.textContent = t('Du stehst im Schach – das ist die Drohung.'); return; }
+    if (!th) { el.textContent = t('Drohungen erscheinen, sobald Hinweise sichtbar sind.'); return; }
+    if (th.pending) { el.innerHTML = '<span class="th-icon">!</span>' + t('Suche, was {c} droht …', { c: opp }); return; }
+    if (!th.serious) { el.innerHTML = '<span class="th-icon ok">✓</span>' + t('{c} droht gerade nichts Ernstes.', { c: opp }); return; }
+    el.innerHTML = '<span class="th-icon">!</span>' + (th.mate
+      ? t('{c} droht {m} – Matt in {n}.', { c: opp, m: '<b>' + esc(th.san) + '</b>', n: th.mate })
+      : t('{c} droht {m} (gewinnt etwa {p} Bauern).', { c: opp, m: '<b>' + esc(th.san) + '</b>', p: num1(Math.min(th.gain, 9)) }));
+  }
+  function toggleThreat() {
+    threatOn = !threatOn;
+    updateEngine();
+    render();
   }
 
   function renderEngine(fen, entry, pi, engineOn) {
@@ -8352,7 +8609,7 @@ if (typeof module !== 'undefined') module.exports = (typeof window !== 'undefine
       html += '<div class="no">' + numv + '</div>' + cell(i) + (i + 1 < state.line.length ? cell(i + 1) : '<div class="mv"></div>');
       numv++;
     }
-    var pi = posInfo(fenAt(state.line.length));
+    var pi = posInfoAt(state.line.length);
     if (pi.terminal) html += '<div class="result">' + (pi.terminal === 'mate' ? (pi.turn === 'w' ? '0–1' : '1–0') : '½–½') + '</div>';
     else if (state.headers.Result && state.headers.Result !== '*' && !state.main) html += '<div class="result">' + esc(state.headers.Result) + '</div>';
     box.innerHTML = html;
@@ -8390,11 +8647,15 @@ if (typeof module !== 'undefined') module.exports = (typeof window !== 'undefine
     reviewSig = sig;
     var sum = summaryFor(results);
     function box(c, name) {
-      var a = accuracyFor(c, results);
+      var a = accuracyFor(c, results), s2 = sum[c];
+      var perf = a != null && s2.elo != null
+        ? '<div class="perf" title="' + esc(t('Grobe Schätzung aus dem durchschnittlichen Bauernverlust pro Zug (ACPL {x}). Eine einzelne Partie ist nur ein Anhaltspunkt.', { x: Math.round(s2.acpl) })) + '">' +
+          t('Leistung ≈ {e}', { e: s2.elo }) + '</div>' : '';
       return '<div class="box"><div class="who"><span class="swatch sm ' + c + '"></span>' + esc(name) + '</div>' +
-             '<div class="num">' + (a == null ? '–' : num1(a)) + '<small>' + t('Genauigkeit') + '</small></div></div>';
+             '<div class="num">' + (a == null ? '–' : num1(a)) + '<small>' + t('Genauigkeit') + '</small></div>' + perf + '</div>';
     }
     $('acc').innerHTML = box('w', names.w) + box('b', names.b);
+    renderReviewSummary(results, sum, names);
     var rows = C.ORDER.filter(function (k) { return k !== 'forced'; }).map(function (k) {
       var w = sum.w.counts[k], b = sum.b.counts[k];
       return '<tr><td class="n' + (w ? '' : ' zero') + '">' + w + '</td><td class="lab"><span class="sym c-' + k + '">' + C.CATS[k].sym + '</span>' + catLabel(k) + '</td><td class="n' + (b ? '' : ' zero') + '">' + b + '</td></tr>';
@@ -8412,7 +8673,7 @@ if (typeof module !== 'undefined') module.exports = (typeof window !== 'undefine
     var n = state.line.length;
     var pts = [];
     for (var i = 0; i <= n; i++) {
-      var f = fenAt(i), wp = whiteWp(f, an.entry(f));
+      var f = fenAt(i), wp = whiteWp(f, entryAt(i), posInfoAt(i));
       pts.push(wp);
     }
     var gsig = pts.map(function (v) { return v == null ? '' : v.toFixed(1); }).join(',') + '|' + state.ply + '|' + graphHover + '|' + W + '|' + (sumCache.sig || '');
@@ -8443,7 +8704,7 @@ if (typeof module !== 'undefined') module.exports = (typeof window !== 'undefine
     var tip = '';
     if (graphHover != null && graphHover > 0) {
       var mv = state.line[graphHover - 1], rr = results[graphHover - 1];
-      var f2 = fenAt(graphHover), e2 = an.entry(f2), pi2 = posInfo(f2);
+      var f2 = fenAt(graphHover), e2 = entryAt(graphHover), pi2 = posInfoAt(graphHover);
       var ev = pi2.terminal ? (pi2.terminal === 'mate' ? '#' : '½') : (e2 && e2.lines[0] ? fmtW(f2, e2.lines[0].score) : '…');
       tip = '<div class="tip" style="left:' + Math.max(60, Math.min(W - 60, X(graphHover))) + 'px">' + esc(moveLabel(mv)) +
             (rr ? ' ' + C.CATS[rr.key].sym : '') + ' · ' + ev + '</div>';
@@ -8456,8 +8717,9 @@ if (typeof module !== 'undefined') module.exports = (typeof window !== 'undefine
   var coachMemo = new Map();
   function coachFor(mv, cls) {
     if (!mv || !cls) return [];
-    var ea = an.entry(mv.fenAfter);
-    var k = mv.id + '|' + cls.key + '|' + (cls.depth || 0) + '|' + (ea ? ea.depth : 0) + '|' + state.settings.notation + '|' + I.lang();
+    var ea = entAfter(mv), idx = state.line.indexOf(mv);
+    var drawBy = idx >= 0 ? posInfoAt(idx + 1).drawReason : null;
+    var k = mv.id + '|' + cls.key + '|' + (cls.depth || 0) + '|' + (ea ? ea.depth : 0) + '|' + state.settings.notation + '|' + I.lang() + '|' + (drawBy || '');
     var hit = coachMemo.get(k);
     if (hit) return hit;
     var out = [];
@@ -8466,6 +8728,12 @@ if (typeof module !== 'undefined') module.exports = (typeof window !== 'undefine
       out = CO.explain({ fenBefore: mv.fenBefore, fenAfter: mv.fenAfter, move: mv, cls: cls, after: ea, lang: I.lang(),
                          notation: state.settings.notation, clock: { left: mv.clock, spent: mv.spent }, base: tc ? tc.base : null });
     } catch (e) { out = []; }
+    // Remis durch Wiederholung oder 50-Züge-Regel, obwohl man besser stand
+    if (drawBy && cls.wpBefore != null && cls.wpBefore >= 60) {
+      out = [drawBy === 'repetition'
+        ? t('Damit steht dieselbe Stellung zum dritten Mal auf dem Brett – Remis, obwohl du besser standest.')
+        : t('Damit greift die 50-Züge-Regel – Remis, obwohl du besser standest. Ein Bauernzug oder Schlagzug hätte die Zählung zurückgesetzt.')].concat(out);
+    }
     if (coachMemo.size > 3000) coachMemo.clear();
     coachMemo.set(k, out);
     return out;
@@ -8497,6 +8765,48 @@ if (typeof module !== 'undefined') module.exports = (typeof window !== 'undefine
     if (acc >= 80) return { cls: 'ok', txt: t('gut') };
     if (acc >= 65) return { cls: 'mid', txt: t('okay') };
     return { cls: 'low', txt: t('schwach') };
+  }
+
+  // Fazit wie vom Trainer: stärkste Phase, teuerster Zug, Leistung – für dich (falls bekannt) oder beide Seiten
+  var PHASE_IN = { opening: 'in der Eröffnung', middlegame: 'im Mittelspiel', endgame: 'im Endspiel' };
+  function renderReviewSummary(results, sum, names) {
+    var el = $('reviewSummary');
+    var complete = accuracyFor('w', results) != null && accuracyFor('b', results) != null && state.line.length >= 10;
+    el.hidden = !complete;
+    if (!complete) { el.innerHTML = ''; return; }
+    var ps = phaseStats(results);
+    var who = state.user && state.user.color ? [state.user.color] : ['w', 'b'];
+    var paras = who.map(function (c) {
+      var mine = state.user && state.user.color === c, nm = esc(names[c]);
+      var out = [];
+      var phases = ['opening', 'middlegame', 'endgame'].filter(function (ph) { return ps[ph][c].acc != null && ps[ph][c].n >= 3; });
+      phases.sort(function (a, b) { return ps[b][c].acc - ps[a][c].acc; });
+      if (phases.length >= 2 && ps[phases[0]][c].acc - ps[phases[phases.length - 1]][c].acc >= 8) {
+        var bp = phases[0], wp = phases[phases.length - 1];
+        out.push(t(mine ? 'Am stärksten warst du {a} ({x}), am schwächsten {b} ({y}).' : '{n} war {a} am stärksten ({x}), {b} am schwächsten ({y}).',
+          { n: nm, a: t(PHASE_IN[bp]), x: Math.round(ps[bp][c].acc), b: t(PHASE_IN[wp]), y: Math.round(ps[wp][c].acc) }));
+      }
+      var worst = null;
+      state.line.forEach(function (m, i) {
+        var r = results[i];
+        if (m.color !== c || !r || r.loss == null || !/mistake|blunder|miss/.test(r.key)) return;
+        if (!worst || r.loss > worst.r.loss) worst = { m: m, r: r, ply: i + 1 };
+      });
+      if (worst) {
+        out.push(t(mine ? 'Dein teuerster Zug: {m} (Gewinnchance −{l} %).' : 'Teuerster Zug von {n}: {m} (Gewinnchance −{l} %).',
+          { n: nm, m: '<button type="button" class="linkish" data-ply="' + worst.ply + '">' + esc(moveLabel(worst.m)) + '</button>', l: Math.round(worst.r.loss) }));
+      } else {
+        out.push(t(mine ? 'Du hast keinen Fehler gemacht und keine Chance verpasst.' : '{n} hat keinen Fehler gemacht und keine Chance verpasst.', { n: nm }));
+      }
+      var br = sum[c].counts.brilliant, gr = sum[c].counts.great;
+      var good = [];
+      if (br) good.push(t('{n}× brillant', { n: br }));
+      if (gr) good.push(t('{n}× großartig', { n: gr }));
+      if (good.length) out.push(t('Dazu: {x}.', { x: good.join(', ') }));
+      if (sum[c].elo != null) out.push(t(mine ? 'Deine Leistung entsprach etwa {e} Elo.' : 'Leistung von {n}: etwa {e} Elo.', { n: nm, e: sum[c].elo }));
+      return '<p>' + out.join(' ') + '</p>';
+    });
+    el.innerHTML = '<div class="eyebrow">' + t('Fazit') + '</div>' + paras.join('');
   }
 
   function renderReviewExtras(results) {
@@ -8797,13 +9107,14 @@ if (typeof module !== 'undefined') module.exports = (typeof window !== 'undefine
   function siteName(site) { return site === 'lichess' ? 'lichess' : 'chess.com'; }
   function connFetch(limit) {
     var s = state.settings;
-    return SK.connect.fetchGames(s.connSite, s.connUser, { limit: limit || 20, months: limit > 30 ? 6 : 2 });
+    return SK.connect.fetchGames(s.connSite, s.connUser, { limit: limit || 20, months: limit > 30 ? 12 : 6 });
   }
   function connErrorText(e) {
     var site = siteName(state.settings.connSite);
     switch (e && e.code) {
-      case 'blocked': return t('Diese Seite darf keine Verbindung zu {s} aufbauen. Öffne Zugradar über die eigene Website oder lokal (siehe README). Alternativ: PGN einfügen.', { s: site });
-      case 'notfound': return t('Benutzer nicht gefunden.');
+      case 'blocked': return t('Diese Seite darf keine Verbindung zu {s} aufbauen (z. B. in einer Vorschau). Öffne Zugradar auf der eigenen Website – oder füge die PGN deiner Partie ein.', { s: site });
+      case 'notfound': return t('Benutzer „{u}“ gibt es auf {s} nicht. Stimmt die Schreibweise?', { u: SK.connect.normalizeUser(state.settings.connSite, state.settings.connUser), s: site });
+      case 'badname': return t('Das sieht nicht wie ein Benutzername aus. Gib nur den Namen ein (oder den Link zu deinem Profil).');
       case 'ratelimit': return t('Zu viele Anfragen – bitte eine Minute warten.');
       case 'network': return t('Keine Verbindung zu {s}.', { s: site });
       case 'input': return t('Bitte einen Benutzernamen eingeben.');
@@ -8812,8 +9123,10 @@ if (typeof module !== 'undefined') module.exports = (typeof window !== 'undefine
   }
   function connLoadList() {
     var s = state.settings;
-    s.connUser = $('connUser').value.trim();
     s.connSite = $('connSite').value;
+    // Profil-Links und „@name“ in den reinen Namen umwandeln
+    s.connUser = SK.connect.normalizeUser(s.connSite, $('connUser').value) || $('connUser').value.trim();
+    $('connUser').value = s.connUser;
     save();
     if (!s.connUser) { connStatus(t('Bitte deinen Benutzernamen eingeben.'), 'error'); return; }
     conn.busy = true;
@@ -8822,11 +9135,13 @@ if (typeof module !== 'undefined') module.exports = (typeof window !== 'undefine
     connFetch(20).then(function (games) {
       conn.busy = false; conn.games = games; conn.lastCheck = Date.now();
       if (games.length && !s.connLast) { s.connLast = games[0].end; save(); }
-      connStatus(games.length ? t('{n} beendete Partien von {u}.', { n: games.length, u: s.connUser }) : t('Keine beendeten Partien gefunden.'), games.length ? 'ok' : '');
+      connStatus(games.length ? t('{n} beendete Partien von {u}.', { n: games.length, u: s.connUser })
+        : t('Keine beendeten Partien von {u} in den letzten 6 Monaten gefunden.', { u: s.connUser }), games.length ? 'ok' : '');
       renderGames();
     }, function (e) {
       conn.busy = false;
       connStatus(connErrorText(e), 'error');
+      if (e && e.code === 'blocked') renderConnNote();
     });
   }
   function fmtTc(tc) {
@@ -8904,8 +9219,7 @@ if (typeof module !== 'undefined') module.exports = (typeof window !== 'undefine
     if (!key || savedFor === key || state.line.length < 6 || !state.settings.autoReview) return;
     var need = reviewDepth();
     for (var i = 0; i <= state.line.length; i++) {
-      var f = fenAt(i);
-      if (!posInfo(f).terminal && !an.ready(f, need)) return;
+      if (!posInfoAt(i).terminal && !an.ready(fenAt(i), need, hkAt(i))) return;
     }
     var entry = LIB.entryFrom(state.game, state.pgn || exportPgn(), state.headers);
     if (state.user && state.user.color && !entry.userColor) {
@@ -8914,8 +9228,16 @@ if (typeof module !== 'undefined') module.exports = (typeof window !== 'undefine
       entry.userResult = r === '1/2-1/2' ? 'draw' : r === '1-0' ? (entry.userColor === 'w' ? 'win' : 'loss') : r === '0-1' ? (entry.userColor === 'b' ? 'win' : 'loss') : null;
     }
     var tc = state.headers.TimeControl || (state.game && state.game.timeControl);
-    var analysis = INS.analyzeGame(state.line, function (f2) { return an.entry(f2); },
-      { minDepth: MIN_D, depth: reviewDepth(), timeControl: tc, gameId: entry.id, userColor: entry.userColor, terminal: terminalOf });
+    // Analyse und Partieende je Halbzug (Wiederholungen haben eigene Einträge)
+    var byFen = new Map(), termByFen = new Map();
+    for (var j = 0; j <= state.line.length; j++) {
+      byFen.set(fenAt(j), entryAt(j));
+      var pj = posInfoAt(j);
+      if (pj.terminal) termByFen.set(fenAt(j), pj.terminal);
+    }
+    var analysis = INS.analyzeGame(state.line, function (f2) { return byFen.has(f2) ? byFen.get(f2) : an.entry(f2); },
+      { minDepth: MIN_D, depth: reviewDepth(), timeControl: tc, gameId: entry.id, userColor: entry.userColor,
+        terminal: function (f3) { return termByFen.has(f3) ? termByFen.get(f3) : terminalOf(f3); } });
     if (!analysis) return;
     savedFor = key;
     entry.analysis = analysis; entry.opening = analysis.opening;
@@ -9353,7 +9675,7 @@ if (typeof module !== 'undefined') module.exports = (typeof window !== 'undefine
   function exportPgn() {
     var results = classifyAll();
     var h = Object.assign({ Event: 'Zugradar', Site: '?', Date: new Date().toISOString().slice(0, 10).replace(/-/g, '.'), White: '?', Black: '?', Result: '*' }, state.headers);
-    var pi = posInfo(fenAt(state.line.length));
+    var pi = posInfoAt(state.line.length);
     if (pi.terminal) h.Result = pi.terminal === 'mate' ? (pi.turn === 'w' ? '0-1' : '1-0') : '1/2-1/2';
     if (state.startFen !== START) { h.SetUp = '1'; h.FEN = state.startFen; }
     var order = ['Event', 'Site', 'Date', 'Round', 'White', 'Black', 'Result'];
@@ -9365,7 +9687,7 @@ if (typeof module !== 'undefined') module.exports = (typeof window !== 'undefine
       var r = results[i];
       var tk = (m.color === 'w' ? numv + '. ' : (i === 0 ? numv + '... ' : '')) +
               m.san + (r && C.CATS[r.key].nag ? C.CATS[r.key].nag : '');
-      var e = an.entry(m.fenAfter);
+      var e = entryAt(i + 1);
       var com = [];
       if (e && e.lines[0]) {
         var ws = whiteScore(m.fenAfter, e.lines[0].score);
@@ -9426,6 +9748,10 @@ if (typeof module !== 'undefined') module.exports = (typeof window !== 'undefine
       var c = e.target.closest('.mv[data-ply]');
       if (c && !train) go(+c.dataset.ply);
     });
+    $('reviewSummary').addEventListener('click', function (e) {
+      var b = e.target.closest('[data-ply]');
+      if (b && !train) go(+b.getAttribute('data-ply'));
+    });
     $('moments').addEventListener('click', function (e) {
       var c = e.target.closest('.km[data-ply]');
       if (c && !train) go(+c.dataset.ply);
@@ -9457,6 +9783,8 @@ if (typeof module !== 'undefined') module.exports = (typeof window !== 'undefine
     $('modeTrainer').onclick = function () { if (state.mode !== 'trainer') setMode('trainer'); };
     $('btnPlayNew').onclick = function () { state.mode = 'play'; newGame(); };
     $('btnPlayFrom').onclick = playFromStash;
+    $('btnThreat').onclick = toggleThreat;
+    $('connToPgn').onclick = function () { setImportTab('pgn'); $('importText').focus(); };
     $('helpBtn').onclick = openHelp;
     $('helpClose').onclick = closeHelp;
     $('helpBox').addEventListener('click', function (e) { if (e.target === $('helpBox')) closeHelp(); });
@@ -9656,6 +9984,7 @@ if (typeof module !== 'undefined') module.exports = (typeof window !== 'undefine
       else if (e.key === 'Home') { go(0); e.preventDefault(); }
       else if (e.key === 'End') { go(state.line.length); e.preventDefault(); }
       else if (e.key === 'f' || e.key === 'F') { $('btnFlip').click(); }
+      else if (e.key === 't' || e.key === 'T') { toggleThreat(); }
       else if (e.key === ' ' && !$('btnBest').disabled && e.target === document.body) { playBest(); e.preventDefault(); }
     });
   }
@@ -9692,7 +10021,7 @@ if (typeof module !== 'undefined') module.exports = (typeof window !== 'undefine
     $('helpLegend').innerHTML = C.ORDER.map(function (k) {
       return '<div class="hl"><span class="sym c-' + k + '">' + C.CATS[k].sym + '</span><b>' + esc(catLabel(k)) + '</b><span>' + esc(t(HELP_CATS[k])) + '</span></div>';
     }).join('');
-    var keys = [['← →', t('Zug zurück / vor')], [t('Pos1') + ' / ' + t('Ende'), t('Zum Anfang / zum Ende')], ['F', t('Brett drehen')],
+    var keys = [['← →', t('Zug zurück / vor')], [t('Pos1') + ' / ' + t('Ende'), t('Zum Anfang / zum Ende')], ['F', t('Brett drehen')], ['T', t('Was droht? (Drohung zeigen)')],
                 [t('Leertaste'), t('Besten Zug spielen')], ['Esc', t('Dialog oder Training beenden')]];
     $('helpKeys').innerHTML = keys.map(function (k) { return '<tr><td><kbd>' + esc(k[0]) + '</kbd></td><td>' + esc(k[1]) + '</td></tr>'; }).join('');
     var mail = (CFG.support && CFG.support.email) || '';
@@ -9770,9 +10099,25 @@ if (typeof module !== 'undefined') module.exports = (typeof window !== 'undefine
     try { history.replaceState(null, '', location.pathname + location.search); } catch (e) { /* egal */ }
   }
 
+  // Eingebettet (z. B. claude.ai-Vorschau) oder schon eine gesperrte Verbindung gesehen?
+  function connRestricted() {
+    var embedded = false;
+    try { embedded = window.top !== window.self; } catch (e) { embedded = true; }
+    return embedded || Object.keys(SK.connect._blocked).length > 0;
+  }
+  function renderConnNote() {
+    var show = connRestricted();
+    $('connEmbed').hidden = !show;
+    if (!show) return;
+    var site = (CFG.siteUrl || '').replace(/\/?$/, '/');
+    var link = $('connSiteLink');
+    link.hidden = !CFG.siteUrl;
+    if (CFG.siteUrl) link.href = site + 'zugradar.html#laden';
+  }
   function openImport(tab) {
     $('importError').hidden = true; $('importBox').hidden = false;
     setImportTab(tab || 'games');
+    renderConnNote();
   }
   function closeImport() { $('importBox').hidden = true; }
   function setImportTab(tab) {
@@ -9787,7 +10132,7 @@ if (typeof module !== 'undefined') module.exports = (typeof window !== 'undefine
 
   function playBest() {
     if (train) return;
-    var fen = fenAt(state.ply), e = an.entry(fen);
+    var e = entryAt(state.ply);
     if (!e || !e.lines.length) return;
     userMove(uciToMove(e.lines[0].uci));
   }
@@ -9834,7 +10179,8 @@ if (typeof module !== 'undefined') module.exports = (typeof window !== 'undefine
                           importText: importText, exportPgn: exportPgn, setMode: setMode, newGame: newGame, render: render,
                           startTraining: startTraining, startTrainer: startTrainer, trainMove: trainMove, train: function () { return train; },
                           connPoll: connPoll, coachFor: coachFor, batch: function () { return batch; }, batchStart: batchStart,
-                          openPro: openPro, applyLanguage: applyLanguage, openHelp: openHelp, handleHash: handleHash };
+                          openPro: openPro, applyLanguage: applyLanguage, openHelp: openHelp, handleHash: handleHash,
+                          repInfo: repInfo, posInfoAt: posInfoAt, entryAt: entryAt };
   }
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
