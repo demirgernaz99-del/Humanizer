@@ -112,6 +112,8 @@ table.cmp { width: 100%; border-collapse: collapse; font-size: 15px; min-width: 
 .plan li { padding-left: 26px; position: relative; color: var(--ink-2); }
 .plan li::before { content: "✓"; position: absolute; left: 0; color: var(--green); font-weight: 700; }
 .plan .btn { justify-self: start; }
+.plan .key-link { justify-self: start; font-size: 14px; color: var(--muted); text-decoration: underline; text-underline-offset: 3px; }
+.plan .key-link:hover { color: var(--ink); }
 @media (max-width: 760px) { .plans { grid-template-columns: minmax(0, 1fr); } }
 
 .fair { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 22px; align-items: start; background: var(--bg-2); border: 1px solid var(--line); border-radius: 16px; padding: 26px; }
@@ -267,6 +269,7 @@ footer a:hover { color: var(--ink); }
             <li data-i="p_p5">Alle Brett-Designs, Teilen ohne Wasserzeichen</li>
           </ul>
           <a class="btn primary" id="buyBtn" href="zugradar.html" data-i="p_pro_cta">Pro holen</a>
+          <a class="key-link" href="zugradar.html#lizenz" data-i="p_key">Schon gekauft? Lizenzschlüssel eingeben</a>
         </div>
       </div>
       <p class="fine" data-i="price_fine">Bezahlung und Rechnung über Lemon Squeezy (Lemon Squeezy LLC) als Verkäufer (Merchant of Record), inklusive Mehrwertsteuer.</p>
@@ -322,7 +325,7 @@ footer a:hover { color: var(--ink); }
 </footer>
 
 <script>
-(function(){var r=typeof window!=='undefined'?window:globalThis;r.SK=r.SK||{};r.SK.seller={"_hinweis": "Deine Geschäftsdaten. Nach Änderungen: python3 build.py. Leere Felder erscheinen auf der Website als [bitte ausfüllen].", "brand": "Zugradar", "siteUrl": "https://demirgernaz99-del.github.io/Humanizer/personal/chess/", "checkoutUrl": "", "prices": {"monthly": "4,99 €", "yearly": "34,99 €", "lifetime": "69 €"}, "pricesEn": {"monthly": "€4.99", "yearly": "€34.99", "lifetime": "€69"}, "license": {"storeId": null, "productIds": []}, "legal": {"name": "", "street": "", "city": "", "country": "Deutschland", "email": "", "phone": "", "vatId": ""}, "merchantOfRecord": "Lemon Squeezy (Lemon Squeezy LLC)"};})();
+(function(){var r=typeof window!=='undefined'?window:globalThis;r.SK=r.SK||{};r.SK.seller={"_hinweis": "Deine Geschäftsdaten. Nach Änderungen: python3 build.py. Leere Felder erscheinen auf der Website als [bitte ausfüllen].", "brand": "Zugradar", "siteUrl": "https://demirgernaz99-del.github.io/Humanizer/personal/chess/", "checkoutUrl": "", "prices": {"monthly": "4,99 €", "yearly": "34,99 €", "lifetime": "69 €"}, "pricesEn": {"monthly": "€4.99", "yearly": "€34.99", "lifetime": "€69"}, "license": {"provider": "lemonsqueezy", "storeId": null, "productIds": [], "organizationId": "", "benefitIds": [], "api": ""}, "legal": {"name": "", "street": "", "city": "", "country": "Deutschland", "email": "", "phone": "", "vatId": ""}, "merchantOfRecord": "Lemon Squeezy (Lemon Squeezy LLC)", "_hinweis_license": "provider: 'lemonsqueezy' (storeId, productIds) oder 'polar' (organizationId, optional benefitIds). api nur bei Proxy ausfüllen."};r.SK.build={"version": "1.0 (8b96be5)"};})();
 (function () {
   var SELLER = window.SK && window.SK.seller || {};
   var EN = {
@@ -358,6 +361,7 @@ footer a:hover { color: var(--ink); }
     per_year: 'per year', or: 'or', per_month: 'per month', once: 'one-time',
     p_p1: 'Insights across up to 100 games', p_p2: 'Tactics trainer without a daily limit', p_p3: 'Auto-import of every finished game',
     p_p4: 'Review up to depth 22', p_p5: 'All board themes, sharing without a watermark', p_pro_cta: 'Get Pro',
+    p_key: 'Already bought? Enter your licence key',
     price_fine: 'Payment and invoicing via ' + (SELLER.merchantOfRecord || 'our reseller') + ' as merchant of record, VAT included.',
     fair_eyebrow: 'Fair play built in', fair_title: 'Built for training, not for cheating.',
     fair_p: 'Zugradar never reads ongoing online games. Your games only reach the review after they have finished. Engine help during a game against humans is forbidden on every platform and gets you banned.',

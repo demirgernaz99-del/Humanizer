@@ -17,7 +17,9 @@
   function ConnectError(code, message) { var e = new Error(message); e.code = code; return e; }
   function sleep(ms) { return new Promise(function (r) { setTimeout(r, ms); }); }
 
-  // fetch mit Wiederholung (chess.com antwortet bei Last gelegentlich ohne CORS-Header)
+  // fetch mit Wiederholung. chess.com antwortet unter Last gelegentlich ohne CORS-Header
+  // (der Browser meldet dann einen Netzfehler); nach ein paar Versuchen klappt es meist.
+  var RETRIES = 5;
   function getText(url, opts, fetchImpl) {
     var f = fetchImpl || root.fetch.bind(root);
     var host = new URL(url).host, tries = 0;
@@ -26,17 +28,39 @@
       return f(url, opts || {}).then(function (res) {
         if (res.status === 404) throw ConnectError('notfound', 'Benutzer nicht gefunden.');
         if (res.status === 429) throw ConnectError('ratelimit', 'Zu viele Anfragen – bitte eine Minute warten.');
+        if (res.status >= 500) throw ConnectError('network', 'Server antwortet mit ' + res.status + '.');
         if (!res.ok) throw ConnectError('http', 'Server antwortet mit ' + res.status + '.');
         return res.text();
-      }, function (err) {
+      }, function () {
         if (blockedHosts[host]) throw ConnectError('blocked', 'Diese Seite darf ' + host + ' nicht abfragen.');
         throw ConnectError('network', 'Keine Verbindung zu ' + host + '.');
       }).catch(function (err) {
-        if (err.code === 'network' && tries < 3) return sleep(600 * tries).then(attempt);
+        if (err.code === 'network' && tries < RETRIES && !blockedHosts[host]) return sleep((root.SK.connect._retryMs || 400) * tries).then(attempt);
         throw err;
       });
     }
     return attempt();
+  }
+
+  // Letzte Stufe für chess.com: JSONP über ein <script> (braucht kein CORS, laut PubAPI-Doku unterstützt)
+  var jsonpN = 0;
+  function jsonp(url) {
+    return new Promise(function (resolve, reject) {
+      if (typeof document === 'undefined') return reject(ConnectError('network', 'Keine Verbindung zu api.chess.com.'));
+      var name = '__zugradarJsonp' + (++jsonpN), s = document.createElement('script'), done = false;
+      function finish() { done = true; clearTimeout(timer); try { delete root[name]; } catch (e) { root[name] = undefined; } s.remove(); }
+      var timer = setTimeout(function () { if (!done) { finish(); reject(ConnectError('network', 'Keine Verbindung zu api.chess.com.')); } }, 15000);
+      root[name] = function (data) { if (done) return; finish(); resolve(JSON.stringify(data)); };
+      s.onerror = function () { if (done) return; finish(); reject(ConnectError(blockedHosts['api.chess.com'] ? 'blocked' : 'network', 'Keine Verbindung zu api.chess.com.')); };
+      s.src = url + (url.indexOf('?') < 0 ? '?' : '&') + 'callback=' + name;
+      document.head.appendChild(s);
+    });
+  }
+  function chesscomText(url, fetchImpl) {
+    return getText(url, {}, fetchImpl).catch(function (err) {
+      if (err.code !== 'network' || fetchImpl) throw err; // Tests mit nachgebildetem fetch: kein JSONP
+      return jsonp(url);
+    });
   }
 
   function resultOf(w, b) {
@@ -64,12 +88,12 @@
     opts = opts || {};
     var limit = opts.limit || 20, name = encodeURIComponent(user.trim().toLowerCase());
     var base = 'https://api.chess.com/pub/player/' + name + '/games/archives';
-    return getText(base, {}, fetchImpl).then(function (t) {
+    return chesscomText(base, fetchImpl).then(function (t) {
       var archives = (JSON.parse(t).archives || []).slice().reverse();
       var games = [];
       function next(i) {
         if (i >= archives.length || i >= (opts.months || 2) || games.length >= limit) return Promise.resolve(games);
-        return getText(archives[i], {}, fetchImpl).then(function (t2) {
+        return chesscomText(archives[i], fetchImpl).then(function (t2) {
           (JSON.parse(t2).games || []).forEach(function (g) {
             if (g.rules && g.rules !== 'chess') return;
             if (!g.pgn || !g.end_time) return; // Archive enthalten nur beendete Partien; sicherheitshalber prüfen
@@ -121,6 +145,6 @@
 
   var SPEED = { bullet: 'Bullet', blitz: 'Blitz', rapid: 'Schnellschach', classical: 'Klassisch', daily: 'Fernschach', correspondence: 'Fernschach', ultraBullet: 'Bullet' };
 
-  root.SK.connect = { fetchGames: fetchGames, chesscom: chesscom, lichess: lichess, SPEED: SPEED, _blocked: blockedHosts };
+  root.SK.connect = { fetchGames: fetchGames, chesscom: chesscom, lichess: lichess, SPEED: SPEED, _blocked: blockedHosts, _retryMs: 400 };
 })();
 if (typeof module !== 'undefined') module.exports = (typeof window !== 'undefined' ? window : globalThis).SK.connect;

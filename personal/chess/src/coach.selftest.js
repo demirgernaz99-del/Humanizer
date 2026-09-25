@@ -5,6 +5,7 @@ var path = require('path');
 var L = require(path.join(__dirname, 'vendor/chess.js'));
 var CO = require(path.join(__dirname, 'coach.js'));
 var CN = require(path.join(__dirname, 'connect.js'));
+CN._retryMs = 5; // Tests: kurze Wartezeit zwischen Wiederholungen
 
 var pass = 0, fail = 0;
 function ok(cond, msg) { if (cond) pass++; else { fail++; console.log('FEHLER:', msg); } }
@@ -122,7 +123,18 @@ Promise.all([
   CN.fetchGames('chesscom', '  ', {}, cc).then(function () { ok(false, 'leerer Name sollte fehlschlagen'); },
     function (e) { eq(e.code, 'input', 'leerer Benutzername abgefangen'); }),
   CN.fetchGames('lichess', 'x', {}, fakeFetch({ 'https://lichess.org/': 'NETWORK' })).then(function () { ok(false, 'Netzfehler sollte fehlschlagen'); },
-    function (e) { eq(e.code, 'network', 'Netzfehler nach Wiederholungen gemeldet'); })
+    function (e) { eq(e.code, 'network', 'Netzfehler nach Wiederholungen gemeldet'); }),
+  (function () {
+    // chess.com liefert zweimal einen Netzfehler (fehlender CORS-Header), dann klappt es
+    var n = 0, flaky = function (url, opts) {
+      n++;
+      if (n <= 2) return Promise.reject(new TypeError('Failed to fetch'));
+      return cc(url, opts);
+    };
+    return CN.fetchGames('chesscom', 'demo_user', { limit: 5 }, flaky).then(function (games) {
+      eq(games.length, 2, 'chess.com: wackelige Verbindung wird durch Wiederholung überbrückt');
+    });
+  })()
 ]).then(function () {
   console.log((fail ? 'FEHLGESCHLAGEN' : 'OK') + ': ' + pass + ' bestanden, ' + fail + ' fehlgeschlagen');
   process.exit(fail ? 1 : 0);

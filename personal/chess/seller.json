@@ -3,9 +3,24 @@
   "brand": "Zugradar",
   "siteUrl": "https://demirgernaz99-del.github.io/Humanizer/personal/chess/",
   "checkoutUrl": "",
-  "prices": { "monthly": "4,99 €", "yearly": "34,99 €", "lifetime": "69 €" },
-  "pricesEn": { "monthly": "€4.99", "yearly": "€34.99", "lifetime": "€69" },
-  "license": { "storeId": null, "productIds": [] },
+  "prices": {
+    "monthly": "4,99 €",
+    "yearly": "34,99 €",
+    "lifetime": "69 €"
+  },
+  "pricesEn": {
+    "monthly": "€4.99",
+    "yearly": "€34.99",
+    "lifetime": "€69"
+  },
+  "license": {
+    "provider": "lemonsqueezy",
+    "storeId": null,
+    "productIds": [],
+    "organizationId": "",
+    "benefitIds": [],
+    "api": ""
+  },
   "legal": {
     "name": "",
     "street": "",
@@ -15,5 +30,6 @@
     "phone": "",
     "vatId": ""
   },
-  "merchantOfRecord": "Lemon Squeezy (Lemon Squeezy LLC)"
+  "merchantOfRecord": "Lemon Squeezy (Lemon Squeezy LLC)",
+  "_hinweis_license": "provider: 'lemonsqueezy' (storeId, productIds) oder 'polar' (organizationId, optional benefitIds). api nur bei Proxy ausfüllen."
 }

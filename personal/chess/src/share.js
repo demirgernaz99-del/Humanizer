@@ -140,18 +140,33 @@
     return Promise.resolve(toBlob(b.canvas));
   }
 
-  // Teilen (Handy) oder herunterladen (Desktop). In der claude.ai-Vorschau über deren Download-Schnittstelle.
-  function deliver(blob, filename, text) {
+  // In der claude.ai-Vorschau über deren Download-Schnittstelle, sonst über fallback
+  function viaHost(blob, filename, fallback) {
     var cl = root.claude;
     if (cl && typeof cl.use === 'function') {
       return cl.use('downloads').then(function (dl) {
-        if (!dl) return deliverPlain(blob, filename, text);
+        if (!dl) return fallback();
         return dl.save({ filename: filename, data: blob }).then(function () { return 'saved'; }, function (e) {
-          return e && e.code === 'declined' ? 'cancelled' : deliverPlain(blob, filename, text);
+          return e && e.code === 'declined' ? 'cancelled' : fallback();
         });
-      }, function () { return deliverPlain(blob, filename, text); });
+      }, fallback);
     }
-    return deliverPlain(blob, filename, text);
+    return fallback();
+  }
+  // Teilen (Handy) oder herunterladen (Desktop)
+  function deliver(blob, filename, text) {
+    return viaHost(blob, filename, function () { return deliverPlain(blob, filename, text); });
+  }
+  // Datei speichern (z. B. Datensicherung) – ohne Teilen-Menü
+  function saveFile(blob, filename) {
+    return viaHost(blob, filename, function () { return download(blob, filename); });
+  }
+  function download(blob, filename) {
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url; a.download = filename; document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(function () { URL.revokeObjectURL(url); }, 4000);
+    return Promise.resolve('downloaded');
   }
   function deliverPlain(blob, filename, text) {
     var file = null;
@@ -159,12 +174,8 @@
     if (file && navigator.canShare && navigator.canShare({ files: [file] })) {
       return navigator.share({ files: [file], text: text || '' }).then(function () { return 'shared'; }, function () { return 'cancelled'; });
     }
-    var url = URL.createObjectURL(blob);
-    var a = document.createElement('a');
-    a.href = url; a.download = filename; document.body.appendChild(a); a.click(); a.remove();
-    setTimeout(function () { URL.revokeObjectURL(url); }, 4000);
-    return Promise.resolve('downloaded');
+    return download(blob, filename);
   }
 
-  root.SK.share = { moveCard: moveCard, reviewCard: reviewCard, deliver: deliver };
+  root.SK.share = { moveCard: moveCard, reviewCard: reviewCard, deliver: deliver, saveFile: saveFile };
 })();

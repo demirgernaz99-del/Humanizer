@@ -34,7 +34,7 @@
     liveMax: 22, reviewDepth: 16, lines: 3, notation: I.lang() === 'en' ? 'en' : 'de',
     arrowBest: true, arrowAlt: false, arrowBetter: true, badges: true, autoReview: true,
     hints: true, humanColor: 'w', level: 'club', theme: 'club', sound: true,
-    connSite: 'chesscom', connUser: '', connAuto: false, connLast: 0
+    connSite: 'chesscom', connUser: '', connAuto: false, connLast: 0, welcomed: false
   };
   var SAMPLE = {
     headers: { Event: 'Hoogovens', Site: 'Wijk aan Zee', Date: '1999.01.20', White: 'Garri Kasparow', Black: 'Wesselin Topalow', Result: '1-0' },
@@ -115,7 +115,18 @@
     return s;
   }
   // PV → „12. Sf3 Lg4 13. …“
+  // Hauptvariante als Text; gemerkt, weil jedes Neuzeichnen sonst alle Linien neu durchrechnet
+  var pvMemo = new Map();
   function pvText(fen, pv, max) {
+    var mk = fen + '|' + pv.join(' ') + '|' + (max || 10) + '|' + state.settings.notation;
+    var hit = pvMemo.get(mk);
+    if (hit !== undefined) return hit;
+    var res = pvTextRaw(fen, pv, max);
+    if (pvMemo.size > 3000) pvMemo.clear();
+    pvMemo.set(mk, res);
+    return res;
+  }
+  function pvTextRaw(fen, pv, max) {
     var c = new L.Chess(fen), out = [], n = Math.min(pv.length, max || 10);
     for (var i = 0; i < n; i++) {
       var turn = c.turn(), num = c.moveNumber(), m;
@@ -161,10 +172,10 @@
   }
   an.onUpdate = function () { batchCheck(); saveCurrentIfDone(); soon(); };
   an.onActivity = function () { soon(); };
-  var engineDetail = '', engineT0 = Date.now();
+  var engineDetail = '', engineT0 = Date.now(), warmEngineCache = null;
   engine.onStatus = function (st, detail) {
     engineDetail = detail || '';
-    if (st === 'ready') { applyEngineCfg(); updateEngine(); }
+    if (st === 'ready') { applyEngineCfg(); updateEngine(); if (warmEngineCache) warmEngineCache(); }
     soon();
   };
 
@@ -360,7 +371,8 @@
     state.pgn = opts.pgn || null;
     savedFor = null;
     if (opts.clocks) attachClocks(line, opts.clocks, state.headers.TimeControl);
-    if (state.user && state.user.color) state.orientation = state.user.color;
+    // Brett: deine Farbe unten, sonst Weiß unten (wie auf allen Plattformen üblich)
+    state.orientation = state.user && state.user.color ? state.user.color : 'w';
     if (state.mode !== 'analyse') setMode('analyse', true);
     changed();
   }
@@ -441,14 +453,47 @@
     loadLine(START, SAMPLE.moves.split(' '), SAMPLE.headers, SAMPLE.ply);
   }
 
+  // Geladene Partie, solange du gegen die KI spielst. Hast du noch nicht gezogen, kommt sie beim Wechsel zurück.
+  var stash = null;
+  function isLoadedGame() {
+    return state.line.length > 0 && !!(state.sample || state.game || state.pgn || (state.headers && state.headers.White));
+  }
+  function stashGame() {
+    var base = state.main || state;
+    stash = { startFen: state.startFen, line: base.line, ply: base.ply, headers: state.headers, sample: state.sample,
+              user: state.user, game: state.game, pgn: state.pgn, orientation: state.orientation };
+    state.startFen = START; state.line = []; state.main = null; state.ply = 0;
+    state.headers = {}; state.sample = false; state.user = null; state.game = null; state.pgn = null;
+  }
+  function unstashGame() {
+    var s2 = stash; stash = null;
+    state.startFen = s2.startFen; state.line = s2.line; state.ply = s2.ply; state.main = null;
+    state.headers = s2.headers; state.sample = s2.sample; state.user = s2.user; state.game = s2.game; state.pgn = s2.pgn;
+    state.orientation = s2.orientation; savedFor = null;
+  }
+  // Aus der beiseitegelegten Partie ab der gezeigten Stellung gegen die KI weiterspielen
+  function playFromStash() {
+    if (!stash) return;
+    var s2 = stash; stash = null;
+    cancelAI();
+    state.startFen = s2.startFen; state.line = s2.line.slice(0, s2.ply); state.ply = state.line.length; state.main = null;
+    state.headers = {}; state.sample = false; state.user = null; state.game = null; state.pgn = null;
+    state.line.forEach(function (m) { m.live = false; });
+    changed();
+  }
+
   function setMode(mode, silent) {
     var prev = state.mode;
     state.mode = mode;
     if (mode !== 'trainer' && train && train.source === 'srs') stopTraining(true);
     if (mode === 'play') {
+      if (prev !== 'play' && isLoadedGame()) stashGame();
       if (state.main) state.main = null;
       state.orientation = state.settings.humanColor;
-    } else cancelAI();
+    } else {
+      cancelAI();
+      if (prev === 'play' && stash) { if (!state.line.length) unstashGame(); else stash = null; }
+    }
     if (mode === 'insights' && prev !== 'insights') insightsDirty = true;
     if (!silent) changed();
   }
@@ -591,7 +636,8 @@
       else if (pi.terminal === 'draw') txt = '½';
       else if (entry && entry.lines.length) {
         var ws = whiteScore(fen, entry.lines[0].score);
-        txt = ws.mate != null ? '#' + Math.abs(ws.mate) : Math.abs(ws.cp / 100).toFixed(1);
+        var pawns = Math.abs(ws.cp / 100);
+        txt = ws.mate != null ? '#' + Math.abs(ws.mate) : pawns >= 10 ? String(Math.round(pawns)) : pawns.toFixed(1);
       }
     }
     numEl.textContent = txt;
@@ -616,9 +662,27 @@
     if (acc != null && state.line.length >= 4) meta += '<span class="acc-chip" title="' + esc(t('Genauigkeit')) + '">' + num1(acc) + '</span>';
     return '<span class="swatch ' + color + '"></span><span class="pname">' + esc(name) + '</span>' + (meta ? '<span class="meta">' + meta + '</span>' : '');
   }
+  // Zusammenfassung nur neu berechnen, wenn sich Bewertungen geändert haben
+  var sumCache = { sig: null, sum: null };
+  function resultsSig(results) {
+    var out = '';
+    for (var i = 0; i < results.length; i++) {
+      var r = results[i];
+      out += state.line[i].id + (r ? r.key + (r.accuracy == null ? '' : r.accuracy.toFixed(1)) : '-') + ',';
+    }
+    return out;
+  }
+  function summaryFor(results) {
+    var sig = resultsSig(results);
+    if (sumCache.sig !== sig) {
+      sumCache.sig = sig;
+      sumCache.sum = C.summarize(state.line.map(function (m, i) { return { color: m.color, cls: results[i] }; }));
+    }
+    return sumCache.sum;
+  }
   // Genauigkeit erst, wenn alle Züge dieser Farbe bewertet sind
   function accuracyFor(color, results) {
-    var sum = C.summarize(state.line.map(function (m, i) { return { color: m.color, cls: results[i] }; }));
+    var sum = summaryFor(results);
     var total = state.line.filter(function (m) { return m.color === color; }).length;
     return total && sum[color].n === total ? sum[color].accuracy : null;
   }
@@ -832,8 +896,13 @@
     var pr = an.reviewProgress();
     $('progress').textContent = !state.settings.autoReview ? t('automatisches Review aus')
       : (pr.done >= pr.total ? t('fertig · Tiefe {d}', { d: reviewDepth() }) : t('analysiert {a} / {b}', { a: pr.done, b: pr.total }));
-    var sum = C.summarize(state.line.map(function (m, i) { return { color: m.color, cls: results[i] }; }));
+    renderGraph(results);
     var names = gameNames();
+    var sig = sumCache.sig + '|' + state.ply + '|' + I.lang() + '|' + names.w + '|' + names.b + '|' + state.orientation + '|' +
+              (state.user ? state.user.color : '') + '|' + state.settings.notation + '|' + state.mode;
+    if (sig === reviewSig) return;
+    reviewSig = sig;
+    var sum = summaryFor(results);
     function box(c, name) {
       var a = accuracyFor(c, results);
       return '<div class="box"><div class="who"><span class="swatch sm ' + c + '"></span>' + esc(name) + '</div>' +
@@ -845,12 +914,12 @@
       return '<tr><td class="n' + (w ? '' : ' zero') + '">' + w + '</td><td class="lab"><span class="sym c-' + k + '">' + C.CATS[k].sym + '</span>' + catLabel(k) + '</td><td class="n' + (b ? '' : ' zero') + '">' + b + '</td></tr>';
     }).join('');
     $('counts').innerHTML = '<thead><tr><td class="n">' + t('Weiß') + '</td><td></td><td class="n">' + t('Schwarz') + '</td></tr></thead><tbody>' + rows + '</tbody>';
-    renderGraph(results);
     renderReviewExtras(results);
   }
+  var reviewSig = '';
 
   // Bewertungsverlauf: Gewinnchance von Weiß pro Halbzug
-  var graphHover = null;
+  var graphHover = null, graphSig = '';
   function renderGraph(results) {
     var g = $('graph');
     var W = Math.max(200, g.clientWidth || 360), H = g.clientHeight || 104;
@@ -860,6 +929,9 @@
       var f = fenAt(i), wp = whiteWp(f, an.entry(f));
       pts.push(wp);
     }
+    var gsig = pts.map(function (v) { return v == null ? '' : v.toFixed(1); }).join(',') + '|' + state.ply + '|' + graphHover + '|' + W + '|' + (sumCache.sig || '');
+    if (gsig === graphSig) return;
+    graphSig = gsig;
     function X(i2) { return n ? i2 / n * W : 0; }
     function Y(wp2) { return H - wp2 / 100 * H; }
     var d = '', started = false, lastX = 0;
@@ -995,9 +1067,11 @@
     // Training
     var tc2 = trainColor(), cand = trainItems(results, tc2);
     var btn = $('btnTrain');
+    var rated = results.filter(function (r) { return r; }).length;
     btn.disabled = !cand.length;
     var mine = state.user && state.user.color === tc2;
-    btn.textContent = !cand.length ? t('Keine Fehler zum Trainieren')
+    btn.textContent = !cand.length && rated < results.length ? t('Fehler-Training nach der Analyse')
+      : !cand.length ? t('Keine Fehler von {c} zum Trainieren', { c: colorName(tc2) })
       : mine ? t('Meine Fehler trainieren ({n})', { n: cand.length }) : t('Fehler von {c} trainieren ({n})', { c: colorName(tc2), n: cand.length });
   }
 
@@ -1678,7 +1752,7 @@
   }
   function shareReview() {
     var results = classifyAll(), names = gameNames();
-    var sum = C.summarize(state.line.map(function (m, i) { return { color: m.color, cls: results[i] }; }));
+    var sum = summaryFor(results);
     var rows = ['brilliant', 'great', 'best', 'inaccuracy', 'mistake', 'blunder'].map(function (k) {
       return { key: k, sym: C.CATS[k].sym, label: catLabel(k), w: sum.w.counts[k], b: sum.b.counts[k] };
     });
@@ -1746,6 +1820,10 @@
     $('mainView').hidden = m === 'insights';
     $('insightsView').hidden = m !== 'insights';
     $('playBox').hidden = m !== 'play';
+    $('welcomeCard').hidden = !(m === 'analyse' && state.sample && !state.settings.welcomed && !train);
+    var pf = $('btnPlayFrom');
+    pf.hidden = !(m === 'play' && stash && !state.line.length && stash.ply > 0);
+    if (!pf.hidden) pf.textContent = t('Geladene Partie ab Zug {n} weiterspielen', { n: Math.floor(stash.ply / 2) + 1 });
     $('engineCard').hidden = m === 'trainer' && !!train;
     $('sheetCard').hidden = m === 'trainer';
     $('btnImport').hidden = false;
@@ -1891,6 +1969,18 @@
     $('modeInsights').onclick = function () { if (state.mode !== 'insights') setMode('insights'); };
     $('modeTrainer').onclick = function () { if (state.mode !== 'trainer') setMode('trainer'); };
     $('btnPlayNew').onclick = function () { state.mode = 'play'; newGame(); };
+    $('btnPlayFrom').onclick = playFromStash;
+    $('helpBtn').onclick = openHelp;
+    $('helpClose').onclick = closeHelp;
+    $('helpBox').addEventListener('click', function (e) { if (e.target === $('helpBox')) closeHelp(); });
+    $('welcomeClose').onclick = dismissWelcome;
+    $('welcomeImport').onclick = function () { dismissWelcome(); openImport('games'); };
+    $('welcomePlay').onclick = function () { dismissWelcome(); setMode('play'); };
+    $('welcomeHelp').onclick = openHelp;
+    $('btnBackup').onclick = backupData;
+    $('btnRestore').onclick = function () { $('restoreFile').value = ''; $('restoreFile').click(); };
+    $('restoreFile').onchange = function () { restoreData(this.files && this.files[0]); };
+    window.addEventListener('hashchange', handleHash);
     $('btnTakeback').onclick = function () {
       if (!state.line.length) return;
       cancelAI();
@@ -1929,7 +2019,7 @@
         state.settings[key] = v;
         if (key === 'humanColor' && state.mode === 'play') state.orientation = el.value;
         if (key === 'theme') applyTheme();
-        applyEngineCfg(); movesSig = ''; coachMemo.clear(); changed();
+        applyEngineCfg(); movesSig = ''; reviewSig = ''; graphSig = ''; coachMemo.clear(); changed();
       };
     }
     function bindChk(id, key) {
@@ -2065,10 +2155,13 @@
     window.addEventListener('resize', function () { insightsDirty = true; soon(); });
 
     document.addEventListener('keydown', function (e) {
-      if (e.target && /INPUT|TEXTAREA|SELECT/.test(e.target.tagName)) return;
+      // Escape schließt Dialoge auch, wenn gerade ein Eingabefeld den Fokus hat
       if (e.key === 'Escape' && !$('importBox').hidden) { closeImport(); return; }
       if (e.key === 'Escape' && !$('proBox').hidden) { $('proBox').hidden = true; return; }
-      if (!$('importBox').hidden || !$('proBox').hidden) return;
+      if (e.key === 'Escape' && !$('helpBox').hidden) { closeHelp(); return; }
+      if (e.target && /INPUT|TEXTAREA|SELECT/.test(e.target.tagName)) return;
+      if (!$('importBox').hidden || !$('proBox').hidden || !$('helpBox').hidden) return;
+      if (e.key === '?') { openHelp(); return; }
       if (train) { if (e.key === 'Escape') stopTraining(); return; }
       if (state.mode === 'insights') return;
       if (e.key === 'ArrowLeft') { go(state.ply - 1); e.preventDefault(); }
@@ -2087,9 +2180,106 @@
     selLevel.innerHTML = LEVELS.map(function (l) { return '<option value="' + l.id + '">' + esc(t(l.label)) + '</option>'; }).join('');
     selLevel.value = lv;
     themeOptions();
-    movesSig = ''; coachMemo.clear(); insightsDirty = true;
+    movesSig = ''; reviewSig = ''; graphSig = ''; coachMemo.clear(); insightsDirty = true;
     if (conn.games.length) renderGames();
     render();
+  }
+
+  /* ---------- Hilfe, Willkommen, Datensicherung, Direktlinks ---------- */
+
+  var HELP_CATS = {
+    brilliant: 'Ein gutes Opfer: der beste oder fast beste Zug, bei dem du Material hergibst.',
+    great: 'Der einzige gute Zug in einer kritischen Stellung.',
+    best: 'Der Zug, den Stockfish selbst spielt.',
+    excellent: 'Fast so gut wie der beste Zug.',
+    good: 'Solider Zug mit kleinem Verlust.',
+    book: 'Bekannte Eröffnungstheorie.',
+    forced: 'Der einzige legale Zug.',
+    inaccuracy: 'Kleiner Verlust an Gewinnchance.',
+    mistake: 'Deutlicher Verlust an Gewinnchance.',
+    miss: 'Ein Matt oder ein Fehler des Gegners wurde nicht genutzt.',
+    blunder: 'Schwerer Fehler, der oft die Partie kostet.'
+  };
+  function openHelp() {
+    $('helpLegend').innerHTML = C.ORDER.map(function (k) {
+      return '<div class="hl"><span class="sym c-' + k + '">' + C.CATS[k].sym + '</span><b>' + esc(catLabel(k)) + '</b><span>' + esc(t(HELP_CATS[k])) + '</span></div>';
+    }).join('');
+    var keys = [['← →', t('Zug zurück / vor')], [t('Pos1') + ' / ' + t('Ende'), t('Zum Anfang / zum Ende')], ['F', t('Brett drehen')],
+                [t('Leertaste'), t('Besten Zug spielen')], ['Esc', t('Dialog oder Training beenden')]];
+    $('helpKeys').innerHTML = keys.map(function (k) { return '<tr><td><kbd>' + esc(k[0]) + '</kbd></td><td>' + esc(k[1]) + '</td></tr>'; }).join('');
+    var mail = (CFG.support && CFG.support.email) || '';
+    $('helpSupport').innerHTML = mail
+      ? esc(t('Fragen, Probleme oder Wünsche? Schreib an')) + ' <a href="mailto:' + esc(mail) + '?subject=' + encodeURIComponent('Zugradar ' + ((SK.build && SK.build.version) || '')) + '">' + esc(mail) + '</a>.'
+      : esc(t('Kontakt: siehe')) + ' <a href="impressum.html" target="_blank" rel="noopener">' + esc(t('Impressum')) + '</a>.';
+    $('helpVersion').textContent = 'Zugradar ' + ((SK.build && SK.build.version) || '') + ' · ' + (engine.info ? engine.info.name : 'Stockfish');
+    $('helpBox').hidden = false;
+    $('helpClose').focus({ preventScroll: true });
+    document.querySelector('.help-dialog').scrollTop = 0;
+  }
+  function closeHelp() { $('helpBox').hidden = true; }
+  function dismissWelcome() {
+    if (state.settings.welcomed) return;
+    state.settings.welcomed = true; save(); render();
+  }
+
+  var BACKUP_KEYS = ['zugradar.v1', 'zugradar.library.v1', 'zugradar.srs.v1'];
+  function dataStatus(txt, bad) { var el = $('dataStatus'); el.textContent = txt || ''; el.classList.toggle('bad', !!bad); }
+  function backupData() {
+    save();
+    var data = {};
+    BACKUP_KEYS.forEach(function (k) {
+      try { var v = localStorage.getItem(k); if (v != null) data[k] = JSON.parse(v); } catch (e) { /* egal */ }
+    });
+    if (!Object.keys(data).length) { dataStatus(t('Dein Browser speichert keine Daten (privater Modus?). Es gibt nichts zu sichern.'), true); return; }
+    var out = { app: 'zugradar', kind: 'backup', v: 1, created: new Date().toISOString(), data: data };
+    var blob = new Blob([JSON.stringify(out)], { type: 'application/json' });
+    var name = (I.lang() === 'en' ? 'zugradar-backup-' : 'zugradar-sicherung-') + new Date().toISOString().slice(0, 10) + '.json';
+    var games = (data['zugradar.library.v1'] || []).length, puzzles = (data['zugradar.srs.v1'] || []).length;
+    SK.share.saveFile(blob, name).then(function (r) {
+      if (r === 'cancelled') { dataStatus(''); return; }
+      dataStatus(t('Gesichert: {g}, {p}.', {
+        g: games === 1 ? t('1 Partie') : t('{n} Partien', { n: games }),
+        p: puzzles === 1 ? t('1 Trainer-Aufgabe') : t('{n} Trainer-Aufgaben', { n: puzzles }) }));
+    }, function () { dataStatus(t('Die Sicherung konnte nicht gespeichert werden.'), true); });
+  }
+  function restoreData(file) {
+    if (!file) return;
+    var rd = new FileReader();
+    rd.onload = function () {
+      var j = null;
+      try { j = JSON.parse(rd.result); } catch (e) { j = null; }
+      if (!j || j.app !== 'zugradar' || j.kind !== 'backup' || !j.data || typeof j.data !== 'object') {
+        dataStatus(t('Das ist keine Zugradar-Sicherung.'), true); return;
+      }
+      var when = j.created ? I.date(Date.parse(j.created), true) : '?';
+      if (!window.confirm(t('Die Sicherung vom {d} ersetzt deine jetzigen Partien, Trainer-Fortschritte und Einstellungen. Fortfahren?', { d: when }))) return;
+      try {
+        BACKUP_KEYS.forEach(function (k) { if (j.data[k] !== undefined) localStorage.setItem(k, JSON.stringify(j.data[k])); });
+      } catch (e) { dataStatus(t('Wiederherstellen fehlgeschlagen: Der Speicher des Browsers ist voll oder gesperrt.'), true); return; }
+      location.reload();
+    };
+    rd.onerror = function () { dataStatus(t('Die Datei konnte nicht gelesen werden.'), true); };
+    rd.readAsText(file);
+  }
+
+  // Direktlinks: zugradar.html#lizenz (nach dem Kauf), #pro, #hilfe, #spielen, #laden
+  function handleHash() {
+    var h = decodeURIComponent((location.hash || '').slice(1)), key = '';
+    if (!h) return;
+    var m = h.match(/^(lizenz|license|key)(?:=(.+))?$/i);
+    if (m) key = m[2] || '';
+    var act = m ? 'key' : h.toLowerCase();
+    if (act === 'key') {
+      openPro('generic');
+      $('proKeyBox').open = true;
+      if (key) $('proKey').value = key.trim();
+      setTimeout(function () { $('proKey').focus(); }, 50);
+    } else if (act === 'pro') openPro('generic');
+    else if (act === 'hilfe' || act === 'help') openHelp();
+    else if (act === 'spielen' || act === 'play') setMode('play');
+    else if (act === 'laden' || act === 'import') openImport('games');
+    else return;
+    try { history.replaceState(null, '', location.pathname + location.search); } catch (e) { /* egal */ }
   }
 
   function openImport(tab) {
@@ -2121,6 +2311,12 @@
     try {
       if (!('serviceWorker' in navigator) || !/^https:|^http:\/\/localhost/.test(location.href) || window.top !== window.self) return;
       navigator.serviceWorker.register('sw.js').catch(function () { /* egal */ });
+      // Sobald die Engine läuft: Engine-Dateien für offline ablegen lassen
+      var warm = function () {
+        navigator.serviceWorker.ready.then(function (reg) { if (reg.active) reg.active.postMessage({ type: 'warm-engine' }); });
+      };
+      warmEngineCache = warm;
+      if (engine.state === 'ready') warm();
     } catch (e) { /* egal */ }
   }
 
@@ -2143,13 +2339,14 @@
     connSchedule();
     LIC.revalidate().then(function () { renderPlan(); }, function () {});
     registerServiceWorker();
+    handleHash();
     var tick = setInterval(function () { if (engine.state === 'ready' || engine.state === 'failed') clearInterval(tick); render(); }, 1000);
     // Test-Hook (Selbsttests im Browser)
     window.__zugradar = { state: state, an: an, engine: engine, classifyAll: classifyAll, userMove: userMove, go: go,
                           importText: importText, exportPgn: exportPgn, setMode: setMode, newGame: newGame, render: render,
                           startTraining: startTraining, startTrainer: startTrainer, trainMove: trainMove, train: function () { return train; },
                           connPoll: connPoll, coachFor: coachFor, batch: function () { return batch; }, batchStart: batchStart,
-                          openPro: openPro, applyLanguage: applyLanguage };
+                          openPro: openPro, applyLanguage: applyLanguage, openHelp: openHelp, handleHash: handleHash };
   }
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);

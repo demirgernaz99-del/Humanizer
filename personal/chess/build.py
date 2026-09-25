@@ -25,8 +25,13 @@ def write(name, text):
 # Englische Texte erzeugen und auf Vollständigkeit prüfen
 subprocess.run([sys.executable, os.path.join(BASE, "tools", "en_build.py")], check=True)
 
+APP_VERSION = "1.0"
 seller = json.loads(read("seller.json"))
-seller_js = "(function(){var r=typeof window!=='undefined'?window:globalThis;r.SK=r.SK||{};r.SK.seller=" + json.dumps(seller, ensure_ascii=False) + ";})();"
+# Build-Kennung: Versionsnummer + Kurz-Hash aller Quelltexte (für Hilfe-Dialog und Support-Anfragen)
+_src = "".join(read("src", f) for f in sorted(os.listdir(os.path.join(BASE, "src"))) if f.endswith((".js", ".css")))
+build_id = APP_VERSION + " (" + hashlib.sha1((_src + read("template.html")).encode("utf-8")).hexdigest()[:7] + ")"
+seller_js = ("(function(){var r=typeof window!=='undefined'?window:globalThis;r.SK=r.SK||{};r.SK.seller=" + json.dumps(seller, ensure_ascii=False) +
+             ";r.SK.build=" + json.dumps({"version": build_id}) + ";})();")
 
 parts = {
     "@@CONFIG@@": "config.js", "@@I18N@@": "i18n.js", "@@I18N_EN@@": "i18n-en.js", "@@LICENSE@@": "license.js",

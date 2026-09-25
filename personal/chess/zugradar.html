@@ -700,6 +700,36 @@ select {
 :root[data-board="slate"] { --sq-l: #dee3e6; --sq-d: #8ca2ad; --sq-l-ink: #6f8794; --sq-d-ink: #eef2f4; }
 :root[data-board="marble"] { --sq-l: #ece9e2; --sq-d: #a7a29a; --sq-l-ink: #8a857d; --sq-d-ink: #f4f2ee; }
 :root[data-board="night"] { --sq-l: #9fa8b6; --sq-d: #4f5a6b; --sq-l-ink: #4f5a6b; --sq-d-ink: #c9d0da; }
+#btnPlayFrom { margin-top: 10px; }
+
+/* ---------- Hilfe, Willkommen, Datensicherung ---------- */
+.help-btn { margin-left: auto; width: 32px; padding: 6px 0; font-family: var(--f-body); font-weight: 700; font-size: 14px; }
+.welcome { position: relative; border-color: var(--accent); background: linear-gradient(180deg, color-mix(in srgb, var(--accent) 7%, var(--panel)), var(--panel)); }
+.welcome h2 { font: 800 20px/1.2 var(--f-display); margin: 0 28px 6px 0; letter-spacing: -.01em; }
+.welcome p { margin: 0 0 12px; color: var(--ink-2); font-size: 14.5px; line-height: 1.5; }
+.welcome-x { position: absolute; top: 8px; right: 8px; width: 30px; height: 30px; border: 0; background: transparent; color: var(--muted); font-size: 22px; line-height: 1; cursor: pointer; border-radius: 6px; }
+.welcome-x:hover { background: var(--panel-2); color: var(--ink); }
+.data-row { margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--line); display: grid; gap: 8px; }
+.data-lab { font-size: 13.5px; color: var(--ink-2); }
+.conn-status.bad { color: var(--c-blunder, #c33); }
+.help-dialog { max-width: 620px; gap: 0; max-height: calc(100dvh - 32px); overflow-y: auto; }
+.help-dialog h2 { font: 800 24px/1.2 var(--f-display); margin: 0 0 6px; }
+.help-dialog h3 { font: 700 13px/1.3 var(--f-body); letter-spacing: .06em; text-transform: uppercase; color: var(--muted); margin: 18px 0 8px; }
+.help-dialog p { margin: 0 0 6px; line-height: 1.5; color: var(--ink-2); }
+.help-steps { margin: 0; padding-left: 20px; line-height: 1.5; color: var(--ink-2); }
+.help-steps li { margin-bottom: 4px; }
+.help-legend { display: grid; gap: 6px; }
+.help-legend .hl { display: grid; grid-template-columns: 28px 118px minmax(0, 1fr); align-items: center; gap: 8px; font-size: 14px; }
+.help-legend .hl span:last-child { color: var(--ink-2); }
+.help-legend .sym { width: 24px; height: 24px; border-radius: 50%; display: inline-grid; place-items: center; color: #fff; font: 800 11px/1 var(--f-body); letter-spacing: -.04em; }
+.keys { border-collapse: collapse; font-size: 14px; }
+.keys td { padding: 4px 12px 4px 0; color: var(--ink-2); }
+.keys kbd { font: 600 12.5px/1 var(--f-mono); border: 1px solid var(--line); border-bottom-width: 2px; border-radius: 5px; padding: 3px 7px; background: var(--panel-2); color: var(--ink); white-space: nowrap; }
+.help-version { font: 500 12px/1.4 var(--f-mono); color: var(--muted); margin-top: 12px !important; }
+@media (max-width: 520px) {
+  .help-legend .hl { grid-template-columns: 28px minmax(0, 1fr); }
+  .help-legend .hl span:last-child { grid-column: 2; font-size: 13px; margin-top: -4px; }
+}
 
 /* Figuren: cburnett-Satz (Colin M.L. Burnett, GPLv2+), entnommen aus lichess chessground (GPLv3). */
 .pc.wp{background-image:url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0NSIgaGVpZ2h0PSI0NSI+PHBhdGggZD0iTTIyLjUgOWMtMi4yMSAwLTQgMS43OS00IDQgMCAuODkuMjkgMS43MS43OCAyLjM4QzE3LjMzIDE2LjUgMTYgMTguNTkgMTYgMjFjMCAyLjAzLjk0IDMuODQgMi40MSA1LjAzLTMgMS4wNi03LjQxIDUuNTUtNy40MSAxMy40N2gyM2MwLTcuOTItNC40MS0xMi40MS03LjQxLTEzLjQ3IDEuNDctMS4xOSAyLjQxLTMgMi40MS01LjAzIDAtMi40MS0xLjMzLTQuNS0zLjI4LTUuNjIuNDktLjY3Ljc4LTEuNDkuNzgtMi4zOCAwLTIuMjEtMS43OS00LTQtNHoiIGZpbGw9IiNmZmYiIHN0cm9rZT0iIzAwMCIgc3Ryb2tlLXdpZHRoPSIxLjUiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPjwvc3ZnPg==')}
@@ -723,6 +753,7 @@ select {
     <div class="brand">
       <a class="brand-name" href="index.html" id="brandLink">Zugradar</a>
       <span class="pill" id="enginePill" data-state="loading"><span class="dot"></span><span id="engineText">Engine lädt …</span></span>
+      <button type="button" class="lang-btn help-btn" id="helpBtn" data-t-title="Hilfe" title="Hilfe" data-t-aria="Hilfe" aria-label="Hilfe">?</button>
     </div>
     <nav class="tabs" role="tablist" data-t-aria="Bereiche" aria-label="Bereiche">
       <button type="button" role="tab" id="modeAnalyse" aria-selected="true" data-t>Analyse</button>
@@ -778,6 +809,16 @@ select {
     </section>
 
     <aside class="panel" data-t-aria="Analyse" aria-label="Analyse">
+      <section class="card welcome" id="welcomeCard" hidden>
+        <button type="button" class="welcome-x" id="welcomeClose" data-t-aria="Schließen" aria-label="Schließen">×</button>
+        <h2 data-t>Willkommen bei Zugradar</h2>
+        <p data-t>Stockfish 18 bewertet jeden Zug – von brillant (!!) bis Patzer (??) – und erklärt in Klartext, was besser gewesen wäre. Auf dem Brett siehst du ein Beispiel: Kasparows berühmtes Turmopfer 24.Txd4!! gegen Topalow.</p>
+        <div class="play-actions">
+          <button type="button" class="btn accent" id="welcomeImport" data-t>Meine Partien laden</button>
+          <button type="button" class="btn ghost" id="welcomePlay" data-t>Gegen die KI spielen</button>
+          <button type="button" class="btn ghost" id="welcomeHelp" data-t>So funktioniert’s</button>
+        </div>
+      </section>
       <div class="play-box" id="playBox" hidden>
         <div class="field-row">
           <label for="selColor" data-t>Ich spiele</label>
@@ -794,6 +835,7 @@ select {
           <button type="button" class="btn accent" id="btnPlayNew" data-t>Neue Partie gegen KI</button>
           <button type="button" class="btn ghost" id="btnTakeback" data-t>Zug zurücknehmen</button>
         </div>
+        <button type="button" class="btn ghost small" id="btnPlayFrom" hidden></button>
       </div>
 
       <div class="trainer-box" id="trainerBox" hidden>
@@ -887,6 +929,15 @@ select {
           <label class="check"><input type="checkbox" id="chkArrowBetter"> <span data-t>Pfeil „besser war …“ nach Fehlern</span></label>
           <label class="check"><input type="checkbox" id="chkBadges"> <span data-t>Bewertungs-Symbol auf dem Brett</span></label>
           <label class="check"><input type="checkbox" id="chkAuto"> <span data-t>Ganze Partie automatisch bewerten</span></label>
+        </div>
+        <div class="data-row">
+          <span class="data-lab" data-t>Deine Daten (Partien, Trainer, Einstellungen) liegen nur auf diesem Gerät.</span>
+          <div class="play-actions">
+            <button type="button" class="btn ghost small" id="btnBackup" data-t>Sichern</button>
+            <button type="button" class="btn ghost small" id="btnRestore" data-t>Wiederherstellen</button>
+          </div>
+          <input type="file" id="restoreFile" accept="application/json,.json" hidden>
+          <p class="conn-status" id="dataStatus" role="status"></p>
         </div>
       </details>
 
@@ -987,10 +1038,35 @@ select {
       </div>
     </div>
   </div>
+  <div class="overlay" id="helpBox" hidden>
+    <div class="sheet-dialog help-dialog" role="dialog" aria-modal="true" aria-labelledby="helpTitle">
+      <h2 id="helpTitle" data-t>Hilfe</h2>
+      <h3 data-t>In drei Schritten</h3>
+      <ol class="help-steps">
+        <li data-t-html><b>Partie laden:</b> Benutzernamen von chess.com oder lichess eingeben oder eine PGN einfügen.</li>
+        <li data-t-html><b>Zug für Zug durchgehen:</b> Jeder Zug bekommt ein Symbol. Der Coach erklärt Fehler und zeigt den besseren Zug.</li>
+        <li data-t-html><b>Besser werden:</b> Fehler der Partie nachspielen, Insights über viele Partien ansehen, im Trainer wiederholen.</li>
+      </ol>
+      <h3 data-t>Die Symbole</h3>
+      <div class="help-legend" id="helpLegend"></div>
+      <h3 data-t>Tastenkürzel</h3>
+      <table class="keys" id="helpKeys"></table>
+      <h3 data-t>Deine Daten</h3>
+      <p data-t>Alles bleibt auf deinem Gerät: kein Konto, keine Cookies, keine Tracker. Unter „Einstellungen“ sicherst du Partien und Trainer-Fortschritt als Datei und stellst sie auf einem anderen Gerät wieder her.</p>
+      <h3 data-t>Fair Play</h3>
+      <p data-t>Zugradar liest nie laufende Partien. Analysiere nach der Partie – Engine-Hilfe während einer Partie gegen Menschen ist Betrug.</p>
+      <h3 data-t>Support</h3>
+      <p id="helpSupport"></p>
+      <p class="help-version" id="helpVersion"></p>
+      <div class="dialog-actions end">
+        <button type="button" class="btn ghost" id="helpClose" data-t>Schließen</button>
+      </div>
+    </div>
+  </div>
 </div>
 
 <script>
-(function(){var r=typeof window!=='undefined'?window:globalThis;r.SK=r.SK||{};r.SK.seller={"_hinweis": "Deine Geschäftsdaten. Nach Änderungen: python3 build.py. Leere Felder erscheinen auf der Website als [bitte ausfüllen].", "brand": "Zugradar", "siteUrl": "https://demirgernaz99-del.github.io/Humanizer/personal/chess/", "checkoutUrl": "", "prices": {"monthly": "4,99 €", "yearly": "34,99 €", "lifetime": "69 €"}, "pricesEn": {"monthly": "€4.99", "yearly": "€34.99", "lifetime": "€69"}, "license": {"storeId": null, "productIds": []}, "legal": {"name": "", "street": "", "city": "", "country": "Deutschland", "email": "", "phone": "", "vatId": ""}, "merchantOfRecord": "Lemon Squeezy (Lemon Squeezy LLC)"};})();
+(function(){var r=typeof window!=='undefined'?window:globalThis;r.SK=r.SK||{};r.SK.seller={"_hinweis": "Deine Geschäftsdaten. Nach Änderungen: python3 build.py. Leere Felder erscheinen auf der Website als [bitte ausfüllen].", "brand": "Zugradar", "siteUrl": "https://demirgernaz99-del.github.io/Humanizer/personal/chess/", "checkoutUrl": "", "prices": {"monthly": "4,99 €", "yearly": "34,99 €", "lifetime": "69 €"}, "pricesEn": {"monthly": "€4.99", "yearly": "€34.99", "lifetime": "€69"}, "license": {"provider": "lemonsqueezy", "storeId": null, "productIds": [], "organizationId": "", "benefitIds": [], "api": ""}, "legal": {"name": "", "street": "", "city": "", "country": "Deutschland", "email": "", "phone": "", "vatId": ""}, "merchantOfRecord": "Lemon Squeezy (Lemon Squeezy LLC)", "_hinweis_license": "provider: 'lemonsqueezy' (storeId, productIds) oder 'polar' (organizationId, optional benefitIds). api nur bei Proxy ausfüllen."};r.SK.build={"version": "1.0 (8b96be5)"};})();
 </script>
 <script>
 /* SK.i18n – Deutsch/Englisch. Der deutsche Text ist zugleich der Schlüssel (wie gettext):
@@ -1146,7 +1222,9 @@ if (typeof module !== 'undefined') module.exports = (typeof window !== 'undefine
   "Ø Bedenkzeit pro Zug": "Avg. time per move",
   "Fehler in Zeitnot": "Errors in time trouble",
   "Fehler nach ≤ 3 s": "Errors after ≤ 3 s",
-  "Keine Fehler zum Trainieren": "No mistakes to practise",
+  "Keine Fehler von {c} zum Trainieren": "No mistakes by {c} to practise",
+  "Fehler-Training nach der Analyse": "Mistake training after the analysis",
+  "Geladene Partie ab Zug {n} weiterspielen": "Continue the loaded game from move {n}",
   "Meine Fehler trainieren ({n})": "Practise my mistakes ({n})",
   "Fehler von {c} trainieren ({n})": "Practise {c}'s mistakes ({n})",
   "{m} ist der beste Zug!": "{m} is the best move!",
@@ -1455,7 +1533,56 @@ if (typeof module !== 'undefined') module.exports = (typeof window !== 'undefine
   "<b>Insights über bis zu 100 Partien</b> – Genauigkeit, Phasen, Zeitnot, Eröffnungen und deine drei größten Baustellen.": "<b>Insights across up to 100 games</b> – accuracy, phases, time trouble, openings and your three biggest weak spots.",
   "<b>Unbegrenzter Taktik-Trainer</b> aus deinen eigenen Fehlern, mit Wiederholung im richtigen Abstand.": "<b>Unlimited tactics trainer</b> built from your own mistakes, with spaced repetition.",
   "<b>Auto-Import:</b> Jede beendete Partie ist analysiert, bevor du zurück bist.": "<b>Auto-import:</b> every finished game is analysed before you're back.",
-  "<b>Tiefere Analyse</b> (Review bis Tiefe 22), alle Brett-Designs, Teilen ohne Wasserzeichen.": "<b>Deeper analysis</b> (review up to depth 22), all board themes, sharing without a watermark."
+  "<b>Tiefere Analyse</b> (Review bis Tiefe 22), alle Brett-Designs, Teilen ohne Wasserzeichen.": "<b>Deeper analysis</b> (review up to depth 22), all board themes, sharing without a watermark.",
+  "Zug zurück / vor": "Previous / next move",
+  "Pos1": "Home",
+  "Ende": "End",
+  "Zum Anfang / zum Ende": "To start / to end",
+  "Leertaste": "Space",
+  "Dialog oder Training beenden": "Close dialog or stop training",
+  "Fragen, Probleme oder Wünsche? Schreib an": "Questions, problems or ideas? Write to",
+  "Kontakt: siehe": "Contact: see",
+  "Dein Browser speichert keine Daten (privater Modus?). Es gibt nichts zu sichern.": "Your browser doesn't store any data (private mode?). There is nothing to back up.",
+  "Gesichert: {g}, {p}.": "Backed up: {g}, {p}.",
+  "1 Partie": "1 game",
+  "{n} Partien": "{n} games",
+  "1 Trainer-Aufgabe": "1 trainer puzzle",
+  "{n} Trainer-Aufgaben": "{n} trainer puzzles",
+  "Die Sicherung konnte nicht gespeichert werden.": "The backup could not be saved.",
+  "Das ist keine Zugradar-Sicherung.": "This is not a Zugradar backup.",
+  "Die Sicherung vom {d} ersetzt deine jetzigen Partien, Trainer-Fortschritte und Einstellungen. Fortfahren?": "The backup from {d} replaces your current games, trainer progress and settings. Continue?",
+  "Wiederherstellen fehlgeschlagen: Der Speicher des Browsers ist voll oder gesperrt.": "Restore failed: the browser's storage is full or blocked.",
+  "Die Datei konnte nicht gelesen werden.": "The file could not be read.",
+  "Willkommen bei Zugradar": "Welcome to Zugradar",
+  "Stockfish 18 bewertet jeden Zug – von brillant (!!) bis Patzer (??) – und erklärt in Klartext, was besser gewesen wäre. Auf dem Brett siehst du ein Beispiel: Kasparows berühmtes Turmopfer 24.Txd4!! gegen Topalow.": "Stockfish 18 rates every move – from brilliant (!!) to blunder (??) – and explains in plain words what would have been better. The board shows an example: Kasparov's famous rook sacrifice 24.Rxd4!! against Topalov.",
+  "Meine Partien laden": "Load my games",
+  "Gegen die KI spielen": "Play the AI",
+  "So funktioniert’s": "How it works",
+  "Deine Daten (Partien, Trainer, Einstellungen) liegen nur auf diesem Gerät.": "Your data (games, trainer, settings) is stored on this device only.",
+  "Sichern": "Back up",
+  "Wiederherstellen": "Restore",
+  "Hilfe": "Help",
+  "In drei Schritten": "In three steps",
+  "Die Symbole": "The symbols",
+  "Tastenkürzel": "Keyboard shortcuts",
+  "Deine Daten": "Your data",
+  "Alles bleibt auf deinem Gerät: kein Konto, keine Cookies, keine Tracker. Unter „Einstellungen“ sicherst du Partien und Trainer-Fortschritt als Datei und stellst sie auf einem anderen Gerät wieder her.": "Everything stays on your device: no account, no cookies, no trackers. Under “Settings” you can back up your games and trainer progress as a file and restore them on another device.",
+  "Fair Play": "Fair play",
+  "Zugradar liest nie laufende Partien. Analysiere nach der Partie – Engine-Hilfe während einer Partie gegen Menschen ist Betrug.": "Zugradar never reads ongoing games. Analyse after the game – engine help during a game against humans is cheating.",
+  "Support": "Support",
+  "<b>Partie laden:</b> Benutzernamen von chess.com oder lichess eingeben oder eine PGN einfügen.": "<b>Load a game:</b> enter your chess.com or lichess username or paste a PGN.",
+  "<b>Zug für Zug durchgehen:</b> Jeder Zug bekommt ein Symbol. Der Coach erklärt Fehler und zeigt den besseren Zug.": "<b>Step through it:</b> every move gets a symbol. The coach explains mistakes and shows the better move.",
+  "<b>Besser werden:</b> Fehler der Partie nachspielen, Insights über viele Partien ansehen, im Trainer wiederholen.": "<b>Get better:</b> replay your mistakes, check insights across many games, repeat them in the trainer.",
+  "Ein gutes Opfer: der beste oder fast beste Zug, bei dem du Material hergibst.": "A sound sacrifice: the best or nearly best move, giving up material.",
+  "Der einzige gute Zug in einer kritischen Stellung.": "The only good move in a critical position.",
+  "Der Zug, den Stockfish selbst spielt.": "The move Stockfish itself plays.",
+  "Fast so gut wie der beste Zug.": "Almost as good as the best move.",
+  "Solider Zug mit kleinem Verlust.": "A solid move with a small loss.",
+  "Bekannte Eröffnungstheorie.": "Known opening theory.",
+  "Kleiner Verlust an Gewinnchance.": "A small loss of winning chances.",
+  "Deutlicher Verlust an Gewinnchance.": "A clear loss of winning chances.",
+  "Ein Matt oder ein Fehler des Gegners wurde nicht genutzt.": "A mate or an opponent's mistake was not taken.",
+  "Schwerer Fehler, der oft die Partie kostet.": "A serious mistake that often costs the game."
 };
 })();
 
@@ -1476,14 +1603,17 @@ if (typeof module !== 'undefined') module.exports = (typeof window !== 'undefine
     // Leer lassen, solange kein Shop existiert – der Kaufen-Knopf erklärt das dann.
     checkoutUrl: '',
 
-    // Lizenzprüfung über die öffentliche Lizenz-API von Lemon Squeezy (kein API-Schlüssel nötig).
+    // Lizenzprüfung über die öffentliche Lizenz-API des Shops (kein geheimer API-Schlüssel nötig).
+    // provider: 'lemonsqueezy' oder 'polar'. api leer = Standardadresse des Anbieters.
     // Falls der Browser die API wegen CORS nicht erreicht: server/license-proxy.js als
-    // Cloudflare Worker deployen und dessen URL hier eintragen.
+    // Cloudflare Worker deployen und dessen URL als api eintragen.
     license: {
       provider: 'lemonsqueezy',
-      api: 'https://api.lemonsqueezy.com/v1/licenses',
-      storeId: null,        // z. B. 12345 – Schlüssel anderer Shops werden dann abgelehnt
-      productIds: [],       // leer = jedes Produkt deines Shops
+      api: '',
+      storeId: null,        // Lemon Squeezy: z. B. 12345 – Schlüssel anderer Shops werden dann abgelehnt
+      productIds: [],       // Lemon Squeezy: leer = jedes Produkt deines Shops
+      organizationId: '',   // Polar: Organisations-ID (Pflicht bei Polar)
+      benefitIds: [],       // Polar: optional, nur Schlüssel dieser Lizenz-Vorteile annehmen
       revalidateDays: 7,    // so oft wird online nachgeprüft
       offlineGraceDays: 14  // so lange gilt Pro ohne Verbindung weiter
     },
@@ -1521,7 +1651,11 @@ if (typeof module !== 'undefined') module.exports = (typeof window !== 'undefine
     ['brand', 'siteUrl', 'checkoutUrl', 'legal'].forEach(function (k) { if (s[k] != null) cfg[k] = s[k]; });
     var lang = root.SK.i18n && root.SK.i18n.lang ? root.SK.i18n.lang() : 'de';
     if (s.prices) cfg.prices = (lang === 'en' && s.pricesEn) ? s.pricesEn : s.prices;
-    if (s.license) { cfg.license.storeId = s.license.storeId; cfg.license.productIds = s.license.productIds || []; }
+    if (s.license) {
+      ['provider', 'api', 'storeId', 'organizationId'].forEach(function (k) { if (s.license[k] != null && s.license[k] !== '') cfg.license[k] = s.license[k]; });
+      cfg.license.productIds = s.license.productIds || [];
+      cfg.license.benefitIds = s.license.benefitIds || [];
+    }
     if (s.legal && s.legal.email) cfg.support.email = s.legal.email;
   }
 })();
@@ -5769,7 +5903,9 @@ if (typeof module !== 'undefined') module.exports = (typeof window !== 'undefine
   function ConnectError(code, message) { var e = new Error(message); e.code = code; return e; }
   function sleep(ms) { return new Promise(function (r) { setTimeout(r, ms); }); }
 
-  // fetch mit Wiederholung (chess.com antwortet bei Last gelegentlich ohne CORS-Header)
+  // fetch mit Wiederholung. chess.com antwortet unter Last gelegentlich ohne CORS-Header
+  // (der Browser meldet dann einen Netzfehler); nach ein paar Versuchen klappt es meist.
+  var RETRIES = 5;
   function getText(url, opts, fetchImpl) {
     var f = fetchImpl || root.fetch.bind(root);
     var host = new URL(url).host, tries = 0;
@@ -5778,17 +5914,39 @@ if (typeof module !== 'undefined') module.exports = (typeof window !== 'undefine
       return f(url, opts || {}).then(function (res) {
         if (res.status === 404) throw ConnectError('notfound', 'Benutzer nicht gefunden.');
         if (res.status === 429) throw ConnectError('ratelimit', 'Zu viele Anfragen – bitte eine Minute warten.');
+        if (res.status >= 500) throw ConnectError('network', 'Server antwortet mit ' + res.status + '.');
         if (!res.ok) throw ConnectError('http', 'Server antwortet mit ' + res.status + '.');
         return res.text();
-      }, function (err) {
+      }, function () {
         if (blockedHosts[host]) throw ConnectError('blocked', 'Diese Seite darf ' + host + ' nicht abfragen.');
         throw ConnectError('network', 'Keine Verbindung zu ' + host + '.');
       }).catch(function (err) {
-        if (err.code === 'network' && tries < 3) return sleep(600 * tries).then(attempt);
+        if (err.code === 'network' && tries < RETRIES && !blockedHosts[host]) return sleep((root.SK.connect._retryMs || 400) * tries).then(attempt);
         throw err;
       });
     }
     return attempt();
+  }
+
+  // Letzte Stufe für chess.com: JSONP über ein <script> (braucht kein CORS, laut PubAPI-Doku unterstützt)
+  var jsonpN = 0;
+  function jsonp(url) {
+    return new Promise(function (resolve, reject) {
+      if (typeof document === 'undefined') return reject(ConnectError('network', 'Keine Verbindung zu api.chess.com.'));
+      var name = '__zugradarJsonp' + (++jsonpN), s = document.createElement('script'), done = false;
+      function finish() { done = true; clearTimeout(timer); try { delete root[name]; } catch (e) { root[name] = undefined; } s.remove(); }
+      var timer = setTimeout(function () { if (!done) { finish(); reject(ConnectError('network', 'Keine Verbindung zu api.chess.com.')); } }, 15000);
+      root[name] = function (data) { if (done) return; finish(); resolve(JSON.stringify(data)); };
+      s.onerror = function () { if (done) return; finish(); reject(ConnectError(blockedHosts['api.chess.com'] ? 'blocked' : 'network', 'Keine Verbindung zu api.chess.com.')); };
+      s.src = url + (url.indexOf('?') < 0 ? '?' : '&') + 'callback=' + name;
+      document.head.appendChild(s);
+    });
+  }
+  function chesscomText(url, fetchImpl) {
+    return getText(url, {}, fetchImpl).catch(function (err) {
+      if (err.code !== 'network' || fetchImpl) throw err; // Tests mit nachgebildetem fetch: kein JSONP
+      return jsonp(url);
+    });
   }
 
   function resultOf(w, b) {
@@ -5816,12 +5974,12 @@ if (typeof module !== 'undefined') module.exports = (typeof window !== 'undefine
     opts = opts || {};
     var limit = opts.limit || 20, name = encodeURIComponent(user.trim().toLowerCase());
     var base = 'https://api.chess.com/pub/player/' + name + '/games/archives';
-    return getText(base, {}, fetchImpl).then(function (t) {
+    return chesscomText(base, fetchImpl).then(function (t) {
       var archives = (JSON.parse(t).archives || []).slice().reverse();
       var games = [];
       function next(i) {
         if (i >= archives.length || i >= (opts.months || 2) || games.length >= limit) return Promise.resolve(games);
-        return getText(archives[i], {}, fetchImpl).then(function (t2) {
+        return chesscomText(archives[i], fetchImpl).then(function (t2) {
           (JSON.parse(t2).games || []).forEach(function (g) {
             if (g.rules && g.rules !== 'chess') return;
             if (!g.pgn || !g.end_time) return; // Archive enthalten nur beendete Partien; sicherheitshalber prüfen
@@ -5873,14 +6031,14 @@ if (typeof module !== 'undefined') module.exports = (typeof window !== 'undefine
 
   var SPEED = { bullet: 'Bullet', blitz: 'Blitz', rapid: 'Schnellschach', classical: 'Klassisch', daily: 'Fernschach', correspondence: 'Fernschach', ultraBullet: 'Bullet' };
 
-  root.SK.connect = { fetchGames: fetchGames, chesscom: chesscom, lichess: lichess, SPEED: SPEED, _blocked: blockedHosts };
+  root.SK.connect = { fetchGames: fetchGames, chesscom: chesscom, lichess: lichess, SPEED: SPEED, _blocked: blockedHosts, _retryMs: 400 };
 })();
 if (typeof module !== 'undefined') module.exports = (typeof window !== 'undefined' ? window : globalThis).SK.connect;
 
 </script>
 <script>
 /* SK.license – Free / Test / Pro. Pro wird über einen Lizenzschlüssel freigeschaltet
-   (Lemon-Squeezy-Lizenz-API: activate / validate / deactivate). Alles clientseitig:
+   (Lemon Squeezy oder Polar: activate / validate / deactivate). Alles clientseitig:
    Der Schlüssel und der Status liegen nur im Browser des Käufers. */
 (function () {
   var root = (typeof window !== 'undefined') ? window : globalThis;
@@ -5928,53 +6086,140 @@ if (typeof module !== 'undefined') module.exports = (typeof window !== 'undefine
     return true;
   }
 
-  function form(obj) {
-    return Object.keys(obj).map(function (k) { return encodeURIComponent(k) + '=' + encodeURIComponent(obj[k]); }).join('&');
-  }
-  function call(path, body, fetchImpl) {
+  function err(code, msg) { var e = new Error(msg); e.code = code; return e; }
+  function lc() { return cfg().license || {}; }
+
+  /* ---------- Anbieter ----------
+     Jeder Anbieter liefert einheitliche Ergebnisse:
+     activate → { ok, instanceId, status, expiresAt, email, product, meta, error, noActivation }
+     validate → { ok, status, expiresAt, email, product, meta, error, down }
+     down = Server-Fehler (5xx) → wie offline behandeln, Pro nicht entziehen. */
+
+  function post(url, body, json, fetchImpl) {
     var f = fetchImpl || (root.fetch && root.fetch.bind(root));
-    var api = (cfg().license || {}).api;
-    return f(api + '/' + path, {
+    return f(url, {
       method: 'POST',
-      headers: { Accept: 'application/json', 'Content-Type': 'application/x-www-form-urlencoded' },
-      body: form(body)
+      headers: json ? { Accept: 'application/json', 'Content-Type': 'application/json' }
+                    : { Accept: 'application/json', 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: json ? JSON.stringify(body) : Object.keys(body).map(function (k) { return encodeURIComponent(k) + '=' + encodeURIComponent(body[k]); }).join('&')
     }).then(function (res) {
-      return res.json().then(function (j) { return { status: res.status, json: j }; }, function () { return { status: res.status, json: {} }; });
+      return res.json().then(function (j) { return { status: res.status, json: j || {} }; }, function () { return { status: res.status, json: {} }; });
     });
   }
-  function err(code, msg) { var e = new Error(msg); e.code = code; return e; }
+  function ms(iso) { return iso ? Date.parse(iso) : null; }
 
-  // Passt der Schlüssel zu diesem Shop/Produkt?
-  function checkMeta(meta) {
-    var c = cfg().license || {};
-    if (c.storeId && meta && +meta.store_id !== +c.storeId) return 'Dieser Schlüssel gehört nicht zu ' + (cfg().brand || 'dieser App') + '.';
-    if (c.productIds && c.productIds.length && meta && c.productIds.indexOf(+meta.product_id) < 0) return 'Dieser Schlüssel gilt für ein anderes Produkt.';
-    return null;
+  var PROVIDERS = {
+    // Lemon Squeezy: öffentliche Lizenz-API, formularkodiert
+    lemonsqueezy: {
+      api: 'https://api.lemonsqueezy.com/v1/licenses',
+      activate: function (api, key, label, f) {
+        return post(api + '/activate', { license_key: key, instance_name: label }, false, f).then(function (r) {
+          var j = r.json;
+          if (r.status >= 500) return { ok: false, down: true, error: '' };
+          if (!j.activated) return { ok: false, error: j.error || '' };
+          var lk = j.license_key || {};
+          return { ok: true, instanceId: j.instance && j.instance.id, status: lk.status === 'active' || !lk.status ? 'active' : lk.status,
+                   expiresAt: ms(lk.expires_at), email: j.meta && j.meta.customer_email || '', product: j.meta && j.meta.product_name || '', meta: j.meta };
+        });
+      },
+      validate: function (api, lic, f) {
+        return post(api + '/validate', { license_key: lic.key, instance_id: lic.instanceId || '' }, false, f).then(function (r) {
+          var j = r.json, lk = j.license_key || {};
+          if (r.status >= 500) return { ok: false, down: true };
+          var active = j.valid && (!lk.status || lk.status === 'active');
+          return { ok: !!active, status: active ? 'active' : (lk.status || 'invalid'), expiresAt: ms(lk.expires_at),
+                   email: j.meta && j.meta.customer_email, product: j.meta && j.meta.product_name, meta: j.meta, error: j.error || '' };
+        });
+      },
+      deactivate: function (api, lic, f) {
+        return post(api + '/deactivate', { license_key: lic.key, instance_id: lic.instanceId }, false, f);
+      },
+      // Passt der Schlüssel zu diesem Shop/Produkt?
+      foreign: function (meta) {
+        var c = lc();
+        if (c.storeId && meta && +meta.store_id !== +c.storeId) return 'store';
+        if (c.productIds && c.productIds.length && meta && c.productIds.indexOf(+meta.product_id) < 0) return 'product';
+        return null;
+      }
+    },
+    // Polar: Kundenportal-API (für öffentliche Clients gedacht), JSON, braucht die Organisations-ID
+    polar: {
+      api: 'https://api.polar.sh/v1/customer-portal/license-keys',
+      activate: function (api, key, label, f) {
+        var org = lc().organizationId;
+        return post(api + '/activate', { key: key, organization_id: org, label: label }, true, f).then(function (r) {
+          var j = r.json;
+          if (r.status >= 500) return { ok: false, down: true, error: '' };
+          var detail = typeof j.detail === 'string' ? j.detail : '';
+          // Schlüssel ohne Aktivierungs-Limit: Polar will dann nur „validate“
+          if (r.status === 403 && /does not support activations/i.test(detail)) return { ok: false, noActivation: true };
+          if (r.status !== 200 || !j.id) return { ok: false, error: detail || (r.status === 404 ? 'License key not found.' : '') };
+          var lk = j.license_key || {};
+          return { ok: lk.status === 'granted', instanceId: j.id, status: lk.status === 'granted' ? 'active' : (lk.status || 'invalid'),
+                   expiresAt: ms(lk.expires_at), email: lk.customer && lk.customer.email || '', product: '', meta: lk };
+        });
+      },
+      validate: function (api, lic, f) {
+        var body = { key: lic.key, organization_id: lc().organizationId };
+        if (lic.instanceId) body.activation_id = lic.instanceId;
+        return post(api + '/validate', body, true, f).then(function (r) {
+          var j = r.json;
+          if (r.status >= 500) return { ok: false, down: true };
+          if (r.status !== 200) return { ok: false, status: 'invalid', error: typeof j.detail === 'string' ? j.detail : '' };
+          return { ok: j.status === 'granted', status: j.status === 'granted' ? 'active' : (j.status || 'invalid'),
+                   expiresAt: ms(j.expires_at), email: j.customer && j.customer.email, product: '', meta: j };
+        });
+      },
+      deactivate: function (api, lic, f) {
+        return post(api + '/deactivate', { key: lic.key, organization_id: lc().organizationId, activation_id: lic.instanceId }, true, f);
+      },
+      // Optional: nur Schlüssel bestimmter Vorteile (Benefits) annehmen
+      foreign: function (meta) {
+        var ids = lc().benefitIds || [];
+        if (ids.length && meta && meta.benefit_id && ids.indexOf(meta.benefit_id) < 0) return 'product';
+        return null;
+      }
+    }
+  };
+  function provider() {
+    var c = lc(), p = PROVIDERS[c.provider] || PROVIDERS.lemonsqueezy;
+    return { p: p, api: c.api || p.api };
   }
-  function record(key, instanceId, lk, meta) {
+  function foreignText(kind) {
+    return kind === 'store' ? 'Dieser Schlüssel gehört nicht zu ' + (cfg().brand || 'dieser App') + '.' : 'Dieser Schlüssel gilt für ein anderes Produkt.';
+  }
+  function record(key, instanceId, r) {
     store(KEY, {
-      key: key, instanceId: instanceId, status: lk.status,
-      expiresAt: lk.expires_at ? Date.parse(lk.expires_at) : null,
-      email: meta && meta.customer_email || '', product: meta && meta.product_name || '',
-      checkedAt: now(), offline: false, problem: ''
+      key: key, instanceId: instanceId || null, status: r.status || 'active', expiresAt: r.expiresAt || null,
+      email: r.email || '', product: r.product || '', checkedAt: now(), offline: false, problem: ''
     });
   }
 
   function activate(key, fetchImpl) {
     key = String(key || '').trim();
     if (key.length < 8) return Promise.reject(err('input', 'Bitte den vollständigen Lizenzschlüssel eingeben.'));
-    var name = (cfg().brand || 'Zugradar') + ' Web · ' + new Date(now()).toISOString().slice(0, 10);
-    return call('activate', { license_key: key, instance_name: name }, fetchImpl).then(function (r) {
-      var j = r.json || {};
-      if (!j.activated) throw err('rejected', j.error || 'Der Schlüssel wurde nicht angenommen.');
-      var bad = checkMeta(j.meta);
-      if (bad) {
-        // Aktivierung sofort wieder freigeben, damit kein Platz verbraucht wird
-        call('deactivate', { license_key: key, instance_id: j.instance && j.instance.id }, fetchImpl).catch(function () {});
-        throw err('wrong_product', bad);
+    var pv = provider();
+    var label = (cfg().brand || 'Zugradar') + ' Web · ' + new Date(now()).toISOString().slice(0, 10);
+    return pv.p.activate(pv.api, key, label, fetchImpl).then(function (r) {
+      if (r.noActivation) {
+        // Kein Geräte-Limit beim Anbieter eingestellt → Schlüssel nur prüfen
+        return pv.p.validate(pv.api, { key: key }, fetchImpl).then(function (v) {
+          if (v.down) throw err('network', 'Lizenzserver nicht erreichbar. Prüfe die Verbindung und versuche es erneut.');
+          if (!v.ok) throw err('rejected', v.error || 'Der Schlüssel wurde nicht angenommen.');
+          if (pv.p.foreign(v.meta)) throw err('wrong_product', foreignText(pv.p.foreign(v.meta)));
+          record(key, null, v); emit(); return state();
+        });
       }
-      if (j.license_key && j.license_key.status && j.license_key.status !== 'active') throw err('inactive', 'Der Schlüssel ist ' + j.license_key.status + '.');
-      record(key, j.instance && j.instance.id, j.license_key || { status: 'active' }, j.meta);
+      if (r.down) throw err('network', 'Lizenzserver nicht erreichbar. Prüfe die Verbindung und versuche es erneut.');
+      if (!r.ok && !r.instanceId) throw err('rejected', r.error || 'Der Schlüssel wurde nicht angenommen.');
+      var bad = pv.p.foreign(r.meta);
+      if (bad || !r.ok) {
+        // Aktivierung sofort wieder freigeben, damit kein Geräteplatz verbraucht wird
+        if (r.instanceId) pv.p.deactivate(pv.api, { key: key, instanceId: r.instanceId }, fetchImpl).catch(function () {});
+        if (bad) throw err('wrong_product', foreignText(bad));
+        throw err('inactive', 'Der Schlüssel ist ' + r.status + '.');
+      }
+      record(key, r.instanceId, r);
       emit();
       return state();
     }, function (e) {
@@ -5983,28 +6228,27 @@ if (typeof module !== 'undefined') module.exports = (typeof window !== 'undefine
     });
   }
 
-  // Nachprüfen, wenn fällig. Netzfehler → Kulanzzeit läuft weiter (offline: true).
+  // Nachprüfen, wenn fällig. Netz- oder Serverfehler → Kulanzzeit läuft weiter (offline: true).
   function revalidate(force, fetchImpl) {
     var lic = load(KEY);
     if (!lic || !lic.key) return Promise.resolve(state());
-    var due = force || !lic.checkedAt || now() > lic.checkedAt + ((cfg().license || {}).revalidateDays || 7) * DAY;
+    var due = force || !lic.checkedAt || now() > lic.checkedAt + (lc().revalidateDays || 7) * DAY;
     if (!due) return Promise.resolve(state());
-    return call('validate', { license_key: lic.key, instance_id: lic.instanceId || '' }, fetchImpl).then(function (r) {
-      var j = r.json || {};
-      if (j.valid && (!j.license_key || j.license_key.status === 'active') && !checkMeta(j.meta)) {
-        record(lic.key, lic.instanceId, j.license_key || { status: 'active' }, j.meta || { customer_email: lic.email, product_name: lic.product });
+    var pv = provider();
+    function offline() { lic.offline = true; store(KEY, lic); emit(); return state(); }
+    return pv.p.validate(pv.api, lic, fetchImpl).then(function (v) {
+      if (v.down) return offline();
+      if (v.ok && !pv.p.foreign(v.meta)) {
+        record(lic.key, lic.instanceId, { status: 'active', expiresAt: v.expiresAt, email: v.email || lic.email, product: v.product || lic.product });
       } else {
-        lic.status = (j.license_key && j.license_key.status) || 'invalid';
-        lic.problem = j.error || 'Die Lizenz ist nicht mehr gültig (' + lic.status + ').';
+        lic.status = v.ok ? 'foreign' : (v.status || 'invalid');
+        lic.problem = v.error || 'Die Lizenz ist nicht mehr gültig (' + lic.status + ').';
         lic.checkedAt = now();
         store(KEY, lic);
       }
       emit();
       return state();
-    }, function () {
-      lic.offline = true; store(KEY, lic); emit();
-      return state();
-    });
+    }, offline);
   }
 
   function deactivate(fetchImpl) {
@@ -6012,8 +6256,8 @@ if (typeof module !== 'undefined') module.exports = (typeof window !== 'undefine
     store(KEY, null);
     emit();
     if (!lic || !lic.key || !lic.instanceId) return Promise.resolve(state());
-    return call('deactivate', { license_key: lic.key, instance_id: lic.instanceId }, fetchImpl)
-      .then(function () { return state(); }, function () { return state(); });
+    var pv = provider();
+    return pv.p.deactivate(pv.api, lic, fetchImpl).then(function () { return state(); }, function () { return state(); });
   }
 
   // Tageszähler (z. B. Trainer-Aufgaben in der kostenlosen Version)
@@ -6028,7 +6272,7 @@ if (typeof module !== 'undefined') module.exports = (typeof window !== 'undefine
   root.SK.license = {
     state: state, isPro: isPro, limits: limits, startTrial: startTrial, activate: activate,
     revalidate: revalidate, deactivate: deactivate, dayCount: dayCount,
-    onChange: function (f) { listeners.push(f); }, _now: null
+    onChange: function (f) { listeners.push(f); }, _now: null, _providers: PROVIDERS
   };
 })();
 if (typeof module !== 'undefined') module.exports = (typeof window !== 'undefined' ? window : globalThis).SK.license;
@@ -6500,18 +6744,33 @@ if (typeof module !== 'undefined') module.exports = (typeof window !== 'undefine
     return Promise.resolve(toBlob(b.canvas));
   }
 
-  // Teilen (Handy) oder herunterladen (Desktop). In der claude.ai-Vorschau über deren Download-Schnittstelle.
-  function deliver(blob, filename, text) {
+  // In der claude.ai-Vorschau über deren Download-Schnittstelle, sonst über fallback
+  function viaHost(blob, filename, fallback) {
     var cl = root.claude;
     if (cl && typeof cl.use === 'function') {
       return cl.use('downloads').then(function (dl) {
-        if (!dl) return deliverPlain(blob, filename, text);
+        if (!dl) return fallback();
         return dl.save({ filename: filename, data: blob }).then(function () { return 'saved'; }, function (e) {
-          return e && e.code === 'declined' ? 'cancelled' : deliverPlain(blob, filename, text);
+          return e && e.code === 'declined' ? 'cancelled' : fallback();
         });
-      }, function () { return deliverPlain(blob, filename, text); });
+      }, fallback);
     }
-    return deliverPlain(blob, filename, text);
+    return fallback();
+  }
+  // Teilen (Handy) oder herunterladen (Desktop)
+  function deliver(blob, filename, text) {
+    return viaHost(blob, filename, function () { return deliverPlain(blob, filename, text); });
+  }
+  // Datei speichern (z. B. Datensicherung) – ohne Teilen-Menü
+  function saveFile(blob, filename) {
+    return viaHost(blob, filename, function () { return download(blob, filename); });
+  }
+  function download(blob, filename) {
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url; a.download = filename; document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(function () { URL.revokeObjectURL(url); }, 4000);
+    return Promise.resolve('downloaded');
   }
   function deliverPlain(blob, filename, text) {
     var file = null;
@@ -6519,14 +6778,10 @@ if (typeof module !== 'undefined') module.exports = (typeof window !== 'undefine
     if (file && navigator.canShare && navigator.canShare({ files: [file] })) {
       return navigator.share({ files: [file], text: text || '' }).then(function () { return 'shared'; }, function () { return 'cancelled'; });
     }
-    var url = URL.createObjectURL(blob);
-    var a = document.createElement('a');
-    a.href = url; a.download = filename; document.body.appendChild(a); a.click(); a.remove();
-    setTimeout(function () { URL.revokeObjectURL(url); }, 4000);
-    return Promise.resolve('downloaded');
+    return download(blob, filename);
   }
 
-  root.SK.share = { moveCard: moveCard, reviewCard: reviewCard, deliver: deliver };
+  root.SK.share = { moveCard: moveCard, reviewCard: reviewCard, deliver: deliver, saveFile: saveFile };
 })();
 
 </script>
@@ -7244,7 +7499,7 @@ if (typeof module !== 'undefined') module.exports = (typeof window !== 'undefine
     liveMax: 22, reviewDepth: 16, lines: 3, notation: I.lang() === 'en' ? 'en' : 'de',
     arrowBest: true, arrowAlt: false, arrowBetter: true, badges: true, autoReview: true,
     hints: true, humanColor: 'w', level: 'club', theme: 'club', sound: true,
-    connSite: 'chesscom', connUser: '', connAuto: false, connLast: 0
+    connSite: 'chesscom', connUser: '', connAuto: false, connLast: 0, welcomed: false
   };
   var SAMPLE = {
     headers: { Event: 'Hoogovens', Site: 'Wijk aan Zee', Date: '1999.01.20', White: 'Garri Kasparow', Black: 'Wesselin Topalow', Result: '1-0' },
@@ -7325,7 +7580,18 @@ if (typeof module !== 'undefined') module.exports = (typeof window !== 'undefine
     return s;
   }
   // PV → „12. Sf3 Lg4 13. …“
+  // Hauptvariante als Text; gemerkt, weil jedes Neuzeichnen sonst alle Linien neu durchrechnet
+  var pvMemo = new Map();
   function pvText(fen, pv, max) {
+    var mk = fen + '|' + pv.join(' ') + '|' + (max || 10) + '|' + state.settings.notation;
+    var hit = pvMemo.get(mk);
+    if (hit !== undefined) return hit;
+    var res = pvTextRaw(fen, pv, max);
+    if (pvMemo.size > 3000) pvMemo.clear();
+    pvMemo.set(mk, res);
+    return res;
+  }
+  function pvTextRaw(fen, pv, max) {
     var c = new L.Chess(fen), out = [], n = Math.min(pv.length, max || 10);
     for (var i = 0; i < n; i++) {
       var turn = c.turn(), num = c.moveNumber(), m;
@@ -7371,10 +7637,10 @@ if (typeof module !== 'undefined') module.exports = (typeof window !== 'undefine
   }
   an.onUpdate = function () { batchCheck(); saveCurrentIfDone(); soon(); };
   an.onActivity = function () { soon(); };
-  var engineDetail = '', engineT0 = Date.now();
+  var engineDetail = '', engineT0 = Date.now(), warmEngineCache = null;
   engine.onStatus = function (st, detail) {
     engineDetail = detail || '';
-    if (st === 'ready') { applyEngineCfg(); updateEngine(); }
+    if (st === 'ready') { applyEngineCfg(); updateEngine(); if (warmEngineCache) warmEngineCache(); }
     soon();
   };
 
@@ -7570,7 +7836,8 @@ if (typeof module !== 'undefined') module.exports = (typeof window !== 'undefine
     state.pgn = opts.pgn || null;
     savedFor = null;
     if (opts.clocks) attachClocks(line, opts.clocks, state.headers.TimeControl);
-    if (state.user && state.user.color) state.orientation = state.user.color;
+    // Brett: deine Farbe unten, sonst Weiß unten (wie auf allen Plattformen üblich)
+    state.orientation = state.user && state.user.color ? state.user.color : 'w';
     if (state.mode !== 'analyse') setMode('analyse', true);
     changed();
   }
@@ -7651,14 +7918,47 @@ if (typeof module !== 'undefined') module.exports = (typeof window !== 'undefine
     loadLine(START, SAMPLE.moves.split(' '), SAMPLE.headers, SAMPLE.ply);
   }
 
+  // Geladene Partie, solange du gegen die KI spielst. Hast du noch nicht gezogen, kommt sie beim Wechsel zurück.
+  var stash = null;
+  function isLoadedGame() {
+    return state.line.length > 0 && !!(state.sample || state.game || state.pgn || (state.headers && state.headers.White));
+  }
+  function stashGame() {
+    var base = state.main || state;
+    stash = { startFen: state.startFen, line: base.line, ply: base.ply, headers: state.headers, sample: state.sample,
+              user: state.user, game: state.game, pgn: state.pgn, orientation: state.orientation };
+    state.startFen = START; state.line = []; state.main = null; state.ply = 0;
+    state.headers = {}; state.sample = false; state.user = null; state.game = null; state.pgn = null;
+  }
+  function unstashGame() {
+    var s2 = stash; stash = null;
+    state.startFen = s2.startFen; state.line = s2.line; state.ply = s2.ply; state.main = null;
+    state.headers = s2.headers; state.sample = s2.sample; state.user = s2.user; state.game = s2.game; state.pgn = s2.pgn;
+    state.orientation = s2.orientation; savedFor = null;
+  }
+  // Aus der beiseitegelegten Partie ab der gezeigten Stellung gegen die KI weiterspielen
+  function playFromStash() {
+    if (!stash) return;
+    var s2 = stash; stash = null;
+    cancelAI();
+    state.startFen = s2.startFen; state.line = s2.line.slice(0, s2.ply); state.ply = state.line.length; state.main = null;
+    state.headers = {}; state.sample = false; state.user = null; state.game = null; state.pgn = null;
+    state.line.forEach(function (m) { m.live = false; });
+    changed();
+  }
+
   function setMode(mode, silent) {
     var prev = state.mode;
     state.mode = mode;
     if (mode !== 'trainer' && train && train.source === 'srs') stopTraining(true);
     if (mode === 'play') {
+      if (prev !== 'play' && isLoadedGame()) stashGame();
       if (state.main) state.main = null;
       state.orientation = state.settings.humanColor;
-    } else cancelAI();
+    } else {
+      cancelAI();
+      if (prev === 'play' && stash) { if (!state.line.length) unstashGame(); else stash = null; }
+    }
     if (mode === 'insights' && prev !== 'insights') insightsDirty = true;
     if (!silent) changed();
   }
@@ -7801,7 +8101,8 @@ if (typeof module !== 'undefined') module.exports = (typeof window !== 'undefine
       else if (pi.terminal === 'draw') txt = '½';
       else if (entry && entry.lines.length) {
         var ws = whiteScore(fen, entry.lines[0].score);
-        txt = ws.mate != null ? '#' + Math.abs(ws.mate) : Math.abs(ws.cp / 100).toFixed(1);
+        var pawns = Math.abs(ws.cp / 100);
+        txt = ws.mate != null ? '#' + Math.abs(ws.mate) : pawns >= 10 ? String(Math.round(pawns)) : pawns.toFixed(1);
       }
     }
     numEl.textContent = txt;
@@ -7826,9 +8127,27 @@ if (typeof module !== 'undefined') module.exports = (typeof window !== 'undefine
     if (acc != null && state.line.length >= 4) meta += '<span class="acc-chip" title="' + esc(t('Genauigkeit')) + '">' + num1(acc) + '</span>';
     return '<span class="swatch ' + color + '"></span><span class="pname">' + esc(name) + '</span>' + (meta ? '<span class="meta">' + meta + '</span>' : '');
   }
+  // Zusammenfassung nur neu berechnen, wenn sich Bewertungen geändert haben
+  var sumCache = { sig: null, sum: null };
+  function resultsSig(results) {
+    var out = '';
+    for (var i = 0; i < results.length; i++) {
+      var r = results[i];
+      out += state.line[i].id + (r ? r.key + (r.accuracy == null ? '' : r.accuracy.toFixed(1)) : '-') + ',';
+    }
+    return out;
+  }
+  function summaryFor(results) {
+    var sig = resultsSig(results);
+    if (sumCache.sig !== sig) {
+      sumCache.sig = sig;
+      sumCache.sum = C.summarize(state.line.map(function (m, i) { return { color: m.color, cls: results[i] }; }));
+    }
+    return sumCache.sum;
+  }
   // Genauigkeit erst, wenn alle Züge dieser Farbe bewertet sind
   function accuracyFor(color, results) {
-    var sum = C.summarize(state.line.map(function (m, i) { return { color: m.color, cls: results[i] }; }));
+    var sum = summaryFor(results);
     var total = state.line.filter(function (m) { return m.color === color; }).length;
     return total && sum[color].n === total ? sum[color].accuracy : null;
   }
@@ -8042,8 +8361,13 @@ if (typeof module !== 'undefined') module.exports = (typeof window !== 'undefine
     var pr = an.reviewProgress();
     $('progress').textContent = !state.settings.autoReview ? t('automatisches Review aus')
       : (pr.done >= pr.total ? t('fertig · Tiefe {d}', { d: reviewDepth() }) : t('analysiert {a} / {b}', { a: pr.done, b: pr.total }));
-    var sum = C.summarize(state.line.map(function (m, i) { return { color: m.color, cls: results[i] }; }));
+    renderGraph(results);
     var names = gameNames();
+    var sig = sumCache.sig + '|' + state.ply + '|' + I.lang() + '|' + names.w + '|' + names.b + '|' + state.orientation + '|' +
+              (state.user ? state.user.color : '') + '|' + state.settings.notation + '|' + state.mode;
+    if (sig === reviewSig) return;
+    reviewSig = sig;
+    var sum = summaryFor(results);
     function box(c, name) {
       var a = accuracyFor(c, results);
       return '<div class="box"><div class="who"><span class="swatch sm ' + c + '"></span>' + esc(name) + '</div>' +
@@ -8055,12 +8379,12 @@ if (typeof module !== 'undefined') module.exports = (typeof window !== 'undefine
       return '<tr><td class="n' + (w ? '' : ' zero') + '">' + w + '</td><td class="lab"><span class="sym c-' + k + '">' + C.CATS[k].sym + '</span>' + catLabel(k) + '</td><td class="n' + (b ? '' : ' zero') + '">' + b + '</td></tr>';
     }).join('');
     $('counts').innerHTML = '<thead><tr><td class="n">' + t('Weiß') + '</td><td></td><td class="n">' + t('Schwarz') + '</td></tr></thead><tbody>' + rows + '</tbody>';
-    renderGraph(results);
     renderReviewExtras(results);
   }
+  var reviewSig = '';
 
   // Bewertungsverlauf: Gewinnchance von Weiß pro Halbzug
-  var graphHover = null;
+  var graphHover = null, graphSig = '';
   function renderGraph(results) {
     var g = $('graph');
     var W = Math.max(200, g.clientWidth || 360), H = g.clientHeight || 104;
@@ -8070,6 +8394,9 @@ if (typeof module !== 'undefined') module.exports = (typeof window !== 'undefine
       var f = fenAt(i), wp = whiteWp(f, an.entry(f));
       pts.push(wp);
     }
+    var gsig = pts.map(function (v) { return v == null ? '' : v.toFixed(1); }).join(',') + '|' + state.ply + '|' + graphHover + '|' + W + '|' + (sumCache.sig || '');
+    if (gsig === graphSig) return;
+    graphSig = gsig;
     function X(i2) { return n ? i2 / n * W : 0; }
     function Y(wp2) { return H - wp2 / 100 * H; }
     var d = '', started = false, lastX = 0;
@@ -8205,9 +8532,11 @@ if (typeof module !== 'undefined') module.exports = (typeof window !== 'undefine
     // Training
     var tc2 = trainColor(), cand = trainItems(results, tc2);
     var btn = $('btnTrain');
+    var rated = results.filter(function (r) { return r; }).length;
     btn.disabled = !cand.length;
     var mine = state.user && state.user.color === tc2;
-    btn.textContent = !cand.length ? t('Keine Fehler zum Trainieren')
+    btn.textContent = !cand.length && rated < results.length ? t('Fehler-Training nach der Analyse')
+      : !cand.length ? t('Keine Fehler von {c} zum Trainieren', { c: colorName(tc2) })
       : mine ? t('Meine Fehler trainieren ({n})', { n: cand.length }) : t('Fehler von {c} trainieren ({n})', { c: colorName(tc2), n: cand.length });
   }
 
@@ -8888,7 +9217,7 @@ if (typeof module !== 'undefined') module.exports = (typeof window !== 'undefine
   }
   function shareReview() {
     var results = classifyAll(), names = gameNames();
-    var sum = C.summarize(state.line.map(function (m, i) { return { color: m.color, cls: results[i] }; }));
+    var sum = summaryFor(results);
     var rows = ['brilliant', 'great', 'best', 'inaccuracy', 'mistake', 'blunder'].map(function (k) {
       return { key: k, sym: C.CATS[k].sym, label: catLabel(k), w: sum.w.counts[k], b: sum.b.counts[k] };
     });
@@ -8956,6 +9285,10 @@ if (typeof module !== 'undefined') module.exports = (typeof window !== 'undefine
     $('mainView').hidden = m === 'insights';
     $('insightsView').hidden = m !== 'insights';
     $('playBox').hidden = m !== 'play';
+    $('welcomeCard').hidden = !(m === 'analyse' && state.sample && !state.settings.welcomed && !train);
+    var pf = $('btnPlayFrom');
+    pf.hidden = !(m === 'play' && stash && !state.line.length && stash.ply > 0);
+    if (!pf.hidden) pf.textContent = t('Geladene Partie ab Zug {n} weiterspielen', { n: Math.floor(stash.ply / 2) + 1 });
     $('engineCard').hidden = m === 'trainer' && !!train;
     $('sheetCard').hidden = m === 'trainer';
     $('btnImport').hidden = false;
@@ -9101,6 +9434,18 @@ if (typeof module !== 'undefined') module.exports = (typeof window !== 'undefine
     $('modeInsights').onclick = function () { if (state.mode !== 'insights') setMode('insights'); };
     $('modeTrainer').onclick = function () { if (state.mode !== 'trainer') setMode('trainer'); };
     $('btnPlayNew').onclick = function () { state.mode = 'play'; newGame(); };
+    $('btnPlayFrom').onclick = playFromStash;
+    $('helpBtn').onclick = openHelp;
+    $('helpClose').onclick = closeHelp;
+    $('helpBox').addEventListener('click', function (e) { if (e.target === $('helpBox')) closeHelp(); });
+    $('welcomeClose').onclick = dismissWelcome;
+    $('welcomeImport').onclick = function () { dismissWelcome(); openImport('games'); };
+    $('welcomePlay').onclick = function () { dismissWelcome(); setMode('play'); };
+    $('welcomeHelp').onclick = openHelp;
+    $('btnBackup').onclick = backupData;
+    $('btnRestore').onclick = function () { $('restoreFile').value = ''; $('restoreFile').click(); };
+    $('restoreFile').onchange = function () { restoreData(this.files && this.files[0]); };
+    window.addEventListener('hashchange', handleHash);
     $('btnTakeback').onclick = function () {
       if (!state.line.length) return;
       cancelAI();
@@ -9139,7 +9484,7 @@ if (typeof module !== 'undefined') module.exports = (typeof window !== 'undefine
         state.settings[key] = v;
         if (key === 'humanColor' && state.mode === 'play') state.orientation = el.value;
         if (key === 'theme') applyTheme();
-        applyEngineCfg(); movesSig = ''; coachMemo.clear(); changed();
+        applyEngineCfg(); movesSig = ''; reviewSig = ''; graphSig = ''; coachMemo.clear(); changed();
       };
     }
     function bindChk(id, key) {
@@ -9275,10 +9620,13 @@ if (typeof module !== 'undefined') module.exports = (typeof window !== 'undefine
     window.addEventListener('resize', function () { insightsDirty = true; soon(); });
 
     document.addEventListener('keydown', function (e) {
-      if (e.target && /INPUT|TEXTAREA|SELECT/.test(e.target.tagName)) return;
+      // Escape schließt Dialoge auch, wenn gerade ein Eingabefeld den Fokus hat
       if (e.key === 'Escape' && !$('importBox').hidden) { closeImport(); return; }
       if (e.key === 'Escape' && !$('proBox').hidden) { $('proBox').hidden = true; return; }
-      if (!$('importBox').hidden || !$('proBox').hidden) return;
+      if (e.key === 'Escape' && !$('helpBox').hidden) { closeHelp(); return; }
+      if (e.target && /INPUT|TEXTAREA|SELECT/.test(e.target.tagName)) return;
+      if (!$('importBox').hidden || !$('proBox').hidden || !$('helpBox').hidden) return;
+      if (e.key === '?') { openHelp(); return; }
       if (train) { if (e.key === 'Escape') stopTraining(); return; }
       if (state.mode === 'insights') return;
       if (e.key === 'ArrowLeft') { go(state.ply - 1); e.preventDefault(); }
@@ -9297,9 +9645,106 @@ if (typeof module !== 'undefined') module.exports = (typeof window !== 'undefine
     selLevel.innerHTML = LEVELS.map(function (l) { return '<option value="' + l.id + '">' + esc(t(l.label)) + '</option>'; }).join('');
     selLevel.value = lv;
     themeOptions();
-    movesSig = ''; coachMemo.clear(); insightsDirty = true;
+    movesSig = ''; reviewSig = ''; graphSig = ''; coachMemo.clear(); insightsDirty = true;
     if (conn.games.length) renderGames();
     render();
+  }
+
+  /* ---------- Hilfe, Willkommen, Datensicherung, Direktlinks ---------- */
+
+  var HELP_CATS = {
+    brilliant: 'Ein gutes Opfer: der beste oder fast beste Zug, bei dem du Material hergibst.',
+    great: 'Der einzige gute Zug in einer kritischen Stellung.',
+    best: 'Der Zug, den Stockfish selbst spielt.',
+    excellent: 'Fast so gut wie der beste Zug.',
+    good: 'Solider Zug mit kleinem Verlust.',
+    book: 'Bekannte Eröffnungstheorie.',
+    forced: 'Der einzige legale Zug.',
+    inaccuracy: 'Kleiner Verlust an Gewinnchance.',
+    mistake: 'Deutlicher Verlust an Gewinnchance.',
+    miss: 'Ein Matt oder ein Fehler des Gegners wurde nicht genutzt.',
+    blunder: 'Schwerer Fehler, der oft die Partie kostet.'
+  };
+  function openHelp() {
+    $('helpLegend').innerHTML = C.ORDER.map(function (k) {
+      return '<div class="hl"><span class="sym c-' + k + '">' + C.CATS[k].sym + '</span><b>' + esc(catLabel(k)) + '</b><span>' + esc(t(HELP_CATS[k])) + '</span></div>';
+    }).join('');
+    var keys = [['← →', t('Zug zurück / vor')], [t('Pos1') + ' / ' + t('Ende'), t('Zum Anfang / zum Ende')], ['F', t('Brett drehen')],
+                [t('Leertaste'), t('Besten Zug spielen')], ['Esc', t('Dialog oder Training beenden')]];
+    $('helpKeys').innerHTML = keys.map(function (k) { return '<tr><td><kbd>' + esc(k[0]) + '</kbd></td><td>' + esc(k[1]) + '</td></tr>'; }).join('');
+    var mail = (CFG.support && CFG.support.email) || '';
+    $('helpSupport').innerHTML = mail
+      ? esc(t('Fragen, Probleme oder Wünsche? Schreib an')) + ' <a href="mailto:' + esc(mail) + '?subject=' + encodeURIComponent('Zugradar ' + ((SK.build && SK.build.version) || '')) + '">' + esc(mail) + '</a>.'
+      : esc(t('Kontakt: siehe')) + ' <a href="impressum.html" target="_blank" rel="noopener">' + esc(t('Impressum')) + '</a>.';
+    $('helpVersion').textContent = 'Zugradar ' + ((SK.build && SK.build.version) || '') + ' · ' + (engine.info ? engine.info.name : 'Stockfish');
+    $('helpBox').hidden = false;
+    $('helpClose').focus({ preventScroll: true });
+    document.querySelector('.help-dialog').scrollTop = 0;
+  }
+  function closeHelp() { $('helpBox').hidden = true; }
+  function dismissWelcome() {
+    if (state.settings.welcomed) return;
+    state.settings.welcomed = true; save(); render();
+  }
+
+  var BACKUP_KEYS = ['zugradar.v1', 'zugradar.library.v1', 'zugradar.srs.v1'];
+  function dataStatus(txt, bad) { var el = $('dataStatus'); el.textContent = txt || ''; el.classList.toggle('bad', !!bad); }
+  function backupData() {
+    save();
+    var data = {};
+    BACKUP_KEYS.forEach(function (k) {
+      try { var v = localStorage.getItem(k); if (v != null) data[k] = JSON.parse(v); } catch (e) { /* egal */ }
+    });
+    if (!Object.keys(data).length) { dataStatus(t('Dein Browser speichert keine Daten (privater Modus?). Es gibt nichts zu sichern.'), true); return; }
+    var out = { app: 'zugradar', kind: 'backup', v: 1, created: new Date().toISOString(), data: data };
+    var blob = new Blob([JSON.stringify(out)], { type: 'application/json' });
+    var name = (I.lang() === 'en' ? 'zugradar-backup-' : 'zugradar-sicherung-') + new Date().toISOString().slice(0, 10) + '.json';
+    var games = (data['zugradar.library.v1'] || []).length, puzzles = (data['zugradar.srs.v1'] || []).length;
+    SK.share.saveFile(blob, name).then(function (r) {
+      if (r === 'cancelled') { dataStatus(''); return; }
+      dataStatus(t('Gesichert: {g}, {p}.', {
+        g: games === 1 ? t('1 Partie') : t('{n} Partien', { n: games }),
+        p: puzzles === 1 ? t('1 Trainer-Aufgabe') : t('{n} Trainer-Aufgaben', { n: puzzles }) }));
+    }, function () { dataStatus(t('Die Sicherung konnte nicht gespeichert werden.'), true); });
+  }
+  function restoreData(file) {
+    if (!file) return;
+    var rd = new FileReader();
+    rd.onload = function () {
+      var j = null;
+      try { j = JSON.parse(rd.result); } catch (e) { j = null; }
+      if (!j || j.app !== 'zugradar' || j.kind !== 'backup' || !j.data || typeof j.data !== 'object') {
+        dataStatus(t('Das ist keine Zugradar-Sicherung.'), true); return;
+      }
+      var when = j.created ? I.date(Date.parse(j.created), true) : '?';
+      if (!window.confirm(t('Die Sicherung vom {d} ersetzt deine jetzigen Partien, Trainer-Fortschritte und Einstellungen. Fortfahren?', { d: when }))) return;
+      try {
+        BACKUP_KEYS.forEach(function (k) { if (j.data[k] !== undefined) localStorage.setItem(k, JSON.stringify(j.data[k])); });
+      } catch (e) { dataStatus(t('Wiederherstellen fehlgeschlagen: Der Speicher des Browsers ist voll oder gesperrt.'), true); return; }
+      location.reload();
+    };
+    rd.onerror = function () { dataStatus(t('Die Datei konnte nicht gelesen werden.'), true); };
+    rd.readAsText(file);
+  }
+
+  // Direktlinks: zugradar.html#lizenz (nach dem Kauf), #pro, #hilfe, #spielen, #laden
+  function handleHash() {
+    var h = decodeURIComponent((location.hash || '').slice(1)), key = '';
+    if (!h) return;
+    var m = h.match(/^(lizenz|license|key)(?:=(.+))?$/i);
+    if (m) key = m[2] || '';
+    var act = m ? 'key' : h.toLowerCase();
+    if (act === 'key') {
+      openPro('generic');
+      $('proKeyBox').open = true;
+      if (key) $('proKey').value = key.trim();
+      setTimeout(function () { $('proKey').focus(); }, 50);
+    } else if (act === 'pro') openPro('generic');
+    else if (act === 'hilfe' || act === 'help') openHelp();
+    else if (act === 'spielen' || act === 'play') setMode('play');
+    else if (act === 'laden' || act === 'import') openImport('games');
+    else return;
+    try { history.replaceState(null, '', location.pathname + location.search); } catch (e) { /* egal */ }
   }
 
   function openImport(tab) {
@@ -9331,6 +9776,12 @@ if (typeof module !== 'undefined') module.exports = (typeof window !== 'undefine
     try {
       if (!('serviceWorker' in navigator) || !/^https:|^http:\/\/localhost/.test(location.href) || window.top !== window.self) return;
       navigator.serviceWorker.register('sw.js').catch(function () { /* egal */ });
+      // Sobald die Engine läuft: Engine-Dateien für offline ablegen lassen
+      var warm = function () {
+        navigator.serviceWorker.ready.then(function (reg) { if (reg.active) reg.active.postMessage({ type: 'warm-engine' }); });
+      };
+      warmEngineCache = warm;
+      if (engine.state === 'ready') warm();
     } catch (e) { /* egal */ }
   }
 
@@ -9353,13 +9804,14 @@ if (typeof module !== 'undefined') module.exports = (typeof window !== 'undefine
     connSchedule();
     LIC.revalidate().then(function () { renderPlan(); }, function () {});
     registerServiceWorker();
+    handleHash();
     var tick = setInterval(function () { if (engine.state === 'ready' || engine.state === 'failed') clearInterval(tick); render(); }, 1000);
     // Test-Hook (Selbsttests im Browser)
     window.__zugradar = { state: state, an: an, engine: engine, classifyAll: classifyAll, userMove: userMove, go: go,
                           importText: importText, exportPgn: exportPgn, setMode: setMode, newGame: newGame, render: render,
                           startTraining: startTraining, startTrainer: startTrainer, trainMove: trainMove, train: function () { return train; },
                           connPoll: connPoll, coachFor: coachFor, batch: function () { return batch; }, batchStart: batchStart,
-                          openPro: openPro, applyLanguage: applyLanguage };
+                          openPro: openPro, applyLanguage: applyLanguage, openHelp: openHelp, handleHash: handleHash };
   }
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);

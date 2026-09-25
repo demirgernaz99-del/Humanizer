@@ -1,5 +1,5 @@
 /* SK.license – Free / Test / Pro. Pro wird über einen Lizenzschlüssel freigeschaltet
-   (Lemon-Squeezy-Lizenz-API: activate / validate / deactivate). Alles clientseitig:
+   (Lemon Squeezy oder Polar: activate / validate / deactivate). Alles clientseitig:
    Der Schlüssel und der Status liegen nur im Browser des Käufers. */
 (function () {
   var root = (typeof window !== 'undefined') ? window : globalThis;
@@ -47,53 +47,140 @@
     return true;
   }
 
-  function form(obj) {
-    return Object.keys(obj).map(function (k) { return encodeURIComponent(k) + '=' + encodeURIComponent(obj[k]); }).join('&');
-  }
-  function call(path, body, fetchImpl) {
+  function err(code, msg) { var e = new Error(msg); e.code = code; return e; }
+  function lc() { return cfg().license || {}; }
+
+  /* ---------- Anbieter ----------
+     Jeder Anbieter liefert einheitliche Ergebnisse:
+     activate → { ok, instanceId, status, expiresAt, email, product, meta, error, noActivation }
+     validate → { ok, status, expiresAt, email, product, meta, error, down }
+     down = Server-Fehler (5xx) → wie offline behandeln, Pro nicht entziehen. */
+
+  function post(url, body, json, fetchImpl) {
     var f = fetchImpl || (root.fetch && root.fetch.bind(root));
-    var api = (cfg().license || {}).api;
-    return f(api + '/' + path, {
+    return f(url, {
       method: 'POST',
-      headers: { Accept: 'application/json', 'Content-Type': 'application/x-www-form-urlencoded' },
-      body: form(body)
+      headers: json ? { Accept: 'application/json', 'Content-Type': 'application/json' }
+                    : { Accept: 'application/json', 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: json ? JSON.stringify(body) : Object.keys(body).map(function (k) { return encodeURIComponent(k) + '=' + encodeURIComponent(body[k]); }).join('&')
     }).then(function (res) {
-      return res.json().then(function (j) { return { status: res.status, json: j }; }, function () { return { status: res.status, json: {} }; });
+      return res.json().then(function (j) { return { status: res.status, json: j || {} }; }, function () { return { status: res.status, json: {} }; });
     });
   }
-  function err(code, msg) { var e = new Error(msg); e.code = code; return e; }
+  function ms(iso) { return iso ? Date.parse(iso) : null; }
 
-  // Passt der Schlüssel zu diesem Shop/Produkt?
-  function checkMeta(meta) {
-    var c = cfg().license || {};
-    if (c.storeId && meta && +meta.store_id !== +c.storeId) return 'Dieser Schlüssel gehört nicht zu ' + (cfg().brand || 'dieser App') + '.';
-    if (c.productIds && c.productIds.length && meta && c.productIds.indexOf(+meta.product_id) < 0) return 'Dieser Schlüssel gilt für ein anderes Produkt.';
-    return null;
+  var PROVIDERS = {
+    // Lemon Squeezy: öffentliche Lizenz-API, formularkodiert
+    lemonsqueezy: {
+      api: 'https://api.lemonsqueezy.com/v1/licenses',
+      activate: function (api, key, label, f) {
+        return post(api + '/activate', { license_key: key, instance_name: label }, false, f).then(function (r) {
+          var j = r.json;
+          if (r.status >= 500) return { ok: false, down: true, error: '' };
+          if (!j.activated) return { ok: false, error: j.error || '' };
+          var lk = j.license_key || {};
+          return { ok: true, instanceId: j.instance && j.instance.id, status: lk.status === 'active' || !lk.status ? 'active' : lk.status,
+                   expiresAt: ms(lk.expires_at), email: j.meta && j.meta.customer_email || '', product: j.meta && j.meta.product_name || '', meta: j.meta };
+        });
+      },
+      validate: function (api, lic, f) {
+        return post(api + '/validate', { license_key: lic.key, instance_id: lic.instanceId || '' }, false, f).then(function (r) {
+          var j = r.json, lk = j.license_key || {};
+          if (r.status >= 500) return { ok: false, down: true };
+          var active = j.valid && (!lk.status || lk.status === 'active');
+          return { ok: !!active, status: active ? 'active' : (lk.status || 'invalid'), expiresAt: ms(lk.expires_at),
+                   email: j.meta && j.meta.customer_email, product: j.meta && j.meta.product_name, meta: j.meta, error: j.error || '' };
+        });
+      },
+      deactivate: function (api, lic, f) {
+        return post(api + '/deactivate', { license_key: lic.key, instance_id: lic.instanceId }, false, f);
+      },
+      // Passt der Schlüssel zu diesem Shop/Produkt?
+      foreign: function (meta) {
+        var c = lc();
+        if (c.storeId && meta && +meta.store_id !== +c.storeId) return 'store';
+        if (c.productIds && c.productIds.length && meta && c.productIds.indexOf(+meta.product_id) < 0) return 'product';
+        return null;
+      }
+    },
+    // Polar: Kundenportal-API (für öffentliche Clients gedacht), JSON, braucht die Organisations-ID
+    polar: {
+      api: 'https://api.polar.sh/v1/customer-portal/license-keys',
+      activate: function (api, key, label, f) {
+        var org = lc().organizationId;
+        return post(api + '/activate', { key: key, organization_id: org, label: label }, true, f).then(function (r) {
+          var j = r.json;
+          if (r.status >= 500) return { ok: false, down: true, error: '' };
+          var detail = typeof j.detail === 'string' ? j.detail : '';
+          // Schlüssel ohne Aktivierungs-Limit: Polar will dann nur „validate“
+          if (r.status === 403 && /does not support activations/i.test(detail)) return { ok: false, noActivation: true };
+          if (r.status !== 200 || !j.id) return { ok: false, error: detail || (r.status === 404 ? 'License key not found.' : '') };
+          var lk = j.license_key || {};
+          return { ok: lk.status === 'granted', instanceId: j.id, status: lk.status === 'granted' ? 'active' : (lk.status || 'invalid'),
+                   expiresAt: ms(lk.expires_at), email: lk.customer && lk.customer.email || '', product: '', meta: lk };
+        });
+      },
+      validate: function (api, lic, f) {
+        var body = { key: lic.key, organization_id: lc().organizationId };
+        if (lic.instanceId) body.activation_id = lic.instanceId;
+        return post(api + '/validate', body, true, f).then(function (r) {
+          var j = r.json;
+          if (r.status >= 500) return { ok: false, down: true };
+          if (r.status !== 200) return { ok: false, status: 'invalid', error: typeof j.detail === 'string' ? j.detail : '' };
+          return { ok: j.status === 'granted', status: j.status === 'granted' ? 'active' : (j.status || 'invalid'),
+                   expiresAt: ms(j.expires_at), email: j.customer && j.customer.email, product: '', meta: j };
+        });
+      },
+      deactivate: function (api, lic, f) {
+        return post(api + '/deactivate', { key: lic.key, organization_id: lc().organizationId, activation_id: lic.instanceId }, true, f);
+      },
+      // Optional: nur Schlüssel bestimmter Vorteile (Benefits) annehmen
+      foreign: function (meta) {
+        var ids = lc().benefitIds || [];
+        if (ids.length && meta && meta.benefit_id && ids.indexOf(meta.benefit_id) < 0) return 'product';
+        return null;
+      }
+    }
+  };
+  function provider() {
+    var c = lc(), p = PROVIDERS[c.provider] || PROVIDERS.lemonsqueezy;
+    return { p: p, api: c.api || p.api };
   }
-  function record(key, instanceId, lk, meta) {
+  function foreignText(kind) {
+    return kind === 'store' ? 'Dieser Schlüssel gehört nicht zu ' + (cfg().brand || 'dieser App') + '.' : 'Dieser Schlüssel gilt für ein anderes Produkt.';
+  }
+  function record(key, instanceId, r) {
     store(KEY, {
-      key: key, instanceId: instanceId, status: lk.status,
-      expiresAt: lk.expires_at ? Date.parse(lk.expires_at) : null,
-      email: meta && meta.customer_email || '', product: meta && meta.product_name || '',
-      checkedAt: now(), offline: false, problem: ''
+      key: key, instanceId: instanceId || null, status: r.status || 'active', expiresAt: r.expiresAt || null,
+      email: r.email || '', product: r.product || '', checkedAt: now(), offline: false, problem: ''
     });
   }
 
   function activate(key, fetchImpl) {
     key = String(key || '').trim();
     if (key.length < 8) return Promise.reject(err('input', 'Bitte den vollständigen Lizenzschlüssel eingeben.'));
-    var name = (cfg().brand || 'Zugradar') + ' Web · ' + new Date(now()).toISOString().slice(0, 10);
-    return call('activate', { license_key: key, instance_name: name }, fetchImpl).then(function (r) {
-      var j = r.json || {};
-      if (!j.activated) throw err('rejected', j.error || 'Der Schlüssel wurde nicht angenommen.');
-      var bad = checkMeta(j.meta);
-      if (bad) {
-        // Aktivierung sofort wieder freigeben, damit kein Platz verbraucht wird
-        call('deactivate', { license_key: key, instance_id: j.instance && j.instance.id }, fetchImpl).catch(function () {});
-        throw err('wrong_product', bad);
+    var pv = provider();
+    var label = (cfg().brand || 'Zugradar') + ' Web · ' + new Date(now()).toISOString().slice(0, 10);
+    return pv.p.activate(pv.api, key, label, fetchImpl).then(function (r) {
+      if (r.noActivation) {
+        // Kein Geräte-Limit beim Anbieter eingestellt → Schlüssel nur prüfen
+        return pv.p.validate(pv.api, { key: key }, fetchImpl).then(function (v) {
+          if (v.down) throw err('network', 'Lizenzserver nicht erreichbar. Prüfe die Verbindung und versuche es erneut.');
+          if (!v.ok) throw err('rejected', v.error || 'Der Schlüssel wurde nicht angenommen.');
+          if (pv.p.foreign(v.meta)) throw err('wrong_product', foreignText(pv.p.foreign(v.meta)));
+          record(key, null, v); emit(); return state();
+        });
       }
-      if (j.license_key && j.license_key.status && j.license_key.status !== 'active') throw err('inactive', 'Der Schlüssel ist ' + j.license_key.status + '.');
-      record(key, j.instance && j.instance.id, j.license_key || { status: 'active' }, j.meta);
+      if (r.down) throw err('network', 'Lizenzserver nicht erreichbar. Prüfe die Verbindung und versuche es erneut.');
+      if (!r.ok && !r.instanceId) throw err('rejected', r.error || 'Der Schlüssel wurde nicht angenommen.');
+      var bad = pv.p.foreign(r.meta);
+      if (bad || !r.ok) {
+        // Aktivierung sofort wieder freigeben, damit kein Geräteplatz verbraucht wird
+        if (r.instanceId) pv.p.deactivate(pv.api, { key: key, instanceId: r.instanceId }, fetchImpl).catch(function () {});
+        if (bad) throw err('wrong_product', foreignText(bad));
+        throw err('inactive', 'Der Schlüssel ist ' + r.status + '.');
+      }
+      record(key, r.instanceId, r);
       emit();
       return state();
     }, function (e) {
@@ -102,28 +189,27 @@
     });
   }
 
-  // Nachprüfen, wenn fällig. Netzfehler → Kulanzzeit läuft weiter (offline: true).
+  // Nachprüfen, wenn fällig. Netz- oder Serverfehler → Kulanzzeit läuft weiter (offline: true).
   function revalidate(force, fetchImpl) {
     var lic = load(KEY);
     if (!lic || !lic.key) return Promise.resolve(state());
-    var due = force || !lic.checkedAt || now() > lic.checkedAt + ((cfg().license || {}).revalidateDays || 7) * DAY;
+    var due = force || !lic.checkedAt || now() > lic.checkedAt + (lc().revalidateDays || 7) * DAY;
     if (!due) return Promise.resolve(state());
-    return call('validate', { license_key: lic.key, instance_id: lic.instanceId || '' }, fetchImpl).then(function (r) {
-      var j = r.json || {};
-      if (j.valid && (!j.license_key || j.license_key.status === 'active') && !checkMeta(j.meta)) {
-        record(lic.key, lic.instanceId, j.license_key || { status: 'active' }, j.meta || { customer_email: lic.email, product_name: lic.product });
+    var pv = provider();
+    function offline() { lic.offline = true; store(KEY, lic); emit(); return state(); }
+    return pv.p.validate(pv.api, lic, fetchImpl).then(function (v) {
+      if (v.down) return offline();
+      if (v.ok && !pv.p.foreign(v.meta)) {
+        record(lic.key, lic.instanceId, { status: 'active', expiresAt: v.expiresAt, email: v.email || lic.email, product: v.product || lic.product });
       } else {
-        lic.status = (j.license_key && j.license_key.status) || 'invalid';
-        lic.problem = j.error || 'Die Lizenz ist nicht mehr gültig (' + lic.status + ').';
+        lic.status = v.ok ? 'foreign' : (v.status || 'invalid');
+        lic.problem = v.error || 'Die Lizenz ist nicht mehr gültig (' + lic.status + ').';
         lic.checkedAt = now();
         store(KEY, lic);
       }
       emit();
       return state();
-    }, function () {
-      lic.offline = true; store(KEY, lic); emit();
-      return state();
-    });
+    }, offline);
   }
 
   function deactivate(fetchImpl) {
@@ -131,8 +217,8 @@
     store(KEY, null);
     emit();
     if (!lic || !lic.key || !lic.instanceId) return Promise.resolve(state());
-    return call('deactivate', { license_key: lic.key, instance_id: lic.instanceId }, fetchImpl)
-      .then(function () { return state(); }, function () { return state(); });
+    var pv = provider();
+    return pv.p.deactivate(pv.api, lic, fetchImpl).then(function () { return state(); }, function () { return state(); });
   }
 
   // Tageszähler (z. B. Trainer-Aufgaben in der kostenlosen Version)
@@ -147,7 +233,7 @@
   root.SK.license = {
     state: state, isPro: isPro, limits: limits, startTrial: startTrial, activate: activate,
     revalidate: revalidate, deactivate: deactivate, dayCount: dayCount,
-    onChange: function (f) { listeners.push(f); }, _now: null
+    onChange: function (f) { listeners.push(f); }, _now: null, _providers: PROVIDERS
   };
 })();
 if (typeof module !== 'undefined') module.exports = (typeof window !== 'undefined' ? window : globalThis).SK.license;

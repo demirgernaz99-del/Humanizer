@@ -84,6 +84,75 @@ Promise.resolve()
   ok(/disabled/.test(s.problem), 'Grund wird angezeigt');
   return LIC.deactivate(good);
 })
+.then(function () {
+  // Serverfehler (5xx) beim Nachprüfen entzieht Pro nicht, sondern gilt als offline
+  return LIC.activate('GOOD-KEY-1234', good).then(function () {
+    var down = lsFetch(function () { return { status: 503, body: { error: 'Service Unavailable' } }; });
+    return LIC.revalidate(true, down);
+  }).then(function (s) {
+    eq(s.plan, 'pro', '5xx beim Nachprüfen → Pro bleibt');
+    ok(s.offline, '5xx → als offline markiert');
+    return LIC.deactivate(good);
+  });
+})
+.then(function () {
+  /* ---------- Polar ---------- */
+  CFG.license.provider = 'polar'; CFG.license.organizationId = 'org-uuid-1';
+  var ORG_OK = function (b) { return b.organization_id === 'org-uuid-1'; };
+  function polarFetch(handler) {
+    var calls = [];
+    var f = function (url, opts) {
+      calls.push({ url: url, body: opts.body, ct: opts.headers['Content-Type'] });
+      var r = handler(url.split('/').pop(), JSON.parse(opts.body));
+      if (r === 'NETWORK') return Promise.reject(new TypeError('Failed to fetch'));
+      return Promise.resolve({ status: r.status || 200, json: function () { return r.body === undefined ? Promise.reject(new Error('no body')) : Promise.resolve(r.body); } });
+    };
+    f.calls = calls; return f;
+  }
+  var lk = { id: 'lk1', status: 'granted', expires_at: null, benefit_id: 'ben-1', customer: { email: 'p@example.com' } };
+  var pol = polarFetch(function (op, b) {
+    if (!ORG_OK(b)) return { status: 422, body: { detail: [{ msg: 'bad org' }] } };
+    if (op === 'activate') return b.key === 'POLAR-GOOD-KEY' ? { body: { id: 'act-1', license_key_id: 'lk1', label: b.label, license_key: lk } }
+      : b.key === 'POLAR-FULL-KEY' ? { status: 403, body: { error: 'NotPermitted', detail: 'License key activation limit already reached' } }
+      : b.key === 'POLAR-NOACT-KEY' ? { status: 403, body: { error: 'NotPermitted', detail: 'This license key does not support activations. Use the /validate endpoint instead to check license validity.' } }
+      : { status: 404, body: { error: 'ResourceNotFound', detail: 'Not found' } };
+    if (op === 'validate') return b.key === 'POLAR-REVOKED' ? { status: 404, body: { error: 'ResourceNotFound', detail: 'License key is no longer active.' } }
+      : { body: Object.assign({}, lk, { activation: b.activation_id ? { id: b.activation_id } : null }) };
+    if (op === 'deactivate') return { status: 204 };
+  });
+  return LIC.activate('POLAR-WRONG', pol).then(function () { ok(false, 'Polar: falscher Schlüssel'); }, function (e) { eq(e.code, 'rejected', 'Polar: unbekannter Schlüssel abgelehnt'); })
+  .then(function () { return LIC.activate('POLAR-FULL-KEY', pol).then(function () { ok(false, 'Polar: Limit'); }, function (e) { ok(/limit/i.test(e.message), 'Polar: Geräte-Limit wird gemeldet'); }); })
+  .then(function () { return LIC.activate('POLAR-GOOD-KEY', pol); })
+  .then(function (s) {
+    eq(s.plan, 'pro', 'Polar: gültiger Schlüssel → Pro');
+    eq(s.email, 'p@example.com', 'Polar: Käufer-E-Mail');
+    var c = pol.calls[pol.calls.length - 1];
+    ok(/customer-portal\/license-keys\/activate$/.test(c.url), 'Polar: richtige Adresse');
+    eq(c.ct, 'application/json', 'Polar: JSON gesendet');
+    return LIC.revalidate(true, pol);
+  })
+  .then(function (s) {
+    eq(s.plan, 'pro', 'Polar: Nachprüfung ok');
+    eq(JSON.parse(pol.calls[pol.calls.length - 1].body).activation_id, 'act-1', 'Polar: Aktivierungs-ID wird mitgeprüft');
+    CFG.license.benefitIds = ['ben-other'];
+    return LIC.revalidate(true, pol);
+  })
+  .then(function (s) {
+    eq(s.plan, 'free', 'Polar: Schlüssel eines anderen Vorteils → Free');
+    CFG.license.benefitIds = [];
+    return LIC.activate('POLAR-NOACT-KEY', pol);
+  })
+  .then(function (s) {
+    eq(s.plan, 'pro', 'Polar: Schlüssel ohne Aktivierungs-Limit → nur geprüft, Pro');
+    return LIC.deactivate(pol);
+  })
+  .then(function () {
+    var n = pol.calls.length;
+    eq(pol.calls[n - 1].url.split('/').pop(), 'validate', 'Polar: ohne Aktivierung kein deactivate-Aufruf nötig');
+    CFG.license.provider = 'lemonsqueezy'; CFG.license.organizationId = '';
+    return LIC.state();
+  });
+})
 .then(function (s) {
   eq(s.plan, 'free', 'nach Abmelden Free');
   eq(LIC.dayCount('trainer'), 0, 'Tageszähler startet bei 0');

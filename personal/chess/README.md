@@ -4,7 +4,8 @@ Zugradar bewertet jeden Zug sofort. Das Spektrum reicht von **brillant (!!)** un
 Dazu zeigt die App live den besten Zug und erklärt Fehler in Klartext. Insights über viele Partien und ein Taktik-Trainer
 aus deinen eigenen Fehlern kommen hinzu. Alles läuft im Browser, auch offline, ohne Konto, auf Deutsch und Englisch.
 
-**Verkaufen:** siehe [VERKAUF.md](VERKAUF.md) (Shop, Preise, Recht, Launch).
+**Verkaufen:** [LAUNCH.md](LAUNCH.md) (Schritt für Schritt zum ersten Verkauf), [VERKAUF.md](VERKAUF.md) (Preise, Recht,
+Marketing). Stand prüfen: `python3 tools/launch_check.py`.
 
 ## Starten
 
@@ -32,9 +33,13 @@ blockiert ist). Fehlen die Dateien, lädt die App Stockfish von cdn.jsdelivr.net
 - **Trainer:** Deine Fehler, Patzer und verpassten Chancen werden zu Aufgaben. Gelöste Aufgaben kommen nach
   1, 3, 7, 14, 30, 60 Tagen wieder (Leitner-System). Free: 5 Aufgaben pro Tag.
 - **Partie laden:** beendete Partien per Benutzername (chess.com, lichess), Auto-Import neuer Partien (Pro), PGN/FEN einfügen.
-- **Pro:** 7-Tage-Test ohne Zahlungsdaten; Freischaltung über einen Lizenzschlüssel (Lemon-Squeezy-Lizenz-API).
+- **Pro:** 7-Tage-Test ohne Zahlungsdaten; Freischaltung über einen Lizenzschlüssel (Lemon Squeezy oder Polar).
+  Direktlink nach dem Kauf: `zugradar.html#lizenz` (auch `#lizenz=SCHLÜSSEL`, `#pro`, `#hilfe`, `#spielen`, `#laden`).
+- **Hilfe und Daten:** Willkommenskarte beim ersten Start, Hilfe (`?`) mit Symbolen, Tastenkürzeln und Support-Adresse,
+  Datensicherung und -wiederherstellung als JSON-Datei (Einstellungen).
 - **Teilen:** Bild eines brillanten Zuges oder des Reviews (1080×1350), in Free mit Wasserzeichen.
-- Deutsch/Englisch automatisch, 5 Brett-Designs, Zugtöne, Hell/Dunkel, installierbar als App (PWA), offline-fähig.
+- Deutsch/Englisch automatisch, 5 Brett-Designs, Zugtöne, Hell/Dunkel, installierbar als App (PWA). Nach dem ersten
+  Besuch läuft alles offline, auch die Engine.
 
 **Fair Play:** Zugradar fragt nie laufende Partien ab (nur `finished=true&ongoing=false` bzw. Monatsarchive).
 
@@ -64,7 +69,7 @@ personal/chess/
 ├── pages/               Landingpage, Rechtstext-Vorlagen, Service Worker
 ├── src/
 │   ├── config.js        Free/Pro-Grenzen, Lizenz-API, Test-Dauer
-│   ├── license.js       Free/Test/Pro, Lizenzschlüssel (activate/validate/deactivate), Offline-Kulanz
+│   ├── license.js       Free/Test/Pro, Lizenzschlüssel (Lemon Squeezy / Polar), Offline-Kulanz
 │   ├── classify.js      Gewinnchance, Abtauschbilanz, Opfer-Erkennung, Kategorien, Genauigkeit
 │   ├── coach.js         Erklärungen und Motiv-Tags (DE/EN), Partiephasen, Uhr
 │   ├── insights.js      Auswertung einer Partie und Profil über viele Partien
@@ -76,7 +81,7 @@ personal/chess/
 │   ├── board.js, openings.js, app.js, styles.css, pieces.css, vendor/chess.js
 │   └── *.selftest.js    Selbsttests
 ├── server/license-proxy.js   optionaler CORS-Proxy für die Lizenz-API (Cloudflare Worker)
-├── tools/               Übersetzungs-Werkzeuge, Icon-Erzeugung
+├── tools/               launch_check.py (Startklar-Prüfung), Übersetzungs-Werkzeuge, Icon-Erzeugung
 ├── engine/, fonts/, icons/   selbst gehostete Engine, Schriften, App-Icons
 └── zugradar.html, index.html, impressum.html, …   Build-Ergebnis
 ```
@@ -84,8 +89,9 @@ personal/chess/
 ```bash
 python3 build.py                  # nach jeder Änderung
 node src/classify.selftest.js     # 46 Tests: Bewertung, Buch, UCI-Parser
-node src/coach.selftest.js        # 38 Tests: Coach, Phasen, Uhr, Konnektor
-node src/pro.selftest.js          # 58 Tests: Lizenz, Test, Bibliothek, Trainer, Insights
+node src/coach.selftest.js        # 39 Tests: Coach, Phasen, Uhr, Konnektor
+node src/pro.selftest.js          # 71 Tests: Lizenz (beide Anbieter), Test, Bibliothek, Trainer, Insights
+python3 tools/launch_check.py     # alles zusammen + Shop-, Impressums- und Build-Prüfung
 ```
 
 Neue Texte in der Oberfläche immer mit `t('Deutscher Text')` schreiben und die englische Fassung in `tools/en.py`

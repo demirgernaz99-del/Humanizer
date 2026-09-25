@@ -1,9 +1,13 @@
 /* Optionaler Lizenz-Proxy als Cloudflare Worker (kostenloser Tarif reicht).
-   Nur nötig, falls Browser die Lemon-Squeezy-Lizenz-API wegen CORS nicht direkt erreichen.
+   Nur nötig, falls Browser die Lizenz-API deines Shops wegen CORS nicht direkt erreichen.
    Deployment: dash.cloudflare.com → Workers → „Create“ → diesen Code einfügen → Deploy.
-   Danach in src/config.js: license.api = 'https://<dein-worker>.workers.dev/v1/licenses'
-   ALLOWED_ORIGIN auf deine Website setzen. Der Proxy reicht nur activate/validate/deactivate durch. */
-const UPSTREAM = 'https://api.lemonsqueezy.com/v1/licenses/';
+   Danach in seller.json: "license": { …, "api": "https://<dein-worker>.workers.dev" } und python3 build.py.
+   PROVIDER und ALLOWED_ORIGIN unten anpassen. Der Proxy reicht nur activate/validate/deactivate durch. */
+const PROVIDER = 'lemonsqueezy'; // oder 'polar'
+const UPSTREAMS = {
+  lemonsqueezy: 'https://api.lemonsqueezy.com/v1/licenses/',
+  polar: 'https://api.polar.sh/v1/customer-portal/license-keys/'
+};
 const ALLOWED_ORIGIN = 'https://demirgernaz99-del.github.io';
 const OPS = ['activate', 'validate', 'deactivate'];
 
@@ -20,9 +24,10 @@ export default {
     if (request.method !== 'POST' || !OPS.includes(op)) return new Response('Not found', { status: 404, headers: cors });
     const body = await request.text();
     if (body.length > 2000) return new Response('Too large', { status: 413, headers: cors });
-    const res = await fetch(UPSTREAM + op, {
+    const json = PROVIDER === 'polar';
+    const res = await fetch(UPSTREAMS[PROVIDER] + op, {
       method: 'POST',
-      headers: { Accept: 'application/json', 'Content-Type': 'application/x-www-form-urlencoded' },
+      headers: { Accept: 'application/json', 'Content-Type': json ? 'application/json' : 'application/x-www-form-urlencoded' },
       body
     });
     return new Response(await res.text(), { status: res.status, headers: { ...cors, 'Content-Type': 'application/json' } });

@@ -15,6 +15,7 @@
     <div class="brand">
       <a class="brand-name" href="index.html" id="brandLink">Zugradar</a>
       <span class="pill" id="enginePill" data-state="loading"><span class="dot"></span><span id="engineText">Engine lädt …</span></span>
+      <button type="button" class="lang-btn help-btn" id="helpBtn" data-t-title="Hilfe" title="Hilfe" data-t-aria="Hilfe" aria-label="Hilfe">?</button>
     </div>
     <nav class="tabs" role="tablist" data-t-aria="Bereiche" aria-label="Bereiche">
       <button type="button" role="tab" id="modeAnalyse" aria-selected="true" data-t>Analyse</button>
@@ -70,6 +71,16 @@
     </section>
 
     <aside class="panel" data-t-aria="Analyse" aria-label="Analyse">
+      <section class="card welcome" id="welcomeCard" hidden>
+        <button type="button" class="welcome-x" id="welcomeClose" data-t-aria="Schließen" aria-label="Schließen">×</button>
+        <h2 data-t>Willkommen bei Zugradar</h2>
+        <p data-t>Stockfish 18 bewertet jeden Zug – von brillant (!!) bis Patzer (??) – und erklärt in Klartext, was besser gewesen wäre. Auf dem Brett siehst du ein Beispiel: Kasparows berühmtes Turmopfer 24.Txd4!! gegen Topalow.</p>
+        <div class="play-actions">
+          <button type="button" class="btn accent" id="welcomeImport" data-t>Meine Partien laden</button>
+          <button type="button" class="btn ghost" id="welcomePlay" data-t>Gegen die KI spielen</button>
+          <button type="button" class="btn ghost" id="welcomeHelp" data-t>So funktioniert’s</button>
+        </div>
+      </section>
       <div class="play-box" id="playBox" hidden>
         <div class="field-row">
           <label for="selColor" data-t>Ich spiele</label>
@@ -86,6 +97,7 @@
           <button type="button" class="btn accent" id="btnPlayNew" data-t>Neue Partie gegen KI</button>
           <button type="button" class="btn ghost" id="btnTakeback" data-t>Zug zurücknehmen</button>
         </div>
+        <button type="button" class="btn ghost small" id="btnPlayFrom" hidden></button>
       </div>
 
       <div class="trainer-box" id="trainerBox" hidden>
@@ -179,6 +191,15 @@
           <label class="check"><input type="checkbox" id="chkArrowBetter"> <span data-t>Pfeil „besser war …“ nach Fehlern</span></label>
           <label class="check"><input type="checkbox" id="chkBadges"> <span data-t>Bewertungs-Symbol auf dem Brett</span></label>
           <label class="check"><input type="checkbox" id="chkAuto"> <span data-t>Ganze Partie automatisch bewerten</span></label>
+        </div>
+        <div class="data-row">
+          <span class="data-lab" data-t>Deine Daten (Partien, Trainer, Einstellungen) liegen nur auf diesem Gerät.</span>
+          <div class="play-actions">
+            <button type="button" class="btn ghost small" id="btnBackup" data-t>Sichern</button>
+            <button type="button" class="btn ghost small" id="btnRestore" data-t>Wiederherstellen</button>
+          </div>
+          <input type="file" id="restoreFile" accept="application/json,.json" hidden>
+          <p class="conn-status" id="dataStatus" role="status"></p>
         </div>
       </details>
 
@@ -276,6 +297,31 @@
         <button type="button" class="btn ghost small" id="proDeactivate" hidden data-t>Lizenz auf diesem Gerät abmelden</button>
         <span class="grow"></span>
         <button type="button" class="btn ghost" id="proClose" data-t>Schließen</button>
+      </div>
+    </div>
+  </div>
+  <div class="overlay" id="helpBox" hidden>
+    <div class="sheet-dialog help-dialog" role="dialog" aria-modal="true" aria-labelledby="helpTitle">
+      <h2 id="helpTitle" data-t>Hilfe</h2>
+      <h3 data-t>In drei Schritten</h3>
+      <ol class="help-steps">
+        <li data-t-html><b>Partie laden:</b> Benutzernamen von chess.com oder lichess eingeben oder eine PGN einfügen.</li>
+        <li data-t-html><b>Zug für Zug durchgehen:</b> Jeder Zug bekommt ein Symbol. Der Coach erklärt Fehler und zeigt den besseren Zug.</li>
+        <li data-t-html><b>Besser werden:</b> Fehler der Partie nachspielen, Insights über viele Partien ansehen, im Trainer wiederholen.</li>
+      </ol>
+      <h3 data-t>Die Symbole</h3>
+      <div class="help-legend" id="helpLegend"></div>
+      <h3 data-t>Tastenkürzel</h3>
+      <table class="keys" id="helpKeys"></table>
+      <h3 data-t>Deine Daten</h3>
+      <p data-t>Alles bleibt auf deinem Gerät: kein Konto, keine Cookies, keine Tracker. Unter „Einstellungen“ sicherst du Partien und Trainer-Fortschritt als Datei und stellst sie auf einem anderen Gerät wieder her.</p>
+      <h3 data-t>Fair Play</h3>
+      <p data-t>Zugradar liest nie laufende Partien. Analysiere nach der Partie – Engine-Hilfe während einer Partie gegen Menschen ist Betrug.</p>
+      <h3 data-t>Support</h3>
+      <p id="helpSupport"></p>
+      <p class="help-version" id="helpVersion"></p>
+      <div class="dialog-actions end">
+        <button type="button" class="btn ghost" id="helpClose" data-t>Schließen</button>
       </div>
     </div>
   </div>

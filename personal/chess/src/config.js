@@ -13,14 +13,17 @@
     // Leer lassen, solange kein Shop existiert – der Kaufen-Knopf erklärt das dann.
     checkoutUrl: '',
 
-    // Lizenzprüfung über die öffentliche Lizenz-API von Lemon Squeezy (kein API-Schlüssel nötig).
+    // Lizenzprüfung über die öffentliche Lizenz-API des Shops (kein geheimer API-Schlüssel nötig).
+    // provider: 'lemonsqueezy' oder 'polar'. api leer = Standardadresse des Anbieters.
     // Falls der Browser die API wegen CORS nicht erreicht: server/license-proxy.js als
-    // Cloudflare Worker deployen und dessen URL hier eintragen.
+    // Cloudflare Worker deployen und dessen URL als api eintragen.
     license: {
       provider: 'lemonsqueezy',
-      api: 'https://api.lemonsqueezy.com/v1/licenses',
-      storeId: null,        // z. B. 12345 – Schlüssel anderer Shops werden dann abgelehnt
-      productIds: [],       // leer = jedes Produkt deines Shops
+      api: '',
+      storeId: null,        // Lemon Squeezy: z. B. 12345 – Schlüssel anderer Shops werden dann abgelehnt
+      productIds: [],       // Lemon Squeezy: leer = jedes Produkt deines Shops
+      organizationId: '',   // Polar: Organisations-ID (Pflicht bei Polar)
+      benefitIds: [],       // Polar: optional, nur Schlüssel dieser Lizenz-Vorteile annehmen
       revalidateDays: 7,    // so oft wird online nachgeprüft
       offlineGraceDays: 14  // so lange gilt Pro ohne Verbindung weiter
     },
@@ -58,7 +61,11 @@
     ['brand', 'siteUrl', 'checkoutUrl', 'legal'].forEach(function (k) { if (s[k] != null) cfg[k] = s[k]; });
     var lang = root.SK.i18n && root.SK.i18n.lang ? root.SK.i18n.lang() : 'de';
     if (s.prices) cfg.prices = (lang === 'en' && s.pricesEn) ? s.pricesEn : s.prices;
-    if (s.license) { cfg.license.storeId = s.license.storeId; cfg.license.productIds = s.license.productIds || []; }
+    if (s.license) {
+      ['provider', 'api', 'storeId', 'organizationId'].forEach(function (k) { if (s.license[k] != null && s.license[k] !== '') cfg.license[k] = s.license[k]; });
+      cfg.license.productIds = s.license.productIds || [];
+      cfg.license.benefitIds = s.license.benefitIds || [];
+    }
     if (s.legal && s.legal.email) cfg.support.email = s.legal.email;
   }
 })();
