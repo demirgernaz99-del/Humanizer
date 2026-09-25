@@ -148,7 +148,9 @@
   }
   an.onUpdate = function () { soon(); };
   an.onActivity = function () { soon(); };
+  var engineDetail = '', engineT0 = Date.now();
   engine.onStatus = function (st, detail) {
+    engineDetail = detail || '';
     if (st === 'ready') { applyEngineCfg(); updateEngine(); }
     soon();
   };
@@ -675,7 +677,15 @@
     if (!entry || !entry.lines.length) {
       bm.innerHTML = '…';
       meta.textContent = engine.state === 'ready' ? 'rechnet …' : '';
-      ul.innerHTML = '<li class="empty">' + (engine.state === 'failed' ? 'Engine nicht verfügbar.' : 'Stockfish rechnet …') + '</li>';
+      if (engine.state === 'failed') {
+        ul.innerHTML = '<li class="empty engine-fail"><b>Stockfish konnte nicht geladen werden.</b> Prüfe die Internetverbindung ' +
+          '(die Engine kommt von cdn.jsdelivr.net) und tippe auf „Nochmal versuchen“.' +
+          '<button type="button" class="btn ghost small" id="btnRetryEngine">Nochmal versuchen</button>' +
+          '<small>Details: ' + esc(engine.log.join(' · ') || 'keine') + '</small></li>';
+      } else if (engine.state !== 'ready') {
+        var secs = Math.round((Date.now() - engineT0) / 1000);
+        ul.innerHTML = '<li class="empty">Lade ' + esc(engineDetail || 'Stockfish') + ' … (' + secs + ' s, beim ersten Mal ca. 7 MB)</li>';
+      } else ul.innerHTML = '<li class="empty">Stockfish rechnet …</li>';
       return;
     }
     var top = entry.lines[0];
@@ -817,7 +827,7 @@
       pill.title = engine.log.join('\n');
     } else {
       pill.dataset.state = 'loading';
-      t.textContent = 'Lade Stockfish …';
+      t.textContent = 'Lade ' + (engineDetail || 'Stockfish') + ' …';
     }
   }
 
@@ -1398,7 +1408,8 @@
       } catch (e) { fallback(); }
     };
 
-    $('enginePill').onclick = function () { if (engine.state === 'failed') { engine.log = []; engine.start(); } };
+    $('enginePill').onclick = function () { if (engine.state === 'failed') retryEngine(); };
+    $('lines').addEventListener('click', function (e) { if (e.target.id === 'btnRetryEngine') retryEngine(); });
 
     // Graph: Hover + Klick
     var g = $('graph');
@@ -1438,6 +1449,8 @@
     (tab === 'pgn' ? $('importText') : $('connUser')).focus();
   }
 
+  function retryEngine() { engine.log = []; engineT0 = Date.now(); engine.start(); render(); }
+
   function playBest() {
     if (train) return;
     var fen = fenAt(state.ply), e = an.entry(fen);
@@ -1460,6 +1473,7 @@
     render();
     engine.start();
     connSchedule();
+    var tick = setInterval(function () { if (engine.state === 'ready' || engine.state === 'failed') clearInterval(tick); render(); }, 1000);
     // Test-Hook (Selbsttests im Browser)
     window.__zugradar = { state: state, an: an, engine: engine, classifyAll: classifyAll, userMove: userMove, go: go,
                           importText: importText, exportPgn: exportPgn, setMode: setMode, newGame: newGame, render: render,

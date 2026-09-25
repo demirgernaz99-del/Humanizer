@@ -558,3 +558,7 @@ select {
   .g-go { display: none; }
   .game { grid-template-columns: 28px minmax(0, 1fr); }
 }
+
+.lines .engine-fail { display: grid; gap: 8px; color: var(--ink-2); }
+.lines .engine-fail small { color: var(--muted); font-size: 12px; word-break: break-word; }
+.lines .engine-fail .btn { justify-self: start; }

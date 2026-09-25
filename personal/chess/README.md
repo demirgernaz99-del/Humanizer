@@ -16,6 +16,11 @@ python3 -m http.server 8000
 # → http://localhost:8000/zugradar.html
 ```
 
+**Online über GitHub Pages (empfohlen, auch fürs Handy):** Im Repo auf GitHub → Settings → Pages →
+„Deploy from a branch“ → Branch `claude/trusting-pascal-xy0947`, Ordner `/ (root)` → Save.
+Nach 1–2 Minuten läuft die App unter
+<https://demirgernaz99-del.github.io/Humanizer/personal/chess/> – dort funktioniert alles, auch der Konnektor.
+
 `zugradar.html` per Doppelklick geht auch. Dann lädt die App Stockfish von `cdn.jsdelivr.net`.
 
 **Offline:** `python3 get_engine.py` lädt die Engine-Dateien nach `engine/` (≈ 9 MB, nicht im Git).
