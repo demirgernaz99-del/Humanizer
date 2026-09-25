@@ -1101,7 +1101,7 @@ select {
 </div>
 
 <script>
-(function(){var r=typeof window!=='undefined'?window:globalThis;r.SK=r.SK||{};r.SK.seller={"_hinweis": "Deine Geschäftsdaten. Nach Änderungen: python3 build.py. Leere Felder erscheinen auf der Website als [bitte ausfüllen].", "brand": "Zugradar", "siteUrl": "https://demirgernaz99-del.github.io/Humanizer/personal/chess/", "checkoutUrl": "", "prices": {"monthly": "4,99 €", "yearly": "34,99 €", "lifetime": "69 €"}, "pricesEn": {"monthly": "€4.99", "yearly": "€34.99", "lifetime": "€69"}, "license": {"provider": "lemonsqueezy", "storeId": null, "productIds": [], "organizationId": "", "benefitIds": [], "api": ""}, "legal": {"name": "", "street": "", "city": "", "country": "Deutschland", "email": "", "phone": "", "vatId": ""}, "merchantOfRecord": "Lemon Squeezy (Lemon Squeezy LLC)", "_hinweis_license": "provider: 'lemonsqueezy' (storeId, productIds) oder 'polar' (organizationId, optional benefitIds). api nur bei Proxy ausfüllen."};r.SK.build={"version": "1.0 (a459830)"};})();
+(function(){var r=typeof window!=='undefined'?window:globalThis;r.SK=r.SK||{};r.SK.seller={"_hinweis": "Deine Geschäftsdaten. Nach Änderungen: python3 build.py. Leere Felder erscheinen auf der Website als [bitte ausfüllen].", "brand": "Zugradar", "siteUrl": "https://demirgernaz99-del.github.io/Humanizer/personal/chess/", "checkoutUrl": "", "prices": {"monthly": "4,99 €", "yearly": "34,99 €", "lifetime": "69 €"}, "pricesEn": {"monthly": "€4.99", "yearly": "€34.99", "lifetime": "€69"}, "license": {"provider": "lemonsqueezy", "storeId": null, "productIds": [], "organizationId": "", "benefitIds": [], "api": ""}, "legal": {"name": "", "street": "", "city": "", "country": "Deutschland", "email": "", "phone": "", "vatId": ""}, "merchantOfRecord": "Lemon Squeezy (Lemon Squeezy LLC)", "_hinweis_license": "provider: 'lemonsqueezy' (storeId, productIds) oder 'polar' (organizationId, optional benefitIds). api nur bei Proxy ausfüllen."};r.SK.build={"version": "1.0 (0642866)"};})();
 </script>
 <script>
 /* SK.i18n – Deutsch/Englisch. Der deutsche Text ist zugleich der Schlüssel (wie gettext):
@@ -8667,9 +8667,15 @@ if (typeof module !== 'undefined') module.exports = (typeof window !== 'undefine
 
   // Bewertungsverlauf: Gewinnchance von Weiß pro Halbzug
   var graphHover = null, graphSig = '';
+  // Größe der Grafik merken: clientWidth bei jedem Zeichnen zu lesen erzwingt ein Neu-Layout der Seite
+  var graphSize = null;
+  function graphDims(g) {
+    if (!graphSize || !graphSize.w) graphSize = { w: g.clientWidth, h: g.clientHeight };
+    return graphSize;
+  }
   function renderGraph(results) {
-    var g = $('graph');
-    var W = Math.max(200, g.clientWidth || 360), H = g.clientHeight || 104;
+    var g = $('graph'), gd = graphDims(g);
+    var W = Math.max(200, gd.w || 360), H = gd.h || 104;
     var n = state.line.length;
     var pts = [];
     for (var i = 0; i <= n; i++) {
@@ -9967,7 +9973,8 @@ if (typeof module !== 'undefined') module.exports = (typeof window !== 'undefine
     g.addEventListener('pointermove', function (e) { graphHover = plyAt(e); renderGraph(classifyAll()); });
     g.addEventListener('pointerleave', function () { graphHover = null; renderGraph(classifyAll()); });
     g.addEventListener('click', function (e) { if (!train) go(plyAt(e)); });
-    window.addEventListener('resize', function () { insightsDirty = true; soon(); });
+    window.addEventListener('resize', function () { insightsDirty = true; graphSize = null; soon(); });
+    if (window.ResizeObserver) new ResizeObserver(function () { graphSize = null; graphSig = ''; soon(); }).observe(g);
 
     document.addEventListener('keydown', function (e) {
       // Escape schließt Dialoge auch, wenn gerade ein Eingabefeld den Fokus hat

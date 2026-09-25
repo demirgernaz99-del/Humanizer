@@ -1067,9 +1067,15 @@
 
   // Bewertungsverlauf: Gewinnchance von Weiß pro Halbzug
   var graphHover = null, graphSig = '';
+  // Größe der Grafik merken: clientWidth bei jedem Zeichnen zu lesen erzwingt ein Neu-Layout der Seite
+  var graphSize = null;
+  function graphDims(g) {
+    if (!graphSize || !graphSize.w) graphSize = { w: g.clientWidth, h: g.clientHeight };
+    return graphSize;
+  }
   function renderGraph(results) {
-    var g = $('graph');
-    var W = Math.max(200, g.clientWidth || 360), H = g.clientHeight || 104;
+    var g = $('graph'), gd = graphDims(g);
+    var W = Math.max(200, gd.w || 360), H = gd.h || 104;
     var n = state.line.length;
     var pts = [];
     for (var i = 0; i <= n; i++) {
@@ -2367,7 +2373,8 @@
     g.addEventListener('pointermove', function (e) { graphHover = plyAt(e); renderGraph(classifyAll()); });
     g.addEventListener('pointerleave', function () { graphHover = null; renderGraph(classifyAll()); });
     g.addEventListener('click', function (e) { if (!train) go(plyAt(e)); });
-    window.addEventListener('resize', function () { insightsDirty = true; soon(); });
+    window.addEventListener('resize', function () { insightsDirty = true; graphSize = null; soon(); });
+    if (window.ResizeObserver) new ResizeObserver(function () { graphSize = null; graphSig = ''; soon(); }).observe(g);
 
     document.addEventListener('keydown', function (e) {
       // Escape schließt Dialoge auch, wenn gerade ein Eingabefeld den Fokus hat
