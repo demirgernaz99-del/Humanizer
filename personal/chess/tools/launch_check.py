@@ -48,6 +48,8 @@ else:
         warn("siteUrl sollte mit „/“ enden, z. B. https://zugradar.de/")
     if "github.io" in site:
         warn("Die Seite läuft unter github.io. Für den Verkauf wirkt eine eigene Domain vertrauenswürdiger (LAUNCH.md, Schritt 6).")
+    else:
+        warn("Eigene Domain: Steht der Hoster in pages/datenschutz.html (Abschnitt „Hosting“) noch auf GitHub Pages? Bitte anpassen.")
     ok(f"Website: {site}")
 
 lic = seller.get("license") or {}
@@ -133,7 +135,7 @@ if not (legal.get("vatId") or "").strip():
     warn("Keine USt-IdNr. eingetragen. Nur nötig, wenn du eine hast (Kleinunternehmer oft nicht).")
 
 # ---------- Build ----------
-built = ["zugradar.html", "index.html", "impressum.html", "datenschutz.html", "agb.html", "lizenzen.html", "sw.js"]
+built = ["zugradar.html", "index.html", "impressum.html", "datenschutz.html", "agb.html", "lizenzen.html", "404.html", "sw.js"]
 missing_files = [f for f in built if not os.path.exists(path(f))]
 if missing_files:
     bad("Build-Dateien fehlen: " + ", ".join(missing_files) + " → python3 build.py")
@@ -164,6 +166,13 @@ for f in ("stockfish-18-lite-single.js", "stockfish-18-lite-single.wasm", "stock
         bad(f"Engine-Datei fehlt: engine/{f} → python3 get_engine.py")
 if all(os.path.exists(path("engine", f)) for f in ("stockfish-18-lite-single.js", "stockfish-18-lite-single.wasm")):
     ok("Engine-Dateien vorhanden (Stockfish 18 + Ersatz)")
+
+shots = ["shots/%s-%s.jpg" % (l, n) for l in ("de", "en") for n in ("analyse", "review", "training")] + ["icons/og-image.png"]
+missing_shots = [f for f in shots if not os.path.exists(path(f))]
+if missing_shots:
+    warn("Produktbilder fehlen: " + ", ".join(missing_shots) + " → node tools/screenshots.js")
+else:
+    ok("Produktbilder und Vorschaubild vorhanden")
 
 repo_root = os.path.dirname(os.path.dirname(BASE))
 if "github.io" in site and not os.path.exists(os.path.join(repo_root, ".nojekyll")):

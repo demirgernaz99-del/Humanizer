@@ -448,9 +448,15 @@
     return null;
   }
 
+  // Namen der Beispielpartie in der Schreibweise der Sprache
+  function sampleHeaders() {
+    var h = Object.assign({}, SAMPLE.headers);
+    if (I.lang() === 'en') { h.White = 'Garry Kasparov'; h.Black = 'Veselin Topalov'; }
+    return h;
+  }
   function loadSample() {
     state.sample = true;
-    loadLine(START, SAMPLE.moves.split(' '), SAMPLE.headers, SAMPLE.ply);
+    loadLine(START, SAMPLE.moves.split(' '), sampleHeaders(), SAMPLE.ply);
   }
 
   // Geladene Partie, solange du gegen die KI spielst. Hast du noch nicht gezogen, kommt sie beim Wechsel zurück.
@@ -507,6 +513,8 @@
         main: state.main ? { moves: state.main.line.map(function (m) { return m.uci; }), ply: state.main.ply } : null,
         ply: state.ply, mode: state.mode, orientation: state.orientation, headers: state.headers,
         settings: state.settings, sample: state.sample, user: state.user, game: state.game,
+        stash: stash ? { startFen: stash.startFen, moves: stash.line.map(function (m) { return m.uci; }), ply: stash.ply, headers: stash.headers,
+                         sample: stash.sample, user: stash.user, game: stash.game, orientation: stash.orientation } : null,
         pgn: state.pgn && state.pgn.length < 20000 ? state.pgn : null,
         clocks: state.line.some(function (m) { return m.clock != null; }) ? state.line.map(function (m) { return m.clock != null ? m.clock : null; }) : null
       };
@@ -541,6 +549,12 @@
       state.game = d.game || null;
       state.pgn = d.pgn || null;
       if (d.clocks && !state.main) attachClocks(state.line, d.clocks, state.headers.TimeControl);
+      // Beiseitegelegte Partie (während du gegen die KI spielst)
+      if (d.stash && state.mode === 'play' && L.validateFen(d.stash.startFen || '').ok) {
+        var sl = buildLine(d.stash.startFen, d.stash.moves || []);
+        stash = { startFen: d.stash.startFen, line: sl, ply: Math.min(sl.length, d.stash.ply || 0), headers: d.stash.headers || {},
+                  sample: !!d.stash.sample, user: d.stash.user || null, game: d.stash.game || null, pgn: null, orientation: d.stash.orientation === 'b' ? 'b' : 'w' };
+      }
       return true;
     } catch (e) { return false; }
   }
@@ -1838,7 +1852,8 @@
       var busy = job && !job.finished;
       pill.dataset.state = busy ? 'busy' : 'ready';
       var what = !busy ? t('bereit') : job.kind === 'play' ? t('KI zieht') : batch.cur && job.key && batch.cur.fens.some(function (f) { return E.posKey(f) === job.key; }) ? t('Serie') : job.kind === 'review' ? t('Review') : t('live');
-      tx.textContent = info.name + (window.innerWidth < 520 ? '' : ' · ' + t(info.note)) + ' · ' + what;
+      // Nur den Kompatibilitätsmodus erwähnen – „NNUE“ sagt Nutzern nichts und kostet Platz
+      tx.textContent = info.name + (info.wasm || window.innerWidth < 520 ? '' : ' · ' + t(info.note)) + ' · ' + what;
       pill.title = info.name + ' (' + t(info.note) + ')';
     } else if (st === 'failed') {
       pill.dataset.state = 'failed';
@@ -2181,6 +2196,7 @@
     selLevel.value = lv;
     themeOptions();
     movesSig = ''; reviewSig = ''; graphSig = ''; coachMemo.clear(); insightsDirty = true;
+    if (state.sample) state.headers = sampleHeaders();
     if (conn.games.length) renderGames();
     render();
   }
@@ -2329,7 +2345,7 @@
       state.sample = true;
       var sans = SAMPLE.moves.split(' '), fen = START, line = [];
       for (var i = 0; i < sans.length; i++) { var mv = makeMove(fen, sans[i]); if (!mv) break; line.push(mv); fen = mv.fenAfter; }
-      state.line = line; state.ply = SAMPLE.ply; state.headers = SAMPLE.headers;
+      state.line = line; state.ply = SAMPLE.ply; state.headers = sampleHeaders();
     }
     applyTheme();
     I.apply();

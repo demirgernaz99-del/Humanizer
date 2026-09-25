@@ -81,9 +81,11 @@ personal/chess/
 │   ├── board.js, openings.js, app.js, styles.css, pieces.css, vendor/chess.js
 │   └── *.selftest.js    Selbsttests
 ├── server/license-proxy.js   optionaler CORS-Proxy für die Lizenz-API (Cloudflare Worker)
-├── tools/               launch_check.py (Startklar-Prüfung), Übersetzungs-Werkzeuge, Icon-Erzeugung
+├── tools/               launch_check.py (Startklar-Prüfung), screenshots.js (Produktbilder + Vorschaubild),
+│                        Übersetzungs-Werkzeuge, Icon-Erzeugung
+├── shots/               Produktbilder für die Landingpage (DE/EN)
 ├── engine/, fonts/, icons/   selbst gehostete Engine, Schriften, App-Icons
-└── zugradar.html, index.html, impressum.html, …   Build-Ergebnis
+└── zugradar.html, index.html, impressum.html, 404.html, robots.txt, sitemap.xml, …   Build-Ergebnis
 ```
 
 ```bash

@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://demirgernaz99-del.github.io/Humanizer/personal/chess/sitemap.xml

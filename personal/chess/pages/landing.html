@@ -7,7 +7,14 @@
 <meta name="description" content="Jeder Zug sofort bewertet: bester Zug, brillante und großartige Züge, Coach-Erklärungen, Insights über deine Partien und ein Taktik-Trainer aus deinen eigenen Fehlern. Im Browser, ohne Konto.">
 <meta property="og:title" content="{{brand}} – jeder Zug sofort bewertet">
 <meta property="og:description" content="Stockfish 18 im Browser: bester Zug, brillante Züge, Coach, Insights und Taktik-Trainer.">
-<meta property="og:image" content="icons/icon-512.png">
+<meta property="og:type" content="website">
+<meta property="og:url" content="{{siteUrl}}">
+<meta property="og:image" content="{{siteUrl}}icons/og-image.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="canonical" href="{{siteUrl}}">
+<script type="application/ld+json">{{JSONLD}}</script>
 <meta name="theme-color" content="#111416">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icons/favicon-32.png" type="image/png">
@@ -112,6 +119,13 @@ table.cmp { width: 100%; border-collapse: collapse; font-size: 15px; min-width: 
 .plan li { padding-left: 26px; position: relative; color: var(--ink-2); }
 .plan li::before { content: "✓"; position: absolute; left: 0; color: var(--green); font-weight: 700; }
 .plan .btn { justify-self: start; }
+.shots { display: grid; grid-template-columns: minmax(0, 1fr) 210px 210px; gap: 22px; align-items: start; margin-top: 30px; }
+.shot { margin: 0; }
+.shot img { display: block; width: 100%; height: auto; border-radius: 12px; border: 1px solid var(--line); background: #16191b; box-shadow: 0 24px 60px rgba(0, 0, 0, .45); }
+.shot.phone img { border-radius: 20px; }
+.shot figcaption { margin-top: 10px; font-size: 14px; color: var(--muted); }
+@media (max-width: 980px) { .shots { grid-template-columns: 1fr 1fr; } .shot.wide { grid-column: 1 / -1; } }
+@media (max-width: 520px) { .shots { grid-template-columns: minmax(0, 1fr); } .shot.phone { max-width: 300px; justify-self: center; } }
 .plan .key-link { justify-self: start; font-size: 14px; color: var(--muted); text-decoration: underline; text-underline-offset: 3px; }
 .plan .key-link:hover { color: var(--ink); }
 @media (max-width: 760px) { .plans { grid-template-columns: minmax(0, 1fr); } }
@@ -184,6 +198,19 @@ footer a:hover { color: var(--ink); }
         <div><code data-i="pm1">5. Sxe5!!</code><span data-i="proof1">Légals Matt, 1750: Die Dame hängt, doch wer sie nimmt, wird mattgesetzt.</span></div>
         <div><code data-i="pm2">16. Db8+!!</code><span data-i="proof2">Morphys Opernpartie, 1858: Damenopfer, danach Matt mit dem Turm.</span></div>
         <div><code data-i="pm3">24. Txd4!!</code><span data-i="proof3">Kasparow – Topalow, 1999: der Beginn der berühmtesten Kombination der Neuzeit.</span></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="block" id="einblick">
+    <div class="wrap">
+      <div class="eyebrow" data-i="shots_eyebrow">So sieht es aus</div>
+      <h2 data-i="shots_title">Die echte App, keine Attrappe.</h2>
+      <p class="sub" data-i="shots_sub">Oben die Analyse am PC, darunter Review und Fehler-Training am Handy. Alle Bilder stammen direkt aus Zugradar.</p>
+      <div class="shots">
+        <figure class="shot wide"><img data-shot="analyse" src="shots/de-analyse.jpg" width="1280" height="800" loading="lazy" alt="Zugradar-Analyse: 24.Txd4 ist brillant, bester Zug, Engine-Linien und Partieformular"><figcaption data-i="shot1">Analyse: bester Zug live, brillante Züge, Coach-Erklärung</figcaption></figure>
+        <figure class="shot phone"><img data-shot="review" src="shots/de-review.jpg" width="716" height="1480" loading="lazy" alt="Partie-Review mit Bewertungsverlauf, Genauigkeit und Zug-Bilanz"><figcaption data-i="shot2">Review: Genauigkeit, Verlauf, Bilanz</figcaption></figure>
+        <figure class="shot phone"><img data-shot="training" src="shots/de-training.jpg" width="780" height="1688" loading="lazy" alt="Fehler-Training: finde einen besseren Zug"><figcaption data-i="shot3">Training: deine Fehler als Aufgaben</figcaption></figure>
       </div>
     </div>
   </section>
@@ -326,6 +353,9 @@ footer a:hover { color: var(--ink); }
     proof_sub: 'A move is brilliant when it is (almost) the best move and gives up real material your opponent could take – and Stockfish confirms the sacrifice pays off. The most famous sacrifices in chess history pass the test:',
     proof1: 'Légal\'s mate, 1750: the queen hangs, but taking it gets you mated.', proof2: 'Morphy\'s Opera Game, 1858: a queen sacrifice, then mate with the rook.',
     proof3: 'Kasparov – Topalov, 1999: the start of the most famous combination of modern times.',
+    shots_eyebrow: 'See it in action', shots_title: 'The real app, not a mock-up.',
+    shots_sub: 'Analysis on desktop at the top, review and mistake training on a phone below. Every image comes straight from Zugradar.',
+    shot1: 'Analysis: best move live, brilliant moves, coach explanation', shot2: 'Review: accuracy, eval graph, move stats', shot3: 'Training: your mistakes as puzzles',
     feat_eyebrow: 'Features', feat_title: 'Everything a game review should do – and more.',
     feat_sub: 'Analysis and single-game reviews are free and unlimited. Pro is for the tools across many games.',
     f1_t: 'Best move, live', f1_p: 'Arrow on the board, evaluation bar and up to five engine lines – instantly, while you move.',
@@ -386,6 +416,13 @@ footer a:hover { color: var(--ink); }
     var alt = document.getElementById('priceAlt');
     if (alt && p.monthly) alt.innerHTML = (l === 'en' ? 'or ' : 'oder ') + p.monthly + (l === 'en' ? ' per month · ' : ' pro Monat · ') + p.lifetime + (l === 'en' ? ' one-time' : ' einmalig');
     document.getElementById('lang').textContent = l === 'de' ? 'EN' : 'DE';
+    var ALT = { analyse: 'Zugradar analysis: 24.Rxd4 is brilliant, best move, engine lines and move list', review: 'Game review with eval graph, accuracy and move stats', training: 'Mistake training: find a better move' };
+    document.querySelectorAll('img[data-shot]').forEach(function (img) {
+      var name = img.getAttribute('data-shot');
+      if (!img.hasAttribute('data-alt-de')) img.setAttribute('data-alt-de', img.alt);
+      img.src = 'shots/' + l + '-' + name + '.jpg';
+      img.alt = l === 'en' ? ALT[name] : img.getAttribute('data-alt-de');
+    });
   }
   document.getElementById('lang').onclick = function () {
     var l = document.documentElement.lang === 'de' ? 'en' : 'de';

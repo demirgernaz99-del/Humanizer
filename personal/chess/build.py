@@ -62,8 +62,16 @@ FONTS_GOOGLE = ('<link rel="preconnect" href="https://fonts.googleapis.com">\n<l
                 '<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap">')
 
 head, body = tpl.split("<!--BODY-->", 1)
+site = (seller.get("siteUrl") or "").strip()
+if site and not site.endswith("/"): site += "/"
+OG = ""
+if site:
+    OG = ('<meta property="og:title" content="' + html.escape(seller.get("brand", "Zugradar")) + ' – Schachanalyse mit Stockfish 18">\n'
+          '<meta property="og:image" content="' + html.escape(site) + 'icons/og-image.png">\n'
+          '<meta name="twitter:card" content="summary_large_image">\n'
+          '<link rel="canonical" href="' + html.escape(site) + 'zugradar.html">\n')
 app = ('<!doctype html>\n<html lang="de">\n<head>\n<meta charset="utf-8">\n'
-       '<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">\n'
+       '<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">\n' + OG
        + head.replace("@@FONTS@@", FONTS_LOCAL).strip() + '\n</head>\n<body>\n' + body.strip() + '\n</body>\n</html>\n')
 write("zugradar.html", app)
 
@@ -83,8 +91,25 @@ def fill(text):
         return html.escape(str(v))
     return re.sub(r"\{\{([a-zA-Z.?]+)\}\}", rep, text)
 
+# Strukturierte Daten für Suchmaschinen (schema.org SoftwareApplication)
+def price_num(txt):
+    n = re.sub(r"[^\d,.]", "", txt or "").replace(",", ".")
+    return n or "0"
+prices = seller.get("prices") or {}
+jsonld = {
+    "@context": "https://schema.org", "@type": "SoftwareApplication",
+    "name": seller.get("brand", "Zugradar"), "applicationCategory": "GameApplication",
+    "operatingSystem": "Web", "inLanguage": ["de", "en"],
+    "description": "Schachanalyse mit Stockfish 18 im Browser: bester Zug, brillante und großartige Züge, Coach-Erklärungen, Insights und Taktik-Trainer.",
+    "offers": [{"@type": "Offer", "name": "Free", "price": "0", "priceCurrency": "EUR"}] + [
+        {"@type": "Offer", "name": "Pro " + label, "price": price_num(prices.get(k)), "priceCurrency": "EUR"}
+        for k, label in (("monthly", "(monatlich)"), ("yearly", "(jährlich)"), ("lifetime", "(einmalig)")) if prices.get(k)],
+}
+if site:
+    jsonld.update({"url": site + "zugradar.html", "image": site + "icons/og-image.png", "screenshot": site + "shots/de-analyse.jpg"})
 landing = read("pages", "landing.html")
 landing = landing.replace("{{PIECES_CSS}}", pieces_css).replace("{{SELLER_JS}}", seller_js)
+landing = landing.replace("{{JSONLD}}", json.dumps(jsonld, ensure_ascii=False).replace("</", "<\\/"))
 write("index.html", fill(landing))
 
 LEGAL = """<!doctype html>
@@ -94,7 +119,7 @@ LEGAL = """<!doctype html>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>{title} – {brand}</title>
 <meta name="robots" content="noindex">
-<link rel="icon" href="icons/favicon-32.png" type="image/png">
+{base}<link rel="icon" href="icons/favicon-32.png" type="image/png">
 <link rel="stylesheet" href="fonts/fonts.css">
 <style>
 :root {{ color-scheme: dark; }}
@@ -124,7 +149,19 @@ for page in ["impressum", "datenschutz", "agb", "lizenzen"]:
     content = read("pages", page + ".html")
     m = re.match(r"<!--title:(.+?)-->", content)
     title = m.group(1) if m else page
-    write(page + ".html", LEGAL.format(title=title, brand=html.escape(seller.get("brand", "Zugradar")), content=fill(content)))
+    write(page + ".html", LEGAL.format(title=title, brand=html.escape(seller.get("brand", "Zugradar")), content=fill(content), base=""))
+
+# 404-Seite: wird auch unter tieferen Pfaden ausgeliefert, deshalb mit <base> auf die Website-Adresse
+content = read("pages", "404.html")
+write("404.html", LEGAL.format(title="Seite nicht gefunden", brand=html.escape(seller.get("brand", "Zugradar")), content=fill(content),
+                               base=('<base href="' + html.escape(site) + '">\n') if site else ""))
+
+# Suchmaschinen: robots.txt und sitemap.xml (wirksam, wenn die Seite auf einer eigenen Domain im Hauptordner liegt)
+if site:
+    write("robots.txt", "User-agent: *\nAllow: /\n\nSitemap: " + site + "sitemap.xml\n")
+    urls = ["", "zugradar.html", "impressum.html", "datenschutz.html", "agb.html", "lizenzen.html"]
+    write("sitemap.xml", '<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
+          + "".join("  <url><loc>" + html.escape(site + u) + "</loc></url>\n" for u in urls) + "</urlset>\n")
 
 # --- Service Worker mit Inhalts-Version ---
 version = hashlib.sha1((app + landing).encode("utf-8")).hexdigest()[:10]

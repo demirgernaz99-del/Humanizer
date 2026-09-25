@@ -117,8 +117,11 @@ Updates: Dateien in `src/` oder `pages/` ändern → `python3 build.py` → comm
   und zeig lieber ein spannendes Review als Werbung.
 - **Schachvereine:** Ein kurzes Mail an Vereine (Jugendtrainer!) mit einem Vereins-Rabattcode.
 - **Streamer und YouTuber:** Affiliate-Provision anbieten; Format-Idee: „Stockfish bewertet eure Partien live nach dem Spiel“.
-- **Suchmaschinen:** Artikel wie „Was ist ein brillanter Zug?“ oder „Schachpartie kostenlos analysieren“
-  auf der Website ergänzen.
+- **Suchmaschinen:** Die Landingpage bringt Beschreibung, Vorschaubild für soziale Netze, strukturierte Daten
+  (Preise), `sitemap.xml` und `robots.txt` mit. Mit eigener Domain die Seite in der Google Search Console anmelden.
+  Artikel wie „Was ist ein brillanter Zug?“ oder „Schachpartie kostenlos analysieren“ bringen zusätzlich Besucher.
+- **Produktbilder aktualisieren:** Nach sichtbaren Änderungen `node tools/screenshots.js` ausführen (braucht Playwright
+  und einen lokalen Server, siehe Kopf der Datei).
 - **Kennzahlen:** Besucher → App geöffnet → Test gestartet → gekauft. Ab rund 2–5 % Käufern unter den Testern bist du auf einem guten Weg.
 
 ## 8. Nächste Ausbaustufen

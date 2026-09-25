@@ -116,6 +116,8 @@ a { color: var(--accent); }
   padding-block: 6px 14px;
 }
 .brand { display: flex; align-items: center; gap: 12px; min-width: 0; }
+.brand .pill { min-width: 0; max-width: 100%; }
+#engineText { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
 .brand-name {
   font: 800 27px/1 var(--f-display); letter-spacing: -.02em; color: var(--ink); text-decoration: none;
   font-variation-settings: "opsz" 96;
@@ -152,7 +154,8 @@ a { color: var(--accent); }
 .pill[data-state="failed"] .dot { background: var(--c-blunder); }
 .pill[data-state="failed"] { cursor: pointer; }
 @keyframes pulse { 50% { opacity: .35; } }
-@media (max-width: 900px) {
+/* Kopfzeile zweizeilig, sobald Marke, Bereiche und Knöpfe nicht nebeneinander passen */
+@media (max-width: 1140px) {
   .top { grid-template-columns: minmax(0, 1fr) auto; }
   .tabs { grid-column: 1 / -1; grid-row: 2; justify-self: stretch; }
   .tabs button { flex: 1; justify-content: center; }
