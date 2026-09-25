@@ -38,12 +38,57 @@ Das Engine-Symbol oben rechts zeigt, welche Engine läuft.
   Brillante und großartige Züge werden zusätzlich mit einem Banner angezeigt.
 - **Gegen KI spielen:** 8 Stärken von ~800 bis volle Stärke. Hinweise (bester Zug, Linien)
   lassen sich ein- und ausschalten. Deine Züge werden nach jedem Zug bewertet.
-- **Partie-Review:** PGN von chess.com/lichess einfügen (Dialog oder einfach Strg+V auf der Seite).
+- **Partie-Review:** Partie über den Konnektor holen oder PGN einfügen (Dialog oder einfach Strg+V auf der Seite).
   Alle Züge werden im Hintergrund bewertet. Dazu kommen Genauigkeit pro Spieler, eine Tabelle
   mit allen Kategorien und der Verlauf der Gewinnchance (klickbar).
 - **Varianten:** In einer geladenen Partie einen anderen Zug spielen → Variante, die Partie bleibt erhalten.
+- **Coach:** Unter jeder Bewertung steht, *warum*: „Danach setzt der Gegner in 2 Zügen matt (Lxf7+)“,
+  „Die Dame auf d5 steht ungedeckt – exd5 gewinnt Material“, „Sxe5 wäre eine Gabel auf König und Turm gewesen“,
+  „Gespielt nach nur 1 s Bedenkzeit“.
+- **Review-Extras:** Schlüsselmomente (klickbar), Genauigkeit je Partiephase, Uhr-Auswertung aus `[%clk]`.
+- **Fehler-Training:** Deine Fehler, Patzer und verpassten Chancen als Aufgaben. Du suchst den besseren Zug,
+  Stockfish prüft ihn. Als gelöst gilt alles, was höchstens 5 % Gewinnchance schlechter ist als der beste Zug.
 - **Export:** „PGN kopieren“ schreibt die Partie mit `!!`/`?`-Zeichen und `[%eval]`-Kommentaren.
 - Deutsche oder englische Notation, Hell/Dunkel automatisch, Handy-tauglich, Zustand bleibt nach dem Neuladen erhalten.
+
+## Deine Partien von chess.com und lichess (Konnektor)
+
+„Partie laden“ → „Meine Partien“: Plattform wählen, Benutzernamen eingeben, „Partien holen“.
+Zugradar zeigt deine letzten 20 **beendeten** Partien (Ergebnis, Gegner, Bedenkzeit, Farbe).
+Ein Klick lädt die Partie, dreht das Brett auf deine Seite und startet das Review.
+
+**Auto-Import:** Mit dem Haken „Neue Partien automatisch laden, sobald sie beendet sind“ prüft
+Zugradar jede Minute, ob eine neue Partie fertig ist, und lädt sie sofort. Wenn du gerade gegen
+die KI spielst oder trainierst, wird nichts überschrieben – dann erscheint nur ein Hinweis.
+
+- Genutzt werden nur die öffentlichen Schnittstellen, ohne Login und ohne Token:
+  chess.com `…/games/archives` (Monatsarchive) und lichess `/api/games/user/{name}?finished=true&ongoing=false`.
+- **Laufende Partien werden nie abgefragt.** Die „aktuelle Partie“-Endpunkte beider Plattformen
+  bleiben bewusst ungenutzt. Engine-Hilfe während einer Partie gegen Menschen ist Betrug und führt zur Sperre.
+- Der Konnektor braucht die lokale Datei (`zugradar.html` über `python3 -m http.server` oder per Doppelklick).
+  Gehostete Vorschauen mit strenger Content-Security-Policy blockieren Verbindungen zu chess.com/lichess.
+  Die App sagt das dann ausdrücklich. PGN einfügen funktioniert überall.
+
+## Zugradar im Vergleich zu chess.com und lichess
+
+| | chess.com Game Review | lichess Analyse | Zugradar |
+|---|---|---|---|
+| Kosten / Limit | kostenlos 1 Review pro Tag; unbegrenzt ab Platinum, Coach-Erklärungen nur Diamond | kostenlos, unbegrenzt | kostenlos, unbegrenzt, offline-fähig |
+| Brillant / Großartig | ja (Regeln nicht offengelegt) | nein (Ungenauigkeit/Fehler/Patzer) | ja, **Regeln offen** und anpassbar (`THRESHOLDS`) |
+| Bewertung während man zieht | nach der Partie im Review | Engine-Linien ja, Einstufung erst nach Server-Analyse | **ja, jeder Zug sofort** |
+| Erklärungen | Coach (Diamond) | keine | Coach-Sätze kostenlos: Matt-Drohung, hängende Figur, Gabel, verpasster Gewinn |
+| Zeit-Analyse | Uhrzeiten sichtbar | Zeitdiagramm | Fehler in Zeitnot, Fehler nach ≤ 3 s, Ø Bedenkzeit, Coach-Hinweis „zu schnell gespielt“ |
+| Fehler nachspielen | Retry | Lerne aus deinen Fehlern | Fehler-Training mit Tipp, Lösung und Trefferquote |
+| Phasen | Noten für Eröffnung/Mittelspiel/Endspiel | im Diagramm markiert | Genauigkeit je Phase und Farbe |
+| Daten | Konto nötig | Konto optional | kein Konto, alles bleibt im Browser |
+
+Noch nicht in Zugradar (bewusst oder später): Eröffnungs-Datenbank/Explorer, 7-Steiner-Endspieldatenbank,
+geschätzte Elo-Leistung pro Partie, Auswertung über viele Partien („Insights“).
+
+Quellen für den Vergleich: [chess.com: Game Review für alle](https://www.chess.com/news/view/chesscom-releases-new-game-review),
+[chess.com: Game Review Design-Update](https://www.chess.com/news/view/game-review-design-update),
+[chess.com Hilfe: Wie funktioniert Game Review?](https://support.chess.com/en/articles/8584089-how-does-game-review-work),
+[lichess: Learn from your mistakes](https://lichess.org/@/lichess/blog/learn-from-your-mistakes/WFvLpiQA).
 
 ## So wird bewertet
 
@@ -95,6 +140,9 @@ personal/chess/
 └── src/
     ├── classify.js      Gewinnchance, SEE, Opfer-Erkennung, Kategorien, Genauigkeit
     ├── classify.selftest.js
+    ├── coach.js         Erklärungen (Matt, hängende Figur, Gabel, Uhr), Partiephasen, [%clk]
+    ├── connect.js       chess.com/lichess: nur beendete Partien
+    ├── coach.selftest.js  Tests für coach.js und connect.js (APIs nachgebildet)
     ├── engine.js        Stockfish-Worker, UCI-Parser, Planer (KI-Zug > Live-Stellung > Review)
     ├── board.js         Brett: Klick/Drag, Umwandlung, Pfeile, Symbole
     ├── openings.js      Eröffnungsbuch
@@ -106,6 +154,7 @@ personal/chess/
 ```bash
 python3 build.py                 # nach jeder Änderung in src/
 node src/classify.selftest.js    # 46 Tests für Bewertung, Buch und UCI-Parser
+node src/coach.selftest.js       # 38 Tests für Coach, Phasen, Uhr und Konnektor
 ```
 
 ## Lizenzen

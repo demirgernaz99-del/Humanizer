@@ -15,7 +15,8 @@
       <span class="brand-sub">Stockfish-Analyse live</span>
     </div>
     <div class="top-actions">
-      <button type="button" class="btn ghost" id="btnImport">PGN / FEN laden</button>
+      <button type="button" class="btn ghost" id="btnImport">Partie laden</button>
+      <button type="button" class="chip" id="autoChip" hidden title="Auto-Import deiner beendeten Partien"></button>
       <button type="button" class="btn ghost" id="btnNew">Neue Partie</button>
       <span class="pill" id="enginePill" data-state="loading"><span class="dot"></span><span id="engineText">Engine lädt …</span></span>
     </div>
@@ -121,6 +122,15 @@
         <div class="graph" id="graph"></div>
         <div class="acc" id="acc"></div>
         <table class="counts" id="counts"></table>
+        <h3 class="sub-head">Phasen</h3>
+        <table class="phases" id="phases"></table>
+        <h3 class="sub-head">Schlüsselmomente</h3>
+        <ul class="moments" id="moments"></ul>
+        <div id="timeBox" hidden>
+          <h3 class="sub-head">Uhr</h3>
+          <table class="counts time" id="timeStats"></table>
+        </div>
+        <button type="button" class="btn accent train-btn" id="btnTrain">Fehler trainieren</button>
       </section>
 
       <details class="card settings">
@@ -161,16 +171,38 @@
 
   <div class="overlay" id="importBox" hidden>
     <div class="sheet-dialog" role="dialog" aria-modal="true" aria-labelledby="importTitle">
-      <h2 id="importTitle">Partie oder Stellung laden</h2>
-      <p class="hint">PGN aus chess.com oder lichess (Partie → Teilen → PGN) oder eine FEN einfügen.
-        Du kannst auch einfach irgendwo auf der Seite einfügen (Strg+V).</p>
-      <textarea id="importText" rows="9" spellcheck="false" placeholder="[Event &quot;…&quot;]&#10;1. e4 e5 2. Sf3 …  oder  rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq - 0 1"></textarea>
-      <p class="error" id="importError" hidden></p>
-      <div class="dialog-actions">
-        <button type="button" class="btn ghost" id="btnSample">Beispiel: Kasparov – Topalov 1999</button>
-        <span class="grow"></span>
-        <button type="button" class="btn ghost" id="btnImportCancel">Abbrechen</button>
-        <button type="button" class="btn accent" id="btnImportGo">Laden</button>
+      <div class="dlg-head">
+        <h2 id="importTitle">Partie laden</h2>
+        <div class="seg small" role="tablist" aria-label="Quelle">
+          <button type="button" role="tab" id="tabGames" aria-selected="true">Meine Partien</button>
+          <button type="button" role="tab" id="tabPgn" aria-selected="false">PGN / FEN</button>
+        </div>
+      </div>
+      <div id="paneGames" class="pane">
+        <div class="conn-form">
+          <select id="connSite" aria-label="Plattform"><option value="chesscom">chess.com</option><option value="lichess">lichess</option></select>
+          <input id="connUser" type="text" placeholder="Benutzername" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="Benutzername">
+          <button type="button" class="btn accent" id="connLoad">Partien holen</button>
+        </div>
+        <label class="check"><input type="checkbox" id="connAuto"> Neue Partien automatisch laden, sobald sie beendet sind</label>
+        <p class="conn-status" id="connStatus"></p>
+        <ul class="games" id="connGames"></ul>
+        <p class="hint small">Nur beendete Partien, über die öffentlichen Schnittstellen von chess.com und lichess, ohne Login.
+          Laufende Partien liest Zugradar grundsätzlich nicht mit – Engine-Hilfe während einer Partie gegen Menschen ist Betrug.</p>
+      </div>
+      <div id="panePgn" class="pane" hidden>
+        <p class="hint">PGN aus chess.com oder lichess (Partie → Teilen → PGN) oder eine FEN einfügen.
+          Du kannst auch einfach irgendwo auf der Seite einfügen (Strg+V).</p>
+        <textarea id="importText" rows="9" spellcheck="false" placeholder="[Event &quot;…&quot;]&#10;1. e4 e5 2. Sf3 …  oder  rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq - 0 1"></textarea>
+        <p class="error" id="importError" hidden></p>
+        <div class="dialog-actions">
+          <button type="button" class="btn ghost" id="btnSample">Beispiel: Kasparov – Topalov 1999</button>
+          <span class="grow"></span>
+          <button type="button" class="btn accent" id="btnImportGo">Laden</button>
+        </div>
+      </div>
+      <div class="dialog-actions end">
+        <button type="button" class="btn ghost" id="btnImportCancel">Schließen</button>
       </div>
     </div>
   </div>
@@ -184,6 +216,12 @@
 </script>
 <script>
 @@CLASSIFY@@
+</script>
+<script>
+@@COACH@@
+</script>
+<script>
+@@CONNECT@@
 </script>
 <script>
 @@ENGINE@@

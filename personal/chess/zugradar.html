@@ -488,6 +488,88 @@ select {
   .badge.pop, .toast { animation: none; }
 }
 
+/* ---------- Coach, Training ---------- */
+.verdict .v-coach { grid-column: 2; margin: 4px 0 0; padding-left: 18px; font-size: 13.5px; color: var(--ink); display: grid; gap: 3px; }
+.verdict .v-coach li::marker { color: var(--accent); }
+.verdict .v-msg { grid-column: 2; font-size: 14px; font-weight: 600; padding: 6px 10px; border-radius: 8px; background: var(--panel-2); border: 1px solid var(--line); margin-top: 4px; }
+.verdict .v-msg.right, .verdict .v-msg.shown { border-color: var(--c-best); color: var(--c-best); }
+.verdict .v-msg.wrong { border-color: var(--c-mistake); color: var(--c-mistake); }
+.verdict .v-hint { grid-column: 2; font-size: 13.5px; color: var(--ink-2); margin-top: 2px; }
+.verdict .v-actions { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+
+/* ---------- Review-Erweiterungen ---------- */
+.sub-head { margin: 16px 0 6px; font: 600 11px/1.2 var(--f-body); letter-spacing: .09em; text-transform: uppercase; color: var(--muted); }
+.phases { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+.phases td { padding: 5px 2px; }
+.phases td.lab { color: var(--ink-2); }
+.phases .ph-cell { text-align: center; width: 88px; }
+.phases thead td { font-size: 11.5px; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; }
+.phases small { display: block; font-size: 11.5px; color: var(--muted); margin-top: 2px; }
+.ph-grade { display: inline-block; min-width: 38px; padding: 3px 6px; border-radius: 6px; font: 700 13px/1.1 var(--f-mono); color: #fff; }
+.ph-grade.top { background: var(--c-best); }
+.ph-grade.ok { background: var(--c-excellent); }
+.ph-grade.mid { background: var(--c-inaccuracy); color: #2a1f00; }
+.ph-grade.low { background: var(--c-mistake); }
+.ph-grade.none { background: var(--panel-2); color: var(--muted); border: 1px solid var(--line); }
+
+.moments { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; max-height: 280px; overflow-y: auto; }
+.km {
+  width: 100%; display: grid; grid-template-columns: 22px minmax(0, 1fr) auto; gap: 10px; align-items: start;
+  text-align: left; padding: 7px 8px; border-radius: 8px; border: 1px solid transparent; background: transparent; cursor: pointer;
+}
+.km:hover, .km.cur { background: var(--panel-2); border-color: var(--line); }
+.km .sym { display: inline-grid; place-items: center; width: 22px; height: 22px; border-radius: 50%; font: 700 10.5px/1 var(--f-body); color: #fff; letter-spacing: -.04em; }
+.km-main { font-size: 13.5px; color: var(--ink-2); min-width: 0; }
+.km-main b { font-family: var(--f-mono); color: var(--ink); font-weight: 600; }
+.km-main small { display: block; color: var(--muted); font-size: 12.5px; margin-top: 2px; }
+.km-clock { font: 500 12px/1.6 var(--f-mono); color: var(--muted); }
+.km-empty { font-size: 13.5px; color: var(--muted); padding: 4px 2px; }
+.counts.time td.n { width: 64px; }
+.train-btn { width: 100%; margin-top: 14px; }
+
+/* ---------- Kopf: Auto-Import-Chip ---------- */
+.chip {
+  display: inline-flex; align-items: center; gap: 6px; padding: 5px 10px; border-radius: 999px; cursor: pointer;
+  border: 1px solid var(--c-best); background: transparent; color: var(--ink-2); font: 500 12.5px/1.2 var(--f-body);
+}
+.chip::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--c-best); }
+
+/* ---------- Dialog: Tabs + Konnektor ---------- */
+.dlg-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.seg.small { grid-template-columns: auto auto; padding: 2px; }
+.seg.small button { padding: 6px 12px; font-size: 13.5px; }
+.pane { display: grid; gap: 10px; }
+.conn-form { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 8px; }
+.conn-form select { max-width: none; }
+.conn-form input {
+  min-width: 0; padding: 8px 10px; border-radius: 8px; border: 1px solid var(--line); background: var(--panel-2);
+}
+.conn-status { margin: 0; font-size: 13.5px; color: var(--ink-2); min-height: 1.2em; }
+.conn-status[data-kind="error"] { color: var(--c-blunder); }
+.conn-status[data-kind="ok"] { color: var(--c-best); }
+.games { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; max-height: 320px; overflow-y: auto; }
+.game {
+  width: 100%; display: grid; grid-template-columns: 28px minmax(0, 1fr) auto; gap: 10px; align-items: center;
+  padding: 8px 10px; border-radius: 9px; border: 1px solid var(--line); background: var(--panel-2); cursor: pointer; text-align: left;
+}
+.game:hover { border-color: var(--muted); }
+.game .res { width: 28px; height: 28px; border-radius: 7px; display: grid; place-items: center; font: 700 13px/1 var(--f-mono); color: #fff; }
+.game .res.win { background: var(--c-best); }
+.game .res.loss { background: var(--c-blunder); }
+.game .res.draw { background: var(--c-forced); }
+.g-main { min-width: 0; }
+.g-main b { display: block; font-weight: 600; font-size: 14px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.g-main small { display: block; font-size: 12.5px; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.g-go { font-size: 13px; color: var(--accent); font-weight: 600; }
+.hint.small { font-size: 12.5px; color: var(--muted); margin: 0; }
+.dialog-actions.end { justify-content: flex-end; }
+@media (max-width: 520px) {
+  .conn-form { grid-template-columns: 1fr 1fr; }
+  .conn-form input { grid-column: 1 / -1; grid-row: 1; }
+  .g-go { display: none; }
+  .game { grid-template-columns: 28px minmax(0, 1fr); }
+}
+
 /* Figuren: cburnett-Satz (Colin M.L. Burnett, GPLv2+), entnommen aus lichess chessground (GPLv3). */
 .pc.wp{background-image:url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0NSIgaGVpZ2h0PSI0NSI+PHBhdGggZD0iTTIyLjUgOWMtMi4yMSAwLTQgMS43OS00IDQgMCAuODkuMjkgMS43MS43OCAyLjM4QzE3LjMzIDE2LjUgMTYgMTguNTkgMTYgMjFjMCAyLjAzLjk0IDMuODQgMi40MSA1LjAzLTMgMS4wNi03LjQxIDUuNTUtNy40MSAxMy40N2gyM2MwLTcuOTItNC40MS0xMi40MS03LjQxLTEzLjQ3IDEuNDctMS4xOSAyLjQxLTMgMi40MS01LjAzIDAtMi40MS0xLjMzLTQuNS0zLjI4LTUuNjIuNDktLjY3Ljc4LTEuNDkuNzgtMi4zOCAwLTIuMjEtMS43OS00LTQtNHoiIGZpbGw9IiNmZmYiIHN0cm9rZT0iIzAwMCIgc3Ryb2tlLXdpZHRoPSIxLjUiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPjwvc3ZnPg==')}
 .pc.wb{background-image:url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0NSIgaGVpZ2h0PSI0NSI+PGcgZmlsbD0ibm9uZSIgZmlsbC1ydWxlPSJldmVub2RkIiBzdHJva2U9IiMwMDAiIHN0cm9rZS13aWR0aD0iMS41IiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiPjxnIGZpbGw9IiNmZmYiIHN0cm9rZS1saW5lY2FwPSJidXR0Ij48cGF0aCBkPSJNOSAzNmMzLjM5LS45NyAxMC4xMS40MyAxMy41LTIgMy4zOSAyLjQzIDEwLjExIDEuMDMgMTMuNSAyIDAgMCAxLjY1LjU0IDMgMi0uNjguOTctMS42NS45OS0zIC41LTMuMzktLjk3LTEwLjExLjQ2LTEzLjUtMS0zLjM5IDEuNDYtMTAuMTEuMDMtMTMuNSAxLTEuMzU0LjQ5LTIuMzIzLjQ3LTMtLjUgMS4zNTQtMS45NCAzLTIgMy0yeiIvPjxwYXRoIGQ9Ik0xNSAzMmMyLjUgMi41IDEyLjUgMi41IDE1IDAgLjUtMS41IDAtMiAwLTIgMC0yLjUtMi41LTQtMi41LTQgNS41LTEuNSA2LTExLjUtNS0xNS41LTExIDQtMTAuNSAxNC01IDE1LjUgMCAwLTIuNSAxLjUtMi41IDQgMCAwLS41LjUgMCAyeiIvPjxwYXRoIGQ9Ik0yNSA4YTIuNSAyLjUgMCAxIDEtNSAwIDIuNSAyLjUgMCAxIDEgNSAweiIvPjwvZz48cGF0aCBkPSJNMTcuNSAyNmgxME0xNSAzMGgxNW0tNy41LTE0LjV2NU0yMCAxOGg1IiBzdHJva2UtbGluZWpvaW49Im1pdGVyIi8+PC9nPjwvc3ZnPg==')}
@@ -512,7 +594,8 @@ select {
       <span class="brand-sub">Stockfish-Analyse live</span>
     </div>
     <div class="top-actions">
-      <button type="button" class="btn ghost" id="btnImport">PGN / FEN laden</button>
+      <button type="button" class="btn ghost" id="btnImport">Partie laden</button>
+      <button type="button" class="chip" id="autoChip" hidden title="Auto-Import deiner beendeten Partien"></button>
       <button type="button" class="btn ghost" id="btnNew">Neue Partie</button>
       <span class="pill" id="enginePill" data-state="loading"><span class="dot"></span><span id="engineText">Engine lädt …</span></span>
     </div>
@@ -618,6 +701,15 @@ select {
         <div class="graph" id="graph"></div>
         <div class="acc" id="acc"></div>
         <table class="counts" id="counts"></table>
+        <h3 class="sub-head">Phasen</h3>
+        <table class="phases" id="phases"></table>
+        <h3 class="sub-head">Schlüsselmomente</h3>
+        <ul class="moments" id="moments"></ul>
+        <div id="timeBox" hidden>
+          <h3 class="sub-head">Uhr</h3>
+          <table class="counts time" id="timeStats"></table>
+        </div>
+        <button type="button" class="btn accent train-btn" id="btnTrain">Fehler trainieren</button>
       </section>
 
       <details class="card settings">
@@ -658,16 +750,38 @@ select {
 
   <div class="overlay" id="importBox" hidden>
     <div class="sheet-dialog" role="dialog" aria-modal="true" aria-labelledby="importTitle">
-      <h2 id="importTitle">Partie oder Stellung laden</h2>
-      <p class="hint">PGN aus chess.com oder lichess (Partie → Teilen → PGN) oder eine FEN einfügen.
-        Du kannst auch einfach irgendwo auf der Seite einfügen (Strg+V).</p>
-      <textarea id="importText" rows="9" spellcheck="false" placeholder="[Event &quot;…&quot;]&#10;1. e4 e5 2. Sf3 …  oder  rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq - 0 1"></textarea>
-      <p class="error" id="importError" hidden></p>
-      <div class="dialog-actions">
-        <button type="button" class="btn ghost" id="btnSample">Beispiel: Kasparov – Topalov 1999</button>
-        <span class="grow"></span>
-        <button type="button" class="btn ghost" id="btnImportCancel">Abbrechen</button>
-        <button type="button" class="btn accent" id="btnImportGo">Laden</button>
+      <div class="dlg-head">
+        <h2 id="importTitle">Partie laden</h2>
+        <div class="seg small" role="tablist" aria-label="Quelle">
+          <button type="button" role="tab" id="tabGames" aria-selected="true">Meine Partien</button>
+          <button type="button" role="tab" id="tabPgn" aria-selected="false">PGN / FEN</button>
+        </div>
+      </div>
+      <div id="paneGames" class="pane">
+        <div class="conn-form">
+          <select id="connSite" aria-label="Plattform"><option value="chesscom">chess.com</option><option value="lichess">lichess</option></select>
+          <input id="connUser" type="text" placeholder="Benutzername" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="Benutzername">
+          <button type="button" class="btn accent" id="connLoad">Partien holen</button>
+        </div>
+        <label class="check"><input type="checkbox" id="connAuto"> Neue Partien automatisch laden, sobald sie beendet sind</label>
+        <p class="conn-status" id="connStatus"></p>
+        <ul class="games" id="connGames"></ul>
+        <p class="hint small">Nur beendete Partien, über die öffentlichen Schnittstellen von chess.com und lichess, ohne Login.
+          Laufende Partien liest Zugradar grundsätzlich nicht mit – Engine-Hilfe während einer Partie gegen Menschen ist Betrug.</p>
+      </div>
+      <div id="panePgn" class="pane" hidden>
+        <p class="hint">PGN aus chess.com oder lichess (Partie → Teilen → PGN) oder eine FEN einfügen.
+          Du kannst auch einfach irgendwo auf der Seite einfügen (Strg+V).</p>
+        <textarea id="importText" rows="9" spellcheck="false" placeholder="[Event &quot;…&quot;]&#10;1. e4 e5 2. Sf3 …  oder  rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq - 0 1"></textarea>
+        <p class="error" id="importError" hidden></p>
+        <div class="dialog-actions">
+          <button type="button" class="btn ghost" id="btnSample">Beispiel: Kasparov – Topalov 1999</button>
+          <span class="grow"></span>
+          <button type="button" class="btn accent" id="btnImportGo">Laden</button>
+        </div>
+      </div>
+      <div class="dialog-actions end">
+        <button type="button" class="btn ghost" id="btnImportCancel">Schließen</button>
       </div>
     </div>
   </div>
@@ -4623,6 +4737,313 @@ if (typeof module !== 'undefined') module.exports = (typeof window !== 'undefine
 
 </script>
 <script>
+/* SK.coach – erklärt Züge in Klartext (Motive wie hängende Figur, Gabel, Matt),
+   teilt die Partie in Phasen, liest Uhrzeiten aus der PGN. Reine Logik, in Node testbar. */
+(function () {
+  var root = (typeof window !== 'undefined') ? window : globalThis;
+  root.SK = root.SK || {};
+
+  var lib = null, CL = null;
+  if (typeof module !== 'undefined' && typeof require === 'function') {
+    try { lib = require('./vendor/chess.js'); CL = require('./classify.js'); } catch (e) { lib = null; }
+  }
+  function L() { return lib || root.SK.ChessLib; }
+  function C() { return CL || root.SK.classify; }
+  function Chess(fen) { return new (L().Chess)(fen); }
+
+  var NOM = { p: 'der Bauer', n: 'der Springer', b: 'der Läufer', r: 'der Turm', q: 'die Dame', k: 'der König' };
+  var AKK = { p: 'den Bauern', n: 'den Springer', b: 'den Läufer', r: 'den Turm', q: 'die Dame', k: 'den König' };
+  var DE = { K: 'K', Q: 'D', R: 'T', B: 'L', N: 'S' };
+  function cap(s) { return s.charAt(0).toUpperCase() + s.slice(1); }
+  function deSan(san) { return san.replace(/[KQRBN]/g, function (x) { return DE[x]; }).replace(/O-O-O/, '0-0-0').replace(/O-O/, '0-0'); }
+  function uciMove(u) { return { from: u.slice(0, 2), to: u.slice(2, 4), promotion: u[4] || undefined }; }
+  function play(fen, uci) {
+    var c = Chess(fen), m = null;
+    try { m = c.move(uciMove(uci)); } catch (e) { m = null; }
+    return m ? { chess: c, move: m } : null;
+  }
+
+  /* ---------- Motive ---------- */
+
+  // Greift die Figur auf `sq` (Farbe `color`) mindestens zwei lohnende Ziele an?
+  // Ziel = König (Schach) oder Figur ≥ 3, die wertvoller oder ungedeckt ist.
+  function forkTargets(chess, sq, color) {
+    var p = chess.get(sq);
+    if (!p || p.color !== color) return [];
+    var V = C().VAL, opp = color === 'w' ? 'b' : 'w';
+    var out = [], b = chess.board();
+    for (var r = 0; r < 8; r++) for (var f = 0; f < 8; f++) {
+      var t = b[r][f];
+      if (!t || t.color !== opp) continue;
+      var ts = 'abcdefgh'[f] + (8 - r);
+      if (chess.attackers(ts, color).indexOf(sq) < 0) continue;
+      if (t.type === 'k') { out.push({ square: ts, type: 'k' }); continue; }
+      if (V[t.type] < 3) continue;
+      var defended = chess.attackers(ts, opp).length > 0;
+      if (V[t.type] > V[p.type] || !defended) out.push({ square: ts, type: t.type });
+    }
+    return out.length >= 2 ? out : [];
+  }
+
+  function targetList(ts) {
+    var names = ts.map(function (t) { return t.type === 'k' ? 'König' : NOM[t.type].split(' ')[1]; });
+    return names.length === 2 ? names[0] + ' und ' + names[1] : names.slice(0, -1).join(', ') + ' und ' + names[names.length - 1];
+  }
+
+  // Was macht ein Zug? → { mate, wins:{type, square}, fork:[…], check }
+  function motifOf(fen, uci) {
+    var pl = play(fen, uci);
+    if (!pl) return null;
+    var c = pl.chess, m = pl.move, V = C().VAL;
+    var out = { san: m.san, piece: m.piece, mate: c.isCheckmate(), check: c.inCheck(), wins: null, fork: [] };
+    if (m.captured) {
+      var net = V[m.captured] - C().see(c, m.to);
+      if (net >= 2) out.wins = { type: m.captured, square: m.to, net: net };
+    }
+    out.fork = forkTargets(c, m.to, m.color);
+    return out;
+  }
+
+  /* explain(ctx) → Liste deutscher Sätze. ctx = { fenBefore, move:{from,to,promotion,san,color}, cls, after (Analyse
+     der Folgestellung), notation:'de'|'en', clock:{left, spent} } */
+  function explain(ctx) {
+    var cls = ctx.cls, mv = ctx.move, out = [];
+    if (!cls || !cls.key) return out;
+    var N = ctx.notation === 'en' ? function (s) { return s; } : deSan;
+    var uci = mv.from + mv.to + (mv.promotion || '');
+    var fenAfter = ctx.fenAfter;
+    if (!fenAfter) { var pa = play(ctx.fenBefore, uci); fenAfter = pa ? pa.chess.fen() : null; }
+    var bad = /inaccuracy|mistake|blunder|miss/.test(cls.key);
+    var own = motifOf(ctx.fenBefore, uci);
+
+    if (!bad) {
+      if (own && own.mate) out.push('Schachmatt.');
+      else if (own && own.fork.length) out.push('Gabel: ' + cap(NOM[own.piece]) + ' greift ' + targetList(own.fork) + ' an.');
+      else if (own && own.wins && cls.key !== 'brilliant') out.push('Gewinnt ' + AKK[own.wins.type] + ' auf ' + own.wins.square + '.');
+      if (cls.playedScore && cls.playedScore.mate > 0 && !(own && own.mate)) out.push('Erzwingt Matt in ' + cls.playedScore.mate + '.');
+      return out;
+    }
+
+    // 1) Was passiert jetzt? (Widerlegung durch den Gegner)
+    var ref = ctx.after && ctx.after.lines && ctx.after.lines[0];
+    if (ref && ref.score && ref.score.mate > 0) {
+      out.push('Danach setzt der Gegner in ' + ref.score.mate + (ref.score.mate === 1 ? ' Zug' : ' Zügen') + ' matt' +
+               (ref.uci && fenAfter ? ' (' + N(sanOf(fenAfter, ref.uci)) + ')' : '') + '.');
+    } else if (ref && ref.uci && fenAfter) {
+      var rm = motifOf(fenAfter, ref.uci);
+      if (rm && rm.wins && rm.wins.square) {
+        var movedHangs = rm.wins.square === mv.to;
+        out.push((movedHangs ? cap(NOM[rm.wins.type]) + ' auf ' + rm.wins.square + ' steht ungedeckt' :
+                  cap(NOM[rm.wins.type]) + ' auf ' + rm.wins.square + ' hängt') + ' – ' + N(rm.san) + ' gewinnt Material.');
+      } else if (rm && rm.fork.length) {
+        out.push('Der Gegner hat die Gabel ' + N(rm.san) + ' auf ' + targetList(rm.fork) + '.');
+      }
+    }
+    // 2) Was wäre möglich gewesen? (bester Zug)
+    if (cls.bestUci) {
+      var bm = motifOf(ctx.fenBefore, cls.bestUci);
+      var bs = N(bm ? bm.san : cls.bestUci);
+      if (cls.bestScore && cls.bestScore.mate > 0) out.push(bs + ' hätte ' + (cls.bestScore.mate === 1 ? 'sofort' : 'in ' + cls.bestScore.mate + ' Zügen') + ' mattgesetzt.');
+      else if (bm && bm.fork.length) out.push(bs + ' wäre eine Gabel auf ' + targetList(bm.fork) + ' gewesen.');
+      else if (bm && bm.wins) out.push(bs + ' hätte ' + AKK[bm.wins.type] + ' auf ' + bm.wins.square + ' gewonnen.');
+    }
+    // 3) Uhr
+    if (ctx.clock && ctx.clock.spent != null && ctx.clock.spent <= 3 && (cls.key === 'blunder' || cls.key === 'mistake')) {
+      out.push('Gespielt nach nur ' + Math.max(0, Math.round(ctx.clock.spent)) + ' s Bedenkzeit – hier hätte sich Nachdenken gelohnt.');
+    } else if (ctx.clock && ctx.clock.left != null && ctx.clock.left < 30 && bad) {
+      out.push('In Zeitnot gespielt (' + fmtClock(ctx.clock.left) + ' auf der Uhr).');
+    }
+    return out;
+  }
+
+  function sanOf(fen, uci) { var p = play(fen, uci); return p ? p.move.san : uci; }
+
+  /* ---------- Partiephasen ---------- */
+
+  function majorsMinors(fen) {
+    var n = 0, board = fen.split(' ')[0];
+    for (var i = 0; i < board.length; i++) if ('nbrqNBRQ'.indexOf(board[i]) >= 0) n++;
+    return n;
+  }
+  // 'opening' | 'middlegame' | 'endgame' für die Stellung VOR einem Zug
+  function phaseOf(fen, inBook) {
+    var mm = majorsMinors(fen);
+    if (mm <= 6) return 'endgame';
+    var fullmove = +fen.split(' ')[5] || 1;
+    if (inBook || (fullmove <= 10 && mm >= 12)) return 'opening';
+    return 'middlegame';
+  }
+  var PHASES = { opening: 'Eröffnung', middlegame: 'Mittelspiel', endgame: 'Endspiel' };
+
+  /* ---------- Uhr ---------- */
+
+  function parseClk(comment) {
+    var m = /\[%clk\s+(\d+):(\d{1,2}):(\d{1,2}(?:\.\d+)?)\]/.exec(comment || '');
+    if (!m) return null;
+    return +m[1] * 3600 + +m[2] * 60 + parseFloat(m[3]);
+  }
+  // "600+2" → {base:600, inc:2}; "1/259200" (Fernschach) → null
+  function parseTimeControl(tc) {
+    var m = /^(\d+)(?:\+(\d+))?$/.exec(String(tc || '').trim());
+    return m ? { base: +m[1], inc: +(m[2] || 0) } : null;
+  }
+  function fmtClock(s) {
+    if (s == null) return '';
+    s = Math.max(0, s);
+    var h = Math.floor(s / 3600), mnt = Math.floor(s % 3600 / 60), sec = Math.floor(s % 60);
+    var frac = s < 10 ? '.' + Math.floor((s * 10) % 10) : '';
+    return (h ? h + ':' + String(mnt).padStart(2, '0') : mnt) + ':' + String(sec).padStart(2, '0') + frac;
+  }
+  /* clocks: Restzeit nach jedem Zug (Sekunden oder null), colors: 'w'/'b' je Zug
+     → spent: verbrauchte Zeit je Zug (null, wenn unbekannt) */
+  function timeSpent(clocks, colors, tc) {
+    var last = { w: tc ? tc.base : null, b: tc ? tc.base : null }, inc = tc ? tc.inc : 0;
+    return clocks.map(function (c, i) {
+      var col = colors[i], prev = last[col];
+      last[col] = c;
+      if (c == null || prev == null) return null;
+      return Math.round(Math.max(0, prev - c + inc) * 10) / 10;
+    });
+  }
+
+  root.SK.coach = {
+    explain: explain, motifOf: motifOf, forkTargets: forkTargets, phaseOf: phaseOf, PHASES: PHASES,
+    parseClk: parseClk, parseTimeControl: parseTimeControl, timeSpent: timeSpent, fmtClock: fmtClock, deSan: deSan
+  };
+})();
+if (typeof module !== 'undefined') module.exports = (typeof window !== 'undefined' ? window : globalThis).SK.coach;
+
+</script>
+<script>
+/* SK.connect – holt deine BEENDETEN Partien von chess.com und lichess (öffentliche APIs,
+   kein Login). Laufende Partien werden bewusst nie abgefragt: Engine-Hilfe während einer
+   Partie gegen Menschen ist Betrug. Auch die „aktuelle Partie“-Endpunkte beider Seiten
+   (lichess /current-game, chess.com /games bzw. /to-move) werden nicht verwendet. */
+(function () {
+  var root = (typeof window !== 'undefined') ? window : globalThis;
+  root.SK = root.SK || {};
+
+  var blockedHosts = {};
+  if (typeof document !== 'undefined') {
+    // Seiten mit strenger CSP (z. B. gehostete Vorschau) blockieren fremde APIs → erkennbar machen
+    document.addEventListener('securitypolicyviolation', function (e) {
+      try { blockedHosts[new URL(e.blockedURI).host] = true; } catch (x) { /* egal */ }
+    });
+  }
+
+  function ConnectError(code, message) { var e = new Error(message); e.code = code; return e; }
+  function sleep(ms) { return new Promise(function (r) { setTimeout(r, ms); }); }
+
+  // fetch mit Wiederholung (chess.com antwortet bei Last gelegentlich ohne CORS-Header)
+  function getText(url, opts, fetchImpl) {
+    var f = fetchImpl || root.fetch.bind(root);
+    var host = new URL(url).host, tries = 0;
+    function attempt() {
+      tries++;
+      return f(url, opts || {}).then(function (res) {
+        if (res.status === 404) throw ConnectError('notfound', 'Benutzer nicht gefunden.');
+        if (res.status === 429) throw ConnectError('ratelimit', 'Zu viele Anfragen – bitte eine Minute warten.');
+        if (!res.ok) throw ConnectError('http', 'Server antwortet mit ' + res.status + '.');
+        return res.text();
+      }, function (err) {
+        if (blockedHosts[host]) throw ConnectError('blocked', 'Diese Seite darf ' + host + ' nicht abfragen.');
+        throw ConnectError('network', 'Keine Verbindung zu ' + host + '.');
+      }).catch(function (err) {
+        if (err.code === 'network' && tries < 3) return sleep(600 * tries).then(attempt);
+        throw err;
+      });
+    }
+    return attempt();
+  }
+
+  function resultOf(w, b) {
+    if (w === 'win') return '1-0';
+    if (b === 'win') return '0-1';
+    return '1/2-1/2';
+  }
+  function userSide(game, user) {
+    var u = user.toLowerCase();
+    if (game.white.name.toLowerCase() === u) return 'w';
+    if (game.black.name.toLowerCase() === u) return 'b';
+    return null;
+  }
+  function withUser(g, user) {
+    g.userColor = userSide(g, user);
+    if (g.userColor) {
+      var r = g.result;
+      g.userResult = r === '1/2-1/2' ? 'draw' : ((r === '1-0') === (g.userColor === 'w') ? 'win' : 'loss');
+    }
+    return g;
+  }
+
+  /* chess.com: Monatsarchive (nur beendete Partien), neueste zuerst */
+  function chesscom(user, opts, fetchImpl) {
+    opts = opts || {};
+    var limit = opts.limit || 20, name = encodeURIComponent(user.trim().toLowerCase());
+    var base = 'https://api.chess.com/pub/player/' + name + '/games/archives';
+    return getText(base, {}, fetchImpl).then(function (t) {
+      var archives = (JSON.parse(t).archives || []).slice().reverse();
+      var games = [];
+      function next(i) {
+        if (i >= archives.length || i >= (opts.months || 2) || games.length >= limit) return Promise.resolve(games);
+        return getText(archives[i], {}, fetchImpl).then(function (t2) {
+          (JSON.parse(t2).games || []).forEach(function (g) {
+            if (g.rules && g.rules !== 'chess') return;
+            if (!g.pgn || !g.end_time) return; // Archive enthalten nur beendete Partien; sicherheitshalber prüfen
+            games.push(withUser({
+              site: 'chesscom', id: g.uuid || g.url, url: g.url, pgn: g.pgn,
+              white: { name: g.white.username, rating: g.white.rating },
+              black: { name: g.black.username, rating: g.black.rating },
+              result: resultOf(g.white.result, g.black.result),
+              end: g.end_time * 1000, timeControl: g.time_control, speed: g.time_class, rated: !!g.rated
+            }, user));
+          });
+          return next(i + 1);
+        });
+      }
+      return next(0);
+    }).then(function (games) {
+      games.sort(function (a, b) { return b.end - a.end; });
+      return games.slice(0, limit);
+    });
+  }
+
+  /* lichess: /api/games/user mit finished=true, ongoing=false */
+  function lichess(user, opts, fetchImpl) {
+    opts = opts || {};
+    var limit = opts.limit || 20;
+    var url = 'https://lichess.org/api/games/user/' + encodeURIComponent(user.trim()) +
+              '?max=' + limit + '&finished=true&ongoing=false&pgnInJson=true&clocks=true&opening=true&moves=true';
+    return getText(url, { headers: { Accept: 'application/x-ndjson' } }, fetchImpl).then(function (t) {
+      return t.split('\n').filter(function (l) { return l.trim(); }).map(function (l) { return JSON.parse(l); })
+        .filter(function (g) { return (g.variant === 'standard' || g.variant === 'fromPosition') && g.pgn && g.status !== 'started' && g.status !== 'created'; })
+        .map(function (g) {
+          var pw = g.players.white || {}, pb = g.players.black || {};
+          var name = function (p) { return (p.user && p.user.name) || (p.aiLevel ? 'Stockfish Stufe ' + p.aiLevel : 'Anonym'); };
+          var tc = g.clock ? g.clock.initial + '+' + g.clock.increment : null;
+          return withUser({
+            site: 'lichess', id: g.id, url: 'https://lichess.org/' + g.id, pgn: g.pgn,
+            white: { name: name(pw), rating: pw.rating }, black: { name: name(pb), rating: pb.rating },
+            result: g.winner === 'white' ? '1-0' : g.winner === 'black' ? '0-1' : '1/2-1/2',
+            end: g.lastMoveAt || g.createdAt, timeControl: tc, speed: g.speed, rated: !!g.rated
+          }, user);
+        });
+    });
+  }
+
+  function fetchGames(site, user, opts, fetchImpl) {
+    if (!user || !user.trim()) return Promise.reject(ConnectError('input', 'Bitte einen Benutzernamen eingeben.'));
+    return site === 'lichess' ? lichess(user, opts, fetchImpl) : chesscom(user, opts, fetchImpl);
+  }
+
+  var SPEED = { bullet: 'Bullet', blitz: 'Blitz', rapid: 'Schnellschach', classical: 'Klassisch', daily: 'Fernschach', correspondence: 'Fernschach', ultraBullet: 'Bullet' };
+
+  root.SK.connect = { fetchGames: fetchGames, chesscom: chesscom, lichess: lichess, SPEED: SPEED, _blocked: blockedHosts };
+})();
+if (typeof module !== 'undefined') module.exports = (typeof window !== 'undefined' ? window : globalThis).SK.connect;
+
+</script>
+<script>
 /* SK.engine – Stockfish im Web Worker + Analyse-Planer.
    Engine-Kandidaten werden der Reihe nach probiert: lokale Dateien (engine/…), dann CDN.
    Der Planer verteilt die eine Engine auf: KI-Zug > aktuelle Stellung (live) > Partie-Review. */
@@ -5310,7 +5731,8 @@ if (typeof module !== 'undefined') module.exports = (typeof window !== 'undefine
   var DEFAULTS = {
     liveMax: 22, reviewDepth: 16, lines: 3, notation: 'de',
     arrowBest: true, arrowAlt: false, arrowBetter: true, badges: true, autoReview: true,
-    hints: true, humanColor: 'w', level: 'club'
+    hints: true, humanColor: 'w', level: 'club',
+    connSite: 'chesscom', connUser: '', connAuto: false, connLast: 0
   };
   var SAMPLE = {
     headers: { Event: 'Hoogovens', Site: 'Wijk aan Zee', Date: '1999.01.20', White: 'Garri Kasparow', Black: 'Wesselin Topalow', Result: '1-0' },
@@ -5320,8 +5742,12 @@ if (typeof module !== 'undefined') module.exports = (typeof window !== 'undefine
 
   var state = {
     startFen: START, line: [], main: null, ply: 0, mode: 'analyse', orientation: 'w',
-    headers: {}, settings: Object.assign({}, DEFAULTS), sample: false
+    headers: {}, settings: Object.assign({}, DEFAULTS), sample: false,
+    user: null,   // { name, color } – wer „du“ in der geladenen Partie bist
+    game: null    // { site, id, url } – Herkunft der geladenen Partie
   };
+  var train = null; // Fehler-Training, siehe unten
+  var CO = SK.coach;
 
   /* ---------- Stellungs-Hilfen ---------- */
 
@@ -5349,6 +5775,11 @@ if (typeof module !== 'undefined') module.exports = (typeof window !== 'undefine
     return p;
   }
   function fenAt(i) { return i === 0 ? state.startFen : state.line[i - 1].fenAfter; }
+  // Stellung, die gerade auf dem Brett steht (im Training die Trainingsstellung)
+  function viewFen() {
+    if (train && train.items[train.i]) return train.attempt ? train.attempt.fenAfter : train.items[train.i].fen;
+    return fenAt(state.ply);
+  }
 
   var nextId = 1;
   function makeMove(fenBefore, input) {
@@ -5430,7 +5861,7 @@ if (typeof module !== 'undefined') module.exports = (typeof window !== 'undefine
   };
 
   function updateEngine() {
-    var fen = fenAt(state.ply), pi = posInfo(fen);
+    var fen = viewFen(), pi = posInfo(fen);
     for (var i = 0; i <= state.line.length; i++) {
       var f = fenAt(i), p = posInfo(f);
       if (p.terminal) an.markTerminal(f, p.terminal);
@@ -5460,6 +5891,7 @@ if (typeof module !== 'undefined') module.exports = (typeof window !== 'undefine
     var out = [], prev = null, chain = bookStart();
     for (var i = 0; i < state.line.length; i++) {
       var mv = state.line[i];
+      if (!mv.phase) mv.phase = CO.phaseOf(mv.fenBefore, chain && i > 0);
       chain = chain && !!SK.book.lookup(mv.fenAfter);
       var r = classifyOne(mv, prev, i > 0 ? state.line[i - 1] : null, chain);
       out.push(r);
@@ -5583,13 +6015,16 @@ if (typeof module !== 'undefined') module.exports = (typeof window !== 'undefine
   function newGame() {
     cancelAI();
     state.startFen = START; state.line = []; state.main = null; state.ply = 0;
-    state.headers = {}; state.sample = false;
+    state.headers = {}; state.sample = false; state.user = null; state.game = null;
+    stopTraining(true);
     if (state.mode === 'play') state.orientation = state.settings.humanColor;
     changed();
   }
 
-  function loadLine(startFen, sans, headers, ply) {
+  function loadLine(startFen, sans, headers, ply, opts) {
+    opts = opts || {};
     cancelAI();
+    stopTraining(true);
     var fen = startFen, line = [];
     for (var i = 0; i < sans.length; i++) {
       var mv = makeMove(fen, sans[i]);
@@ -5599,12 +6034,23 @@ if (typeof module !== 'undefined') module.exports = (typeof window !== 'undefine
     state.startFen = startFen; state.line = line; state.main = null;
     state.ply = ply == null ? 0 : Math.min(ply, line.length);
     state.headers = headers || {};
+    state.user = opts.user || null;
+    state.game = opts.game || null;
+    if (opts.clocks) attachClocks(line, opts.clocks, state.headers.TimeControl);
+    if (state.user && state.user.color) state.orientation = state.user.color;
     if (state.mode === 'play') setMode('analyse', true);
     changed();
   }
 
+  // Restzeit nach jedem Zug (aus [%clk …]) und daraus die verbrauchte Bedenkzeit
+  function attachClocks(line, clocks, tcHeader) {
+    if (!clocks || !clocks.some(function (c) { return c != null; })) return;
+    var spent = CO.timeSpent(clocks, line.map(function (m) { return m.color; }), CO.parseTimeControl(tcHeader));
+    line.forEach(function (m, i) { m.clock = clocks[i] != null ? clocks[i] : null; m.spent = spent[i]; });
+  }
+
   // PGN oder FEN laden → Fehlertext oder null
-  function importText(txt) {
+  function importText(txt, meta) {
     txt = (txt || '').trim();
     if (!txt) return 'Bitte eine PGN oder FEN einfügen.';
     var fenLike = /^[pnbrqkPNBRQK1-8]+(\/[pnbrqkPNBRQK1-8]+){7}\s+[wb]\b/.test(txt);
@@ -5628,8 +6074,13 @@ if (typeof module !== 'undefined') module.exports = (typeof window !== 'undefine
     var headers = c.getHeaders ? c.getHeaders() : {};
     var start = hist.length ? hist[0].before : c.fen();
     if (!hist.length && !headers.FEN) return 'In der PGN wurden keine Züge gefunden.';
+    var comments = {};
+    try { (c.getComments() || []).forEach(function (x) { comments[x.fen] = x.comment; }); } catch (e) { comments = {}; }
+    var clocks = hist.map(function (m) { return CO.parseClk(comments[m.after]); });
     state.sample = false;
-    loadLine(start, hist.map(function (m) { return m.san; }), headers, hist.length);
+    meta = meta || {};
+    loadLine(start, hist.map(function (m) { return m.san; }), headers, meta.ply != null ? meta.ply : hist.length,
+             { clocks: clocks, user: meta.user, game: meta.game });
     return null;
   }
 
@@ -5655,7 +6106,8 @@ if (typeof module !== 'undefined') module.exports = (typeof window !== 'undefine
         v: 1, startFen: state.startFen, moves: state.line.map(function (m) { return m.uci; }),
         main: state.main ? { moves: state.main.line.map(function (m) { return m.uci; }), ply: state.main.ply } : null,
         ply: state.ply, mode: state.mode, orientation: state.orientation, headers: state.headers,
-        settings: state.settings, sample: state.sample
+        settings: state.settings, sample: state.sample, user: state.user, game: state.game,
+        clocks: state.line.some(function (m) { return m.clock != null; }) ? state.line.map(function (m) { return m.clock != null ? m.clock : null; }) : null
       };
       localStorage.setItem(STORE, JSON.stringify(data));
     } catch (e) { /* privat / blockiert – egal */ }
@@ -5684,6 +6136,9 @@ if (typeof module !== 'undefined') module.exports = (typeof window !== 'undefine
       state.orientation = d.orientation === 'b' ? 'b' : 'w';
       state.headers = d.headers || {};
       state.sample = !!d.sample;
+      state.user = d.user || null;
+      state.game = d.game || null;
+      if (d.clocks && !state.main) attachClocks(state.line, d.clocks, state.headers.TimeControl);
       return true;
     } catch (e) { return false; }
   }
@@ -5701,8 +6156,9 @@ if (typeof module !== 'undefined') module.exports = (typeof window !== 'undefine
   }
 
   function render() {
-    var fen = fenAt(state.ply), pi = posInfo(fen), entry = an.entry(fen);
     var results = classifyAll();
+    if (train) { renderTrain(results); return; }
+    var fen = fenAt(state.ply), pi = posInfo(fen), entry = an.entry(fen);
     var last = state.ply > 0 ? state.line[state.ply - 1] : null;
     var cls = last ? results[state.ply - 1] : null;
     var engineOn = showEngineNow();
@@ -5814,7 +6270,7 @@ if (typeof module !== 'undefined') module.exports = (typeof window !== 'undefine
   var PIECE = { p: 'Der Bauer', n: 'Der Springer', b: 'Der Läufer', r: 'Der Turm', q: 'Die Dame' };
   function fmtW(fen, score) { return C.fmtScore(whiteScore(fen, score)); }
 
-  function verdictText(mv, cls) {
+  function verdictText(mv, cls, hasCoach) {
     var fb = mv.fenBefore;
     var best = cls.bestUci ? nota(uciSan(fb, cls.bestUci)) : null;
     var bestEv = cls.bestScore ? fmtW(fb, cls.bestScore) : '';
@@ -5848,7 +6304,7 @@ if (typeof module !== 'undefined') module.exports = (typeof window !== 'undefine
       default: // inaccuracy, mistake, blunder
         var thr = '';
         var ea = an.entry(mv.fenAfter);
-        if ((cls.key === 'blunder' || cls.key === 'mistake') && ea && ea.lines[0]) {
+        if ((cls.key === 'blunder' || cls.key === 'mistake') && ea && ea.lines[0] && !hasCoach) {
           thr = ' Die Widerlegung: ' + pvText(mv.fenAfter, ea.lines[0].pv, 4) + '.';
         }
         return 'Besser war <b>' + esc(best) + '</b> (' + bestEv + '). Gewinnchance −' + lossTxt + ' %.' + thr;
@@ -5893,7 +6349,9 @@ if (typeof module !== 'undefined') module.exports = (typeof window !== 'undefine
       var cat = C.CATS[cls.key];
       html = '<div class="v-icon c-' + cls.key + '">' + cat.sym + '</div>' +
              '<div class="v-title"><span class="san">' + esc(moveLabel(last)) + '</span> ' + article(cls.key) + '</div>' +
-             '<div class="v-text">' + verdictText(last, cls) + '</div>';
+             '<div class="v-text">' + verdictText(last, cls, coachFor(last, cls).length > 0) + '</div>';
+      var tips = coachFor(last, cls);
+      if (tips.length) html += '<ul class="v-coach">' + tips.map(function (t) { return '<li>' + esc(t) + '</li>'; }).join('') + '</ul>';
       if (cls.wpBefore != null && cls.wpAfter != null && cls.key !== 'forced' && cls.key !== 'book') {
         var b = Math.round(cls.wpBefore), a = Math.round(cls.wpAfter);
         html += '<div class="v-wp" title="Gewinnchance des ziehenden Spielers: mit dem besten Zug → mit dem gespielten Zug">' +
@@ -6003,6 +6461,7 @@ if (typeof module !== 'undefined') module.exports = (typeof window !== 'undefine
     }).join('');
     $('counts').innerHTML = '<thead><tr><td class="n">Weiß</td><td></td><td class="n">Schwarz</td></tr></thead><tbody>' + rows + '</tbody>';
     renderGraph(results);
+    renderInsights(results);
   }
 
   // Bewertungsverlauf: Gewinnchance von Weiß pro Halbzug
@@ -6070,16 +6529,389 @@ if (typeof module !== 'undefined') module.exports = (typeof window !== 'undefine
   }
 
   function renderControls(pi, entry, engineOn) {
-    $('btnFirst').disabled = $('btnPrev').disabled = state.ply === 0;
-    $('btnNext').disabled = $('btnLast').disabled = state.ply >= state.line.length;
+    $('btnFirst').disabled = $('btnPrev').disabled = state.ply === 0 || !!train;
+    $('btnNext').disabled = $('btnLast').disabled = state.ply >= state.line.length || !!train;
     var canBest = !pi.terminal && entry && entry.lines.length && engineOn &&
       (state.mode === 'analyse' || (state.ply === state.line.length && pi.turn === state.settings.humanColor));
-    $('btnBest').disabled = !canBest;
+    $('btnBest').disabled = !canBest || !!train;
     $('varBanner').hidden = !state.main;
     $('modeAnalyse').setAttribute('aria-selected', String(state.mode === 'analyse'));
     $('modePlay').setAttribute('aria-selected', String(state.mode === 'play'));
     $('playBox').hidden = state.mode !== 'play';
     $('btnTakeback').disabled = !state.line.length || ai.thinking;
+  }
+
+
+  /* ---------- Coach-Erklärungen ---------- */
+
+  var coachMemo = new Map();
+  function coachFor(mv, cls) {
+    if (!mv || !cls) return [];
+    var ea = an.entry(mv.fenAfter);
+    var k = mv.id + '|' + cls.key + '|' + (cls.depth || 0) + '|' + (ea ? ea.depth : 0) + '|' + state.settings.notation;
+    var hit = coachMemo.get(k);
+    if (hit) return hit;
+    var out = [];
+    try {
+      out = CO.explain({ fenBefore: mv.fenBefore, fenAfter: mv.fenAfter, move: mv, cls: cls, after: ea,
+                         notation: state.settings.notation, clock: { left: mv.clock, spent: mv.spent } });
+    } catch (e) { out = []; }
+    if (coachMemo.size > 3000) coachMemo.clear();
+    coachMemo.set(k, out);
+    return out;
+  }
+
+  /* ---------- Review: Phasen, Schlüsselmomente, Zeit ---------- */
+
+  function phaseStats(results) {
+    var out = {};
+    ['opening', 'middlegame', 'endgame'].forEach(function (ph) {
+      out[ph] = {};
+      ['w', 'b'].forEach(function (c) {
+        var moves = [], done = true;
+        state.line.forEach(function (m, i) {
+          if (m.phase !== ph || m.color !== c) return;
+          var r = results[i];
+          if (!r) { done = false; return; }
+          if (r.accuracy != null) moves.push(r.accuracy);
+        });
+        out[ph][c] = { n: moves.length, done: done,
+                       acc: moves.length ? moves.reduce(function (a, b) { return a + b; }, 0) / moves.length : null };
+      });
+    });
+    return out;
+  }
+  function grade(acc) {
+    if (acc == null) return { cls: 'none', txt: '–' };
+    if (acc >= 90) return { cls: 'top', txt: 'stark' };
+    if (acc >= 80) return { cls: 'ok', txt: 'gut' };
+    if (acc >= 65) return { cls: 'mid', txt: 'okay' };
+    return { cls: 'low', txt: 'schwach' };
+  }
+
+  function renderInsights(results) {
+    // Phasen
+    var ps = phaseStats(results), rows = '';
+    ['opening', 'middlegame', 'endgame'].forEach(function (ph) {
+      var w = ps[ph].w, b = ps[ph].b;
+      if (!w.n && !b.n && w.done && b.done) return;
+      function cell(x) {
+        if (!x.done) return '<td class="ph-cell"><span class="ph-grade none">…</span></td>';
+        var g = grade(x.acc);
+        return '<td class="ph-cell"><span class="ph-grade ' + g.cls + '">' + (x.acc == null ? '–' : x.acc.toFixed(0)) + '</span><small>' + g.txt + '</small></td>';
+      }
+      rows += '<tr><td class="lab">' + CO.PHASES[ph] + '</td>' + cell(w) + cell(b) + '</tr>';
+    });
+    $('phases').innerHTML = rows ? '<thead><tr><td></td><td class="ph-cell">Weiß</td><td class="ph-cell">Schwarz</td></tr></thead><tbody>' + rows + '</tbody>' : '';
+
+    // Schlüsselmomente
+    var items = [];
+    state.line.forEach(function (m, i) {
+      var r = results[i];
+      if (!r || !/brilliant|great|miss|mistake|blunder/.test(r.key)) return;
+      var tip = coachFor(m, r)[0] || '';
+      var clock = m.clock != null ? '<span class="km-clock" title="Restzeit nach dem Zug">' + CO.fmtClock(m.clock) + '</span>' : '';
+      items.push('<li><button type="button" class="km' + (i === state.ply - 1 ? ' cur' : '') + '" data-ply="' + (i + 1) + '">' +
+        '<span class="sym c-' + r.key + '">' + C.CATS[r.key].sym + '</span>' +
+        '<span class="km-main"><b>' + esc(moveLabel(m)) + '</b> ' + C.CATS[r.key].label + (tip ? '<small>' + esc(tip) + '</small>' : '') + '</span>' +
+        clock + '</button></li>');
+    });
+    $('moments').innerHTML = items.length ? items.join('') : '<li class="km-empty">Noch keine Schlüsselmomente – sie erscheinen, sobald die Züge bewertet sind.</li>';
+
+    // Zeit (nur mit Uhrzeiten aus der PGN)
+    var hasClock = state.line.some(function (m) { return m.clock != null; });
+    $('timeBox').hidden = !hasClock;
+    if (hasClock) {
+      var tc = CO.parseTimeControl(state.headers.TimeControl);
+      var t = { w: { spent: [], press: 0, fast: 0, err: 0 }, b: { spent: [], press: 0, fast: 0, err: 0 } };
+      state.line.forEach(function (m, i) {
+        var x = t[m.color], r = results[i];
+        if (m.spent != null) x.spent.push(m.spent);
+        if (!r || !/mistake|blunder|miss/.test(r.key)) return;
+        x.err++;
+        var low = m.clock != null && (m.clock < 30 || (tc && m.clock < tc.base * 0.1));
+        if (low) x.press++;
+        else if (m.spent != null && m.spent <= 3) x.fast++;
+      });
+      function avg(a) { return a.length ? CO.fmtClock(a.reduce(function (p, q) { return p + q; }, 0) / a.length) : '–'; }
+      $('timeStats').innerHTML =
+        '<tr><td class="lab">Ø Bedenkzeit pro Zug</td><td class="n">' + avg(t.w.spent) + '</td><td class="n">' + avg(t.b.spent) + '</td></tr>' +
+        '<tr><td class="lab">Fehler in Zeitnot</td><td class="n">' + t.w.press + '/' + t.w.err + '</td><td class="n">' + t.b.press + '/' + t.b.err + '</td></tr>' +
+        '<tr><td class="lab">Fehler nach ≤ 3 s</td><td class="n">' + t.w.fast + '/' + t.w.err + '</td><td class="n">' + t.b.fast + '/' + t.b.err + '</td></tr>';
+    }
+
+    // Training
+    var tc2 = trainColor(), cand = trainItems(results, tc2);
+    var btn = $('btnTrain');
+    btn.disabled = !cand.length;
+    var who = state.user && state.user.color === tc2 ? 'Meine Fehler' : 'Fehler von ' + (tc2 === 'w' ? 'Weiß' : 'Schwarz');
+    btn.textContent = cand.length ? who + ' trainieren (' + cand.length + ')' : who + ': nichts zu trainieren';
+  }
+
+  /* ---------- Fehler-Training (wie „Retry“ / „Lerne aus deinen Fehlern“) ---------- */
+
+  function trainColor() {
+    if (state.user && state.user.color) return state.user.color;
+    if (state.mode === 'play') return state.settings.humanColor;
+    return state.orientation;
+  }
+  function trainItems(results, color) {
+    var out = [];
+    state.line.forEach(function (m, i) {
+      var r = results[i];
+      if (!r || m.color !== color || !r.bestUci || !/mistake|blunder|miss/.test(r.key)) return;
+      out.push({ idx: i, fen: m.fenBefore, played: m, cls: r, color: m.color });
+    });
+    return out;
+  }
+  function startTraining() {
+    var items = trainItems(classifyAll(), trainColor());
+    if (!items.length) return;
+    cancelAI();
+    train = { items: items, i: 0, attempt: null, status: 'try', msg: '', solved: 0, firstTry: true, hint: false };
+    state.orientation = items[0].color;
+    updateEngine(); render();
+    var tc = $('verdict'); if (tc && tc.scrollIntoView) tc.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+  }
+  function stopTraining(silent) {
+    if (!train) return;
+    clearTimeout(train.timer);
+    train = null;
+    if (!silent) { updateEngine(); render(); }
+  }
+  function trainNext() {
+    if (!train) return;
+    clearTimeout(train.timer);
+    train.i++; train.attempt = null; train.status = train.i >= train.items.length ? 'done' : 'try';
+    train.msg = ''; train.firstTry = true; train.hint = false;
+    updateEngine(); render();
+  }
+  function trainMove(input) {
+    var it = train.items[train.i];
+    var mv = makeMove(it.fen, input);
+    if (!mv) return;
+    train.attempt = { uci: mv.uci, san: mv.san, fenAfter: mv.fenAfter, from: mv.from, to: mv.to };
+    train.status = 'checking';
+    animateNext = { from: mv.from, to: mv.to };
+    updateEngine(); judgeAttempt(); render();
+  }
+  // Gilt ein Versuch als gelöst? Höchstens 5 % Gewinnchance schlechter als der beste Zug.
+  function judgeAttempt() {
+    if (!train || train.status !== 'checking') return;
+    var it = train.items[train.i], att = train.attempt;
+    var eb = an.entry(it.fen);
+    var bestWp = eb && eb.lines[0] ? C.scoreWp(eb.lines[0].score) : it.cls.wpBefore;
+    var wp = null;
+    if (att.uci === it.played.uci) wp = -1; // der Partiezug selbst
+    else if (posInfo(att.fenAfter).terminal === 'mate') wp = 100;
+    else if (posInfo(att.fenAfter).terminal === 'draw') wp = 50;
+    else {
+      var line = eb ? eb.lines.filter(function (l) { return l.uci === att.uci; })[0] : null;
+      if (line) wp = C.scoreWp(line.score);
+      else {
+        var ea = an.entry(att.fenAfter);
+        if (!ea || ea.depth < MIN_D || !ea.lines.length) return; // weiter rechnen lassen
+        wp = 100 - C.scoreWp(ea.lines[0].score);
+      }
+    }
+    var loss = wp < 0 ? 100 : Math.max(0, bestWp - wp);
+    var san = nota(att.san);
+    if (loss < 5) {
+      train.status = 'right';
+      if (train.firstTry && !train.hint) train.solved++;
+      train.msg = san + (att.uci === it.cls.bestUci ? ' ist der beste Zug!' : ' ist genauso gut – gelöst!');
+    } else {
+      train.status = 'wrong'; train.firstTry = false;
+      train.msg = wp < 0 ? san + ' war der Zug aus der Partie. Such weiter.' : san + ' kostet ' + loss.toFixed(0) + ' % Gewinnchance. Versuch es nochmal.';
+      train.timer = setTimeout(function () {
+        if (!train || train.status !== 'wrong') return;
+        train.attempt = null; train.status = 'try';
+        updateEngine(); render();
+      }, 1100);
+    }
+  }
+  function trainReveal() {
+    if (!train) return;
+    clearTimeout(train.timer);
+    var it = train.items[train.i];
+    var mv = makeMove(it.fen, uciToMove(it.cls.bestUci));
+    train.firstTry = false;
+    train.attempt = mv ? { uci: mv.uci, san: mv.san, fenAfter: mv.fenAfter, from: mv.from, to: mv.to } : null;
+    train.status = 'shown';
+    train.msg = 'Lösung: ' + (mv ? nota(mv.san) : it.cls.bestUci) + '.';
+    if (mv) animateNext = { from: mv.from, to: mv.to };
+    updateEngine(); render();
+  }
+
+  function renderTrain(results) {
+    judgeAttempt();
+    var t = train, it = t.items[t.i];
+    var fen = viewFen(), pi = posInfo(fen);
+    var el = $('verdict'), html;
+    if (t.status === 'done' || !it) {
+      html = '<div class="v-icon c-best">✓</div><div class="v-title">Training beendet</div>' +
+        '<div class="v-text"><b>' + t.solved + ' von ' + t.items.length + '</b> auf Anhieb gelöst.</div>' +
+        '<div class="v-actions"><button type="button" class="btn accent small" data-t="again">Nochmal</button>' +
+        '<button type="button" class="btn ghost small" data-t="stop">Zurück zur Partie</button></div>';
+      el.innerHTML = html;
+      board.render({ fen: fenAt(state.ply), orientation: state.orientation, lastMove: null, arrows: [], interactive: false });
+    } else {
+      var att = t.attempt;
+      var arrows = [];
+      if (t.status === 'right' || t.status === 'shown') arrows.push(Object.assign(uciToMove(it.cls.bestUci), { kind: 'better' }));
+      var badge = null;
+      if (att && (t.status === 'right' || t.status === 'wrong' || t.status === 'shown')) {
+        var k = t.status === 'wrong' ? 'mistake' : 'best';
+        badge = { square: att.to, key: k, sym: t.status === 'wrong' ? '✕' : '✓', label: '' };
+      }
+      var prev = it.idx > 0 ? state.line[it.idx - 1] : null;
+      board.render({
+        fen: fen, orientation: state.orientation,
+        lastMove: att ? { from: att.from, to: att.to } : (prev ? { from: prev.from, to: prev.to } : null),
+        check: pi.king, arrows: arrows, badge: badge, animate: animateNext,
+        interactive: t.status === 'try' && !pi.terminal
+      });
+      animateNext = null;
+      var hintTxt = '';
+      if (t.hint) {
+        var bm = makeMove(it.fen, uciToMove(it.cls.bestUci));
+        if (bm) hintTxt = '<div class="v-hint">Tipp: Zieh mit ' + ({ p: 'einem Bauern', n: 'dem Springer', b: 'dem Läufer', r: 'dem Turm', q: 'der Dame', k: 'dem König' }[bm.piece]) + ' (von ' + bm.from + ').</div>';
+      }
+      var state2 = { try: '', checking: 'Stockfish prüft …', right: '', wrong: '', shown: '' }[t.status];
+      html = '<div class="v-icon c-' + it.cls.key + '">' + C.CATS[it.cls.key].sym + '</div>' +
+        '<div class="v-title">Fehler-Training · ' + (t.i + 1) + ' von ' + t.items.length + '</div>' +
+        '<div class="v-text">In der Partie kam <b>' + esc(moveLabel(it.played)) + '</b> (' + C.CATS[it.cls.key].label + '). ' +
+        'Finde einen besseren Zug für ' + (it.color === 'w' ? 'Weiß' : 'Schwarz') + '.</div>' +
+        (t.msg ? '<div class="v-msg ' + t.status + '">' + esc(t.msg) + '</div>' : (state2 ? '<div class="v-msg">' + state2 + '</div>' : '')) +
+        hintTxt +
+        '<div class="v-actions">' +
+        (t.status === 'right' || t.status === 'shown'
+          ? '<button type="button" class="btn accent small" data-t="next">' + (t.i + 1 < t.items.length ? 'Nächster Fehler' : 'Auswertung') + '</button>'
+          : '<button type="button" class="btn ghost small" data-t="hint"' + (t.hint ? ' disabled' : '') + '>Tipp</button>' +
+            '<button type="button" class="btn ghost small" data-t="show">Lösung zeigen</button>' +
+            '<button type="button" class="btn ghost small" data-t="next">Überspringen</button>') +
+        '<button type="button" class="btn ghost small" data-t="stop">Beenden</button></div>';
+      el.innerHTML = html;
+    }
+    // Engine-Hinweise würden die Lösung verraten
+    $('bestMove').innerHTML = '<span class="ev">im Training verborgen</span>';
+    $('engineMeta').textContent = '';
+    $('lines').innerHTML = '<li class="empty">Während des Trainings ausgeblendet.</li>';
+    renderEval(fen, null, pi, false);
+    renderPlayers(results);
+    renderMoves(results);
+    renderReview(results);
+    renderStatus();
+    renderControls(pi, null, false);
+  }
+
+  /* ---------- Konnektor: deine beendeten Partien ---------- */
+
+  var conn = { games: [], busy: false, timer: null, lastCheck: 0, error: null };
+  function connStatus(txt, kind) {
+    var el = $('connStatus');
+    el.textContent = txt || '';
+    el.dataset.kind = kind || '';
+  }
+  function siteName(site) { return site === 'lichess' ? 'lichess' : 'chess.com'; }
+  function connFetch(limit) {
+    var s = state.settings;
+    return SK.connect.fetchGames(s.connSite, s.connUser, { limit: limit || 20 });
+  }
+  function connErrorText(e) {
+    if (e && e.code === 'blocked') return 'Diese gehostete Seite darf keine Verbindung zu ' + siteName(state.settings.connSite) +
+      ' aufbauen. Öffne zugradar.html lokal (siehe README), dort funktioniert der Konnektor. Alternativ: PGN einfügen.';
+    return (e && e.message) || 'Unbekannter Fehler.';
+  }
+  function connLoadList() {
+    var s = state.settings;
+    s.connUser = $('connUser').value.trim();
+    s.connSite = $('connSite').value;
+    save();
+    if (!s.connUser) { connStatus('Bitte deinen Benutzernamen eingeben.', 'error'); return; }
+    conn.busy = true;
+    connStatus('Lade Partien von ' + siteName(s.connSite) + ' …', 'busy');
+    $('connGames').innerHTML = '';
+    connFetch(20).then(function (games) {
+      conn.busy = false; conn.games = games; conn.lastCheck = Date.now();
+      if (games.length && !s.connLast) { s.connLast = games[0].end; save(); }
+      connStatus(games.length ? games.length + ' beendete Partien von ' + s.connUser + '.' : 'Keine beendeten Partien gefunden.', games.length ? 'ok' : '');
+      renderGames();
+    }, function (e) {
+      conn.busy = false;
+      connStatus(connErrorText(e), 'error');
+    });
+  }
+  function fmtDate(ms) {
+    var d = new Date(ms);
+    return d.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit' }) + ' ' + d.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
+  }
+  function fmtTc(tc) {
+    var t = CO.parseTimeControl(tc);
+    if (!t) return tc ? 'Fernschach' : '';
+    return (t.base >= 60 ? Math.round(t.base / 60) : t.base + ' s') + '+' + t.inc;
+  }
+  function renderGames() {
+    var ul = $('connGames');
+    ul.innerHTML = conn.games.map(function (g, i) {
+      var me = g.userColor, opp = me === 'b' ? g.white : g.black;
+      var res = g.userResult === 'win' ? ['S', 'win', 'Sieg'] : g.userResult === 'loss' ? ['N', 'loss', 'Niederlage'] : g.userResult === 'draw' ? ['R', 'draw', 'Remis'] : ['·', 'draw', g.result];
+      var speed = SK.connect.SPEED[g.speed] || g.speed || '';
+      return '<li><button type="button" class="game" data-i="' + i + '">' +
+        '<span class="res ' + res[1] + '" title="' + res[2] + '">' + res[0] + '</span>' +
+        '<span class="g-main"><b>' + (me ? 'vs. ' : '') + esc(me ? opp.name : g.white.name + ' – ' + g.black.name) + (me && opp.rating ? ' (' + opp.rating + ')' : '') + '</b>' +
+        '<small>' + [speed, fmtTc(g.timeControl), me ? 'mit ' + (me === 'w' ? 'Weiß' : 'Schwarz') : '', fmtDate(g.end)].filter(Boolean).join(' · ') + '</small></span>' +
+        '<span class="g-go">Analysieren</span></button></li>';
+    }).join('');
+  }
+  function loadGame(g, silent) {
+    var err = importText(g.pgn, {
+      user: g.userColor ? { name: g.userColor === 'w' ? g.white.name : g.black.name, color: g.userColor } : null,
+      game: { site: g.site, id: g.id, url: g.url }, ply: 0
+    });
+    if (err) { connStatus(err, 'error'); return false; }
+    if (!silent) closeImport();
+    return true;
+  }
+  // Auto-Import: prüft jede Minute, ob eine NEUE, BEENDETE Partie dazugekommen ist
+  function connSchedule() {
+    clearInterval(conn.timer); conn.timer = null;
+    var s = state.settings;
+    $('autoChip').hidden = !(s.connAuto && s.connUser);
+    if (!(s.connAuto && s.connUser)) return;
+    $('autoChip').textContent = 'Auto-Import · ' + s.connUser;
+    conn.timer = setInterval(connPoll, 60000);
+  }
+  function connPoll() {
+    var s = state.settings;
+    if (!(s.connAuto && s.connUser) || conn.busy) return;
+    if (typeof document !== 'undefined' && document.hidden) return;
+    conn.busy = true;
+    connFetch(5).then(function (games) {
+      conn.busy = false; conn.lastCheck = Date.now();
+      var fresh = games.filter(function (g) { return g.end > (s.connLast || 0); });
+      if (!fresh.length) { connStatus('Zuletzt geprüft ' + fmtDate(conn.lastCheck).split(' ')[1] + ' – keine neue Partie.', ''); return; }
+      var g = fresh[0];
+      s.connLast = g.end; save();
+      conn.games = games; renderGames();
+      // Nicht mitten in einer Partie gegen die KI oder im Training überschreiben
+      if (state.mode === 'play' || train) { connStatus('Neue Partie verfügbar – öffne „Partie laden“, um sie zu analysieren.', 'ok'); return; }
+      if (loadGame(g, true)) {
+        showToastText('Neue Partie geladen');
+        connStatus('Neue Partie automatisch geladen: ' + fmtDate(g.end) + '.', 'ok');
+      }
+    }, function (e) {
+      conn.busy = false;
+      connStatus(connErrorText(e), 'error');
+      if (e && e.code === 'blocked') { s.connAuto = false; $('connAuto').checked = false; save(); connSchedule(); }
+    });
+  }
+  function showToastText(txt) {
+    var t = $('toast');
+    t.hidden = true; t.className = 'toast c-great'; t.textContent = txt;
+    void t.offsetWidth; t.hidden = false;
+    clearTimeout(toast.timer);
+    toast.timer = setTimeout(function () { t.hidden = true; }, 2000);
   }
 
   /* ---------- Export ---------- */
@@ -6119,16 +6951,17 @@ if (typeof module !== 'undefined') module.exports = (typeof window !== 'undefine
   function bind() {
     board = new SK.Board($('board'), {
       canPick: function (color) {
-        var pi = posInfo(fenAt(state.ply));
+        var pi = posInfo(viewFen());
         if (color !== pi.turn) return false;
+        if (train) return train.status === 'try';
         if (state.mode === 'play') return color === state.settings.humanColor && state.ply === state.line.length && !ai.thinking;
         return true;
       },
       legalFrom: function (sq) {
-        return posInfo(fenAt(state.ply)).moves.filter(function (m) { return m.from === sq; })
+        return posInfo(viewFen()).moves.filter(function (m) { return m.from === sq; })
           .map(function (m) { return { to: m.to, promotion: m.promotion, captured: m.captured }; });
       },
-      onMove: function (m) { userMove(m); }
+      onMove: function (m) { if (train) trainMove(m); else userMove(m); }
     });
 
     $('btnFirst').onclick = function () { go(0); };
@@ -6145,14 +6978,31 @@ if (typeof module !== 'undefined') module.exports = (typeof window !== 'undefine
     };
     $('lines').addEventListener('click', function (e) {
       var li = e.target.closest('li[data-uci]');
-      if (!li) return;
+      if (!li || train) return;
       var pi = posInfo(fenAt(state.ply));
       if (state.mode === 'play' && (pi.turn !== state.settings.humanColor || state.ply !== state.line.length)) return;
       userMove(uciToMove(li.dataset.uci));
     });
     $('moves').addEventListener('click', function (e) {
       var c = e.target.closest('.mv[data-ply]');
-      if (c) go(+c.dataset.ply);
+      if (c && !train) go(+c.dataset.ply);
+    });
+    $('moments').addEventListener('click', function (e) {
+      var c = e.target.closest('.km[data-ply]');
+      if (c && !train) go(+c.dataset.ply);
+    });
+
+    // Fehler-Training
+    $('btnTrain').onclick = startTraining;
+    $('verdict').addEventListener('click', function (e) {
+      var b = e.target.closest('[data-t]');
+      if (!b || !train) return;
+      var a = b.dataset.t;
+      if (a === 'next') trainNext();
+      else if (a === 'show') trainReveal();
+      else if (a === 'hint') { train.hint = true; render(); }
+      else if (a === 'stop') stopTraining();
+      else if (a === 'again') { stopTraining(true); startTraining(); }
     });
 
     // Modus
@@ -6199,10 +7049,29 @@ if (typeof module !== 'undefined') module.exports = (typeof window !== 'undefine
     bindChk('chkBadges', 'badges');
     bindChk('chkAuto', 'autoReview');
 
-    // Import
-    function openImport() { $('importError').hidden = true; $('importBox').hidden = false; $('importText').focus(); }
-    function closeImport() { $('importBox').hidden = true; }
-    $('btnImport').onclick = openImport;
+    // Import-Dialog: Tabs „Meine Partien“ / „PGN / FEN“
+    $('btnImport').onclick = function () { openImport('games'); };
+    $('autoChip').onclick = function () { openImport('games'); };
+    $('tabGames').onclick = function () { setImportTab('games'); };
+    $('tabPgn').onclick = function () { setImportTab('pgn'); };
+    $('connSite').value = state.settings.connSite;
+    $('connUser').value = state.settings.connUser;
+    $('connAuto').checked = !!state.settings.connAuto;
+    $('connLoad').onclick = connLoadList;
+    $('connUser').addEventListener('keydown', function (e) { if (e.key === 'Enter') connLoadList(); });
+    $('connSite').onchange = function () { state.settings.connSite = $('connSite').value; state.settings.connLast = 0; save(); };
+    $('connAuto').onchange = function () {
+      var s = state.settings;
+      s.connAuto = $('connAuto').checked;
+      s.connUser = $('connUser').value.trim() || s.connUser;
+      save(); connSchedule();
+      if (s.connAuto && !s.connUser) connStatus('Für den Auto-Import erst den Benutzernamen eingeben.', 'error');
+      else if (s.connAuto) { connStatus('Auto-Import aktiv: Zugradar prüft jede Minute auf neue, beendete Partien.', 'ok'); if (!conn.games.length) connLoadList(); }
+    };
+    $('connGames').addEventListener('click', function (e) {
+      var b = e.target.closest('.game[data-i]');
+      if (b) loadGame(conn.games[+b.dataset.i]);
+    });
     $('btnImportCancel').onclick = closeImport;
     $('importBox').addEventListener('click', function (e) { if (e.target === $('importBox')) closeImport(); });
     $('btnImportGo').onclick = function () {
@@ -6217,13 +7086,13 @@ if (typeof module !== 'undefined') module.exports = (typeof window !== 'undefine
       var txt = (e.clipboardData || window.clipboardData).getData('text');
       if (!txt || txt.length < 8) return;
       var err = importText(txt);
-      if (err) { $('importText').value = txt; openImport(); $('importError').textContent = err; $('importError').hidden = false; }
+      if (err) { $('importText').value = txt; openImport('pgn'); $('importError').textContent = err; $('importError').hidden = false; }
     });
 
     $('btnCopyPgn').onclick = function () {
       var pgn = exportPgn(), note = $('copyNote');
       function fallback() {
-        $('importText').value = pgn; openImport();
+        $('importText').value = pgn; openImport('pgn');
         $('importText').select();
         $('importError').textContent = 'Kopieren wurde blockiert – die PGN ist markiert, kopiere sie mit Strg+C.';
         $('importError').hidden = false;
@@ -6253,6 +7122,7 @@ if (typeof module !== 'undefined') module.exports = (typeof window !== 'undefine
       if (e.target && /INPUT|TEXTAREA|SELECT/.test(e.target.tagName)) return;
       if (e.key === 'Escape' && !$('importBox').hidden) { closeImport(); return; }
       if (!$('importBox').hidden) return;
+      if (train) { if (e.key === 'Escape') stopTraining(); return; }
       if (e.key === 'ArrowLeft') { go(state.ply - 1); e.preventDefault(); }
       else if (e.key === 'ArrowRight') { go(state.ply + 1, true); e.preventDefault(); }
       else if (e.key === 'Home') { go(0); e.preventDefault(); }
@@ -6262,7 +7132,21 @@ if (typeof module !== 'undefined') module.exports = (typeof window !== 'undefine
     });
   }
 
+  function openImport(tab) {
+    $('importError').hidden = true; $('importBox').hidden = false;
+    setImportTab(tab || 'games');
+  }
+  function closeImport() { $('importBox').hidden = true; }
+  function setImportTab(tab) {
+    $('tabGames').setAttribute('aria-selected', String(tab === 'games'));
+    $('tabPgn').setAttribute('aria-selected', String(tab === 'pgn'));
+    $('paneGames').hidden = tab !== 'games';
+    $('panePgn').hidden = tab !== 'pgn';
+    (tab === 'pgn' ? $('importText') : $('connUser')).focus();
+  }
+
   function playBest() {
+    if (train) return;
     var fen = fenAt(state.ply), e = an.entry(fen);
     if (!e || !e.lines.length) return;
     userMove(uciToMove(e.lines[0].uci));
@@ -6282,9 +7166,12 @@ if (typeof module !== 'undefined') module.exports = (typeof window !== 'undefine
     }
     render();
     engine.start();
+    connSchedule();
     // Test-Hook (Selbsttests im Browser)
     window.__zugradar = { state: state, an: an, engine: engine, classifyAll: classifyAll, userMove: userMove, go: go,
-                          importText: importText, exportPgn: exportPgn, setMode: setMode, newGame: newGame, render: render };
+                          importText: importText, exportPgn: exportPgn, setMode: setMode, newGame: newGame, render: render,
+                          startTraining: startTraining, trainMove: trainMove, train: function () { return train; },
+                          connPoll: connPoll, coachFor: coachFor };
   }
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);

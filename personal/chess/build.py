@@ -15,6 +15,8 @@ parts = {
     "@@CHESS@@": "vendor/chess.js",
     "@@OPENINGS@@": "openings.js",
     "@@CLASSIFY@@": "classify.js",
+    "@@COACH@@": "coach.js",
+    "@@CONNECT@@": "connect.js",
     "@@ENGINE@@": "engine.js",
     "@@BOARD@@": "board.js",
     "@@APP@@": "app.js",
