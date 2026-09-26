@@ -776,6 +776,13 @@ select {
 .pv-step.cur { background: var(--accent); color: var(--accent-ink); }
 .pv-actions { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
 
+/* ---------- Aktives Review ---------- */
+body.ar-active #sheetCard, body.ar-active #review, body.ar-active .acc-chip, body.ar-active #engineCard { display: none !important; }
+.ar-compare { list-style: none; margin: 8px 0 0; padding: 0; display: grid; gap: 6px; font-size: 14px; color: var(--ink-2); }
+.ar-compare li { display: flex; align-items: center; gap: 8px; }
+.ar-compare .sym { display: inline-grid; place-items: center; width: 22px; height: 22px; border-radius: 50%; font: 700 10.5px/1 var(--f-body); color: #fff; letter-spacing: -.04em; flex: none; }
+.v-icon.neutral + .v-title { }
+
 /* Figuren: cburnett-Satz (Colin M.L. Burnett, GPLv2+), entnommen aus lichess chessground (GPLv3). */
 .pc.wp{background-image:url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0NSIgaGVpZ2h0PSI0NSI+PHBhdGggZD0iTTIyLjUgOWMtMi4yMSAwLTQgMS43OS00IDQgMCAuODkuMjkgMS43MS43OCAyLjM4QzE3LjMzIDE2LjUgMTYgMTguNTkgMTYgMjFjMCAyLjAzLjk0IDMuODQgMi40MSA1LjAzLTMgMS4wNi03LjQxIDUuNTUtNy40MSAxMy40N2gyM2MwLTcuOTItNC40MS0xMi40MS03LjQxLTEzLjQ3IDEuNDctMS4xOSAyLjQxLTMgMi40MS01LjAzIDAtMi40MS0xLjMzLTQuNS0zLjI4LTUuNjIuNDktLjY3Ljc4LTEuNDkuNzgtMi4zOCAwLTIuMjEtMS43OS00LTQtNHoiIGZpbGw9IiNmZmYiIHN0cm9rZT0iIzAwMCIgc3Ryb2tlLXdpZHRoPSIxLjUiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPjwvc3ZnPg==')}
 .pc.wb{background-image:url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0NSIgaGVpZ2h0PSI0NSI+PGcgZmlsbD0ibm9uZSIgZmlsbC1ydWxlPSJldmVub2RkIiBzdHJva2U9IiMwMDAiIHN0cm9rZS13aWR0aD0iMS41IiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiPjxnIGZpbGw9IiNmZmYiIHN0cm9rZS1saW5lY2FwPSJidXR0Ij48cGF0aCBkPSJNOSAzNmMzLjM5LS45NyAxMC4xMS40MyAxMy41LTIgMy4zOSAyLjQzIDEwLjExIDEuMDMgMTMuNSAyIDAgMCAxLjY1LjU0IDMgMi0uNjguOTctMS42NS45OS0zIC41LTMuMzktLjk3LTEwLjExLjQ2LTEzLjUtMS0zLjM5IDEuNDYtMTAuMTEuMDMtMTMuNSAxLTEuMzU0LjQ5LTIuMzIzLjQ3LTMtLjUgMS4zNTQtMS45NCAzLTIgMy0yeiIvPjxwYXRoIGQ9Ik0xNSAzMmMyLjUgMi41IDEyLjUgMi41IDE1IDAgLjUtMS41IDAtMiAwLTIgMC0yLjUtMi41LTQtMi41LTQgNS41LTEuNSA2LTExLjUtNS0xNS41LTExIDQtMTAuNSAxNC01IDE1LjUgMCAwLTIuNSAxLjUtMi41IDQgMCAwLS41LjUgMCAyeiIvPjxwYXRoIGQ9Ik0yNSA4YTIuNSAyLjUgMCAxIDEtNSAwIDIuNSAyLjUgMCAxIDEgNSAweiIvPjwvZz48cGF0aCBkPSJNMTcuNSAyNmgxME0xNSAzMGgxNW0tNy41LTE0LjV2NU0yMCAxOGg1IiBzdHJva2UtbGluZWpvaW49Im1pdGVyIi8+PC9nPjwvc3ZnPg==')}
@@ -946,7 +953,8 @@ select {
           <table class="counts time" id="timeStats"></table>
         </div>
         <div class="review-actions">
-          <button type="button" class="btn accent" id="btnTrain" data-t>Fehler trainieren</button>
+          <button type="button" class="btn accent" id="btnActive" data-t-title="Erst selbst ziehen, dann Vergleich mit Partie und Stockfish" title="Erst selbst ziehen, dann Vergleich mit Partie und Stockfish" data-t>Aktives Review</button>
+          <button type="button" class="btn ghost" id="btnTrain" data-t>Fehler trainieren</button>
           <button type="button" class="btn ghost" id="btnShareReview" data-t>Review teilen</button>
         </div>
       </section>
@@ -1127,7 +1135,7 @@ select {
 </div>
 
 <script>
-(function(){var r=typeof window!=='undefined'?window:globalThis;r.SK=r.SK||{};r.SK.seller={"_hinweis": "Deine Geschäftsdaten. Nach Änderungen: python3 build.py. Leere Felder erscheinen auf der Website als [bitte ausfüllen].", "brand": "Zugradar", "siteUrl": "https://demirgernaz99-del.github.io/Humanizer/personal/chess/", "checkoutUrl": "", "prices": {"monthly": "4,99 €", "yearly": "34,99 €", "lifetime": "69 €"}, "pricesEn": {"monthly": "€4.99", "yearly": "€34.99", "lifetime": "€69"}, "license": {"provider": "lemonsqueezy", "storeId": null, "productIds": [], "organizationId": "", "benefitIds": [], "api": ""}, "legal": {"name": "", "street": "", "city": "", "country": "Deutschland", "email": "", "phone": "", "vatId": ""}, "merchantOfRecord": "Lemon Squeezy (Lemon Squeezy LLC)", "_hinweis_license": "provider: 'lemonsqueezy' (storeId, productIds) oder 'polar' (organizationId, optional benefitIds). api nur bei Proxy ausfüllen."};r.SK.build={"version": "1.0 (2937177)"};})();
+(function(){var r=typeof window!=='undefined'?window:globalThis;r.SK=r.SK||{};r.SK.seller={"_hinweis": "Deine Geschäftsdaten. Nach Änderungen: python3 build.py. Leere Felder erscheinen auf der Website als [bitte ausfüllen].", "brand": "Zugradar", "siteUrl": "https://demirgernaz99-del.github.io/Humanizer/personal/chess/", "checkoutUrl": "", "prices": {"monthly": "4,99 €", "yearly": "34,99 €", "lifetime": "69 €"}, "pricesEn": {"monthly": "€4.99", "yearly": "€34.99", "lifetime": "€69"}, "license": {"provider": "lemonsqueezy", "storeId": null, "productIds": [], "organizationId": "", "benefitIds": [], "api": ""}, "legal": {"name": "", "street": "", "city": "", "country": "Deutschland", "email": "", "phone": "", "vatId": ""}, "merchantOfRecord": "Lemon Squeezy (Lemon Squeezy LLC)", "_hinweis_license": "provider: 'lemonsqueezy' (storeId, productIds) oder 'polar' (organizationId, optional benefitIds). api nur bei Proxy ausfüllen."};r.SK.build={"version": "1.0 (17b543d)"};})();
 </script>
 <script>
 /* SK.i18n – Deutsch/Englisch. Der deutsche Text ist zugleich der Schlüssel (wie gettext):
@@ -1699,7 +1707,35 @@ if (typeof module !== 'undefined') module.exports = (typeof window !== 'undefine
   "Widerlegung nach {m}": "Refutation after {m}",
   "Die Idee hinter {m}": "The idea behind {m}",
   "Besser: {m}": "Better: {m}",
-  "Die Drohung vor {m}": "The threat before {m}"
+  "Die Drohung vor {m}": "The threat before {m}",
+  "Erst selbst ziehen, dann Vergleich mit Partie und Stockfish": "Play your move first, then compare with the game and Stockfish",
+  "Aktives Review": "Active review",
+  "Aktives Review nach der Analyse": "Active review after the analysis",
+  "Aktives Review ({n} Momente)": "Active review ({n} moments)",
+  "Aktives Review: keine kritischen Momente": "Active review: no critical moments",
+  "{m} – genau der Zug von Stockfish!": "{m} – exactly Stockfish's move!",
+  "{m} – genauso gut wie der Zug von Stockfish.": "{m} – just as good as Stockfish's move.",
+  "{m} – derselbe Zug wie in der Partie.": "{m} – the same move as in the game.",
+  "{m} kostet {l} % Gewinnchance.": "{m} costs {l}% winning chances.",
+  "Aktives Review abgeschlossen": "Active review complete",
+  "{a} von {b} Momenten gelöst.": "{a} of {b} moments solved.",
+  "Bei {c} von {d} Fehlern aus der Partie hast du jetzt einen besseren Zug gefunden.": "For {c} of {d} mistakes from the game you have now found a better move.",
+  "Jetzt siehst du die vollständige Analyse mit allen Bewertungen.": "Now you'll see the full analysis with all ratings.",
+  "Zur vollständigen Analyse": "Go to the full analysis",
+  "Zug {n}, {c} am Zug": "Move {n}, {c} to move",
+  "Aktives Review · Moment {a} von {b}": "Active review · moment {a} of {b}",
+  "Hier fiel eine wichtige Entscheidung. Was spielst du?": "An important decision was made here. What do you play?",
+  "Auflösen": "Reveal",
+  "In der Partie: {m} – {k}": "In the game: {m} – {k}",
+  "Stockfish: {m}": "Stockfish: {m}",
+  "Nächster Moment": "Next moment",
+  "In dieser Stellung gibt es genau einen starken Zug – such nach Schach, Schlagen und Drohungen.": "There is exactly one strong move in this position – look for checks, captures and threats.",
+  "Was droht dein Gegner? Schau dir seinen letzten Zug genau an.": "What is your opponent threatening? Take a close look at their last move.",
+  "Du hast hier eine Chance – such nach Schach, Schlagen und Drohungen für dich.": "You have a chance here – look for your own checks, captures and threats.",
+  "Achte darauf, welche Figuren nach deinem Zug ungedeckt sind.": "Watch which pieces are left unprotected after your move.",
+  "Denk an den König und die Freibauern.": "Think about the king and the passed pawns.",
+  "Welche deiner Figuren steht am schlechtesten? Verbessere sie.": "Which of your pieces is placed worst? Improve it.",
+  "Welche Doppelangriffe oder Fesselungen hätte dein Gegner nach deinem Zug?": "What double attacks or pins would your opponent have after your move?"
 };
 })();
 
@@ -5969,7 +6005,21 @@ if (typeof module !== 'undefined') module.exports = (typeof window !== 'undefine
      Eine Hauptursache pro Fehler (plus Umstand: zu schnell / Zeitnot), damit man gezielt üben kann.
      Die Drohung vor dem Zug kommt aus einer Nullzug-Analyse: dieselbe Stellung, aber der Gegner ist am Zug.
      ctx wie bei facts(), zusätzlich: before (Analyse vor dem Zug), threat (Analyse der Nullzug-Stellung), phase. */
-  var CAUSES = ['mate_blind', 'threat_missed', 'greedy', 'hung_piece', 'tactic_missed', 'technique', 'positional'];
+  var CAUSES = ['mate_blind', 'threat_missed', 'greedy', 'hung_piece', 'tactic_allowed', 'tactic_missed', 'technique', 'positional'];
+
+  /* Materialbilanz entlang der Widerlegung: Wie viel Material hat der Ziehende nach bis zu 4 Halbzügen
+     (Gegner, eigener Zug, Gegner, eigener Zug) im Vergleich zu vor seinem Zug? Negativ = verloren. */
+  function pvMaterialDelta(fenBefore, fenAfter, pv, color) {
+    if (!fenAfter || !pv || !pv.length) return 0;
+    var m0 = C().material(Chess(fenBefore), color);
+    var c = Chess(fenAfter), n = pv.length >= 4 ? 4 : pv.length >= 2 ? 2 : 1;
+    for (var i = 0; i < n; i++) {
+      var m = null;
+      try { m = c.move(uciMove(pv[i])); } catch (e) { m = null; }
+      if (!m) break;
+    }
+    return C().material(c, color) - m0;
+  }
 
   function nullFen(fen) {
     var p = fen.split(' ');
@@ -6010,13 +6060,19 @@ if (typeof module !== 'undefined') module.exports = (typeof window !== 'undefine
     var threat = threatOf(ctx);
     var captured = !!(mv.captured || (play(ctx.fenBefore, uci) || { move: {} }).move.captured);
     var ignored = threat && sameIdea(threat, ref, fenAfter);
+    var color = ctx.fenBefore.split(' ')[1];
+    var matLoss = ref && ref.pv ? -pvMaterialDelta(ctx.fenBefore, fenAfter, ref.pv, color) : 0;
+    var hangs = has('hangs') || has('hangs_moved');
     var cause;
     if (ignored) cause = 'threat_missed';
     else if (has('mate_allowed')) cause = 'mate_blind';
     else if (cls.key === 'miss') cause = 'tactic_missed';   // eine Gewinnchance ausgelassen wiegt schwerer als die Folgen
-    else if (captured && (has('hangs') || has('hangs_moved') || has('fork_allowed'))) cause = 'greedy';
-    else if (has('hangs') || has('hangs_moved') || has('fork_allowed')) cause = 'hung_piece';
+    else if (captured && (hangs || has('fork_allowed') || matLoss >= 1.5)) cause = 'greedy';
+    else if (hangs) cause = 'hung_piece';
+    else if (has('fork_allowed') || matLoss >= 2) cause = 'tactic_allowed';
     else if (cls.key === 'miss' || has('mate_missed') || has('fork_missed') || has('win_missed')) cause = 'tactic_missed';
+    // Geschlagen (kein Zurückschlagen) und es war ein Fehler: die Beute hatte einen Haken
+    else if (captured && !(ctx.prevMove && ctx.prevMove.captured && ctx.prevMove.to === mv.to)) cause = 'greedy';
     else if (ctx.phase === 'endgame') cause = 'technique';
     else cause = 'positional';
     var circ = has('time_trouble') ? 'time_trouble' : has('fast') ? 'fast' : null;
@@ -6032,6 +6088,7 @@ if (typeof module !== 'undefined') module.exports = (typeof window !== 'undefine
       threat_missed: ['Drohung übersehen', 'Frag vor jedem Zug: Was will der Gegner mit seinem letzten Zug? Üben kannst du das mit „Was droht?“ (Taste T).'],
       greedy: ['Vergiftete Beute', 'Vor dem Schlagen einen Zug weiter denken: Was schlägt oder droht der Gegner danach?'],
       hung_piece: ['Figur eingestellt', 'Blunder-Check vor dem Loslassen: Ist jede Figur nach meinem Zug noch gedeckt?'],
+      tactic_allowed: ['Taktik des Gegners übersehen', 'Prüfe nach deinem Zug: Hat der Gegner einen Doppelangriff, eine Fesselung oder einen Abzug?'],
       tactic_missed: ['Chance übersehen', 'Suche zuerst für dich selbst: Schach, Schlagen, Drohungen – bevor du einen ruhigen Zug machst.'],
       technique: ['Endspieltechnik', 'Im Endspiel zählen der aktive König, Freibauern und das Verhindern von Gegenspiel.'],
       positional: ['Stellungsfehler', 'Kein taktischer Grund: Der Zug verschlechtert die Stellung auf Dauer. Vergleiche ihn mit der besseren Idee.'],
@@ -6048,6 +6105,7 @@ if (typeof module !== 'undefined') module.exports = (typeof window !== 'undefine
       threat_missed: ['Missed the threat', 'Before every move, ask: what does my opponent want with their last move? Practise with “What\'s the threat?” (T key).'],
       greedy: ['Poisoned bait', 'Before capturing, think one move further: what does your opponent take or threaten next?'],
       hung_piece: ['Hung a piece', 'Blunder check before you let go: is every piece still protected after my move?'],
+      tactic_allowed: ['Allowed a tactic', 'After your move, check: does your opponent have a double attack, a pin or a discovered attack?'],
       tactic_missed: ['Missed a chance', 'Look for your own checks, captures and threats first – before making a quiet move.'],
       technique: ['Endgame technique', 'In the endgame, an active king, passed pawns and stopping counterplay are what count.'],
       positional: ['Positional error', 'No tactical reason: the move worsens your position in the long run. Compare it with the better idea.'],
@@ -6731,7 +6789,7 @@ if (typeof module !== 'undefined') module.exports = { library: (typeof window !=
       var dg = null;
       if (/mistake|blunder|miss/.test(r.key)) {
         dg = coach().diagnose({ fenBefore: mv.fenBefore, fenAfter: mv.fenAfter, move: mv, cls: r, after: ea, before: eb,
-          threat: opts.threat ? opts.threat(mv.fenBefore) : null, phase: phase,
+          threat: opts.threat ? opts.threat(mv.fenBefore) : null, phase: phase, prevMove: i ? moves[i - 1] : null,
           clock: { left: mv.clock, spent: mv.spent }, base: tc ? tc.base : null });
       }
       out.push({ san: mv.san, uci: mv.uci, color: mv.color, key: r.key, loss: r.loss == null ? null : Math.round(r.loss * 10) / 10,
@@ -7933,7 +7991,9 @@ if (typeof module !== 'undefined') module.exports = (typeof window !== 'undefine
     var tc = CO.parseTimeControl(state.headers.TimeControl);
     var d = null;
     try {
+      var ix = state.line.indexOf(mv);
       d = CO.diagnose({ fenBefore: mv.fenBefore, fenAfter: mv.fenAfter, move: mv, cls: cls, after: ea, before: eb, threat: te,
+                        prevMove: ix > 0 ? state.line[ix - 1] : null,
                         phase: mv.phase, clock: { left: mv.clock, spent: mv.spent }, base: tc ? tc.base : null });
     } catch (e) { d = null; }
     var res = d ? { d: d, desc: CO.describeCause(d, { lang: I.lang(), notation: state.settings.notation, moverColor: mv.color }),
@@ -8494,6 +8554,8 @@ if (typeof module !== 'undefined') module.exports = (typeof window !== 'undefine
 
   function render() {
     renderChrome();
+    // Während des aktiven Reviews keine Bewertungen zeigen, die die Lösung verraten
+    document.body.classList.toggle('ar-active', !!(train && train.source === 'active'));
     if (state.mode === 'insights') { renderInsightsView(); renderStatus(); return; }
     var results = classifyAll();
     ensureThreatQueue(results);
@@ -8535,16 +8597,7 @@ if (typeof module !== 'undefined') module.exports = (typeof window !== 'undefine
     var interactive = !pi.terminal && (state.mode === 'analyse' || state.mode === 'trainer' ||
       (state.ply === state.line.length && pi.turn === s.humanColor && !ai.thinking));
     if (preview && preview.ply !== state.ply) stopPreview(true);
-    if (preview) {
-      var pst = preview.i ? preview.steps[preview.i - 1] : null, pfen = pst ? pst.fen : preview.start, ppi = posInfo(pfen);
-      var nxt = preview.steps[preview.i];
-      if (animateNext) sound(ppi.inCheck ? 'check' : animateNext.capture ? 'capture' : 'move');
-      board.render({
-        fen: pfen, orientation: state.orientation, lastMove: pst ? { from: pst.from, to: pst.to } : null, check: ppi.king,
-        arrows: nxt ? [Object.assign(uciToMove(nxt.uci), { kind: preview.kind === 'threat' || preview.kind === 'ref' ? 'threat' : 'best' })] : [],
-        badge: null, tint: null, animate: animateNext, interactive: false
-      });
-    } else {
+    if (!renderPreviewBoard()) {
       if (animateNext) sound(pi.inCheck ? 'check' : animateNext.capture ? 'capture' : 'move');
       board.render({
         fen: fen, orientation: state.orientation, lastMove: last ? { from: last.from, to: last.to } : null,
@@ -8742,6 +8795,19 @@ if (typeof module !== 'undefined') module.exports = (typeof window !== 'undefine
     clearTimeout(preview.timer);
     preview = null;
     if (!silent) render();
+  }
+  // Zeichnet das Brett im Vorschau-Modus; false, wenn keine Vorschau läuft
+  function renderPreviewBoard() {
+    if (!preview) return false;
+    var pst = preview.i ? preview.steps[preview.i - 1] : null, pfen = pst ? pst.fen : preview.start, ppi = posInfo(pfen);
+    var nxt = preview.steps[preview.i];
+    if (animateNext) sound(ppi.inCheck ? 'check' : animateNext.capture ? 'capture' : 'move');
+    board.render({
+      fen: pfen, orientation: state.orientation, lastMove: pst ? { from: pst.from, to: pst.to } : null, check: ppi.king,
+      arrows: nxt ? [Object.assign(uciToMove(nxt.uci), { kind: preview.kind === 'threat' || preview.kind === 'ref' ? 'threat' : 'best' })] : [],
+      badge: null, tint: null, animate: animateNext, interactive: false
+    });
+    return true;
   }
   function renderPreviewBar() {
     var bar = $('previewBar');
@@ -9205,6 +9271,9 @@ if (typeof module !== 'undefined') module.exports = (typeof window !== 'undefine
 
     // Training
     var tc2 = trainColor(), cand = trainItems(results, tc2);
+    var ab = $('btnActive'), done = reviewComplete(results), moments = done ? activeItems(results, tc2).length : 0;
+    ab.disabled = !done || !moments;
+    ab.textContent = !done ? t('Aktives Review nach der Analyse') : moments ? t('Aktives Review ({n} Momente)', { n: moments }) : t('Aktives Review: keine kritischen Momente');
     var btn = $('btnTrain');
     var rated = results.filter(function (r) { return r; }).length;
     btn.disabled = !cand.length;
@@ -9239,6 +9308,30 @@ if (typeof module !== 'undefined') module.exports = (typeof window !== 'undefine
     var tc = $('verdict'); if (tc && tc.scrollIntoView) tc.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
   }
   function startTraining() { beginTraining(trainItems(classifyAll(), trainColor()), 'game'); }
+
+  /* Aktives Review: die entscheidenden Momente einer Farbe – eigene Fehler und Stellen, an denen ein
+     besonderer Zug gefunden wurde. Erst selbst ziehen, dann Vergleich mit Partie und Stockfish. */
+  var ACTIVE_MAX = 6;
+  function activeItems(results, color) {
+    var errs = [], found = [];
+    state.line.forEach(function (m, i) {
+      var r = results[i];
+      if (!r || m.color !== color || !r.bestUci) return;
+      if (isBadKey(r.key)) errs.push({ idx: i, fen: m.fenBefore, played: m, cls: r, color: m.color, kind: 'error' });
+      else if (r.key === 'brilliant' || r.key === 'great') found.push({ idx: i, fen: m.fenBefore, played: m, cls: r, color: m.color, kind: 'found' });
+    });
+    errs.sort(function (a, b) { return (b.cls.loss || 0) - (a.cls.loss || 0); });
+    var pick = errs.slice(0, Math.max(ACTIVE_MAX - Math.min(found.length, 2), ACTIVE_MAX - found.length));
+    pick = pick.concat(found.slice(0, ACTIVE_MAX - pick.length));
+    return pick.sort(function (a, b) { return a.idx - b.idx; });
+  }
+  function reviewComplete(results) { return accuracyFor('w', results) != null && accuracyFor('b', results) != null; }
+  function startActiveReview() {
+    var results = classifyAll();
+    if (!reviewComplete(results)) return;
+    stopPreview(true);
+    beginTraining(activeItems(results, trainColor()), 'active');
+  }
 
   // Trainer: fällige Aufgaben aus allen analysierten Partien
   function trainerRemaining() {
@@ -9297,7 +9390,8 @@ if (typeof module !== 'undefined') module.exports = (typeof window !== 'undefine
     var eb = an.entry(it.fen);
     var bestWp = eb && eb.lines[0] && eb.depth >= MIN_D ? C.scoreWp(eb.lines[0].score) : it.cls.wpBefore;
     var wp = null;
-    if (att.uci === it.played.uci) wp = -1; // der Partiezug selbst
+    if (att.uci === it.played.uci && it.kind === 'found') wp = bestWp != null ? bestWp : 100; // Partiezug war der besondere Zug
+    else if (att.uci === it.played.uci) wp = -1; // der Partiezug selbst
     else if (att.uci === it.cls.bestUci) wp = bestWp != null ? bestWp : 100;
     else if (posInfo(att.fenAfter).terminal === 'mate') wp = 100;
     else if (posInfo(att.fenAfter).terminal === 'draw') wp = 50;
@@ -9313,6 +9407,19 @@ if (typeof module !== 'undefined') module.exports = (typeof window !== 'undefine
     if (bestWp == null) bestWp = wp;
     var loss = wp < 0 ? 100 : Math.max(0, bestWp - wp);
     var san = nota(att.san);
+    if (train.source === 'active') {
+      // Ein Versuch wie in einer echten Partie – danach die Auflösung
+      var ok = loss < 5;
+      train.status = 'reveal'; train.ok = ok;
+      train.lossTxt = wp < 0 ? null : loss;
+      train.sameAsGame = att.uci === it.played.uci;
+      if (ok) { train.solved++; sound('brilliant'); }
+      finishItem(ok);
+      train.msg = ok ? (att.uci === it.cls.bestUci ? t('{m} – genau der Zug von Stockfish!', { m: san }) : t('{m} – genauso gut wie der Zug von Stockfish.', { m: san }))
+        : train.sameAsGame ? t('{m} – derselbe Zug wie in der Partie.', { m: san })
+        : t('{m} kostet {l} % Gewinnchance.', { m: san, l: loss.toFixed(0) });
+      return;
+    }
     if (loss < 5) {
       train.status = 'right';
       var first = train.firstTry && !train.hint;
@@ -9329,6 +9436,14 @@ if (typeof module !== 'undefined') module.exports = (typeof window !== 'undefine
         updateEngine(); render();
       }, 1100);
     }
+  }
+  // Aktives Review: ohne eigenen Zug auflösen
+  function activeReveal() {
+    var it = train.items[train.i];
+    clearTimeout(train.timer);
+    train.attempt = null; train.status = 'reveal'; train.ok = false; train.msg = '';
+    finishItem(false);
+    updateEngine(); render();
   }
   function trainReveal() {
     if (!train) return;
@@ -9352,6 +9467,7 @@ if (typeof module !== 'undefined') module.exports = (typeof window !== 'undefine
     var tr = train, it = tr.items[tr.i];
     var fen = viewFen(), pi = posInfo(fen);
     var el = $('verdict'), html;
+    if (tr.source === 'active') { renderActive(results, tr, it, fen, pi, el); return; }
     if (tr.status === 'done' || !it) {
       var limitNote = tr.limit ? '<div class="v-hint">' + t('Das Tageslimit der kostenlosen Version ist erreicht. Mit Pro trainierst du unbegrenzt.') + '</div>' : '';
       html = '<div class="v-icon c-best">✓</div><div class="v-title">' + t('Training beendet') + '</div>' +
@@ -9415,6 +9531,82 @@ if (typeof module !== 'undefined') module.exports = (typeof window !== 'undefine
     renderTrainerBox();
     renderStatus();
     renderControls(pi, null, false);
+  }
+
+  function renderActive(results, tr, it, fen, pi, el) {
+    var html;
+    if (tr.status === 'done' || !it) {
+      var better = tr.items.filter(function (x) { return x.kind === 'error' && x.okResult; }).length;
+      var errs = tr.items.filter(function (x) { return x.kind === 'error'; }).length;
+      html = '<div class="v-icon c-best">✓</div><div class="v-title">' + t('Aktives Review abgeschlossen') + '</div>' +
+        '<div class="v-text">' + t('{a} von {b} Momenten gelöst.', { a: '<b>' + tr.solved + '</b>', b: tr.items.length }) +
+        (errs ? ' ' + t('Bei {c} von {d} Fehlern aus der Partie hast du jetzt einen besseren Zug gefunden.', { c: better, d: errs }) : '') + '</div>' +
+        '<div class="v-hint">' + t('Jetzt siehst du die vollständige Analyse mit allen Bewertungen.') + '</div>' +
+        '<div class="v-actions"><button type="button" class="btn accent small" data-act="stop">' + t('Zur vollständigen Analyse') + '</button>' +
+        '<button type="button" class="btn ghost small" data-act="again">' + t('Nochmal') + '</button></div>';
+      el.innerHTML = html;
+      board.render({ fen: fenAt(state.ply), orientation: state.orientation, lastMove: null, arrows: [], interactive: false });
+    } else {
+      var att = tr.attempt, revealed = tr.status === 'reveal' || tr.status === 'shown';
+      var arrows = [];
+      if (revealed) {
+        arrows.push(Object.assign(uciToMove(it.cls.bestUci), { kind: 'better' }));
+        if (it.kind === 'error') arrows.push(Object.assign(uciToMove(it.played.uci), { kind: 'threat', width: 10 }));
+      }
+      var badge = att && revealed ? { square: att.to, key: tr.ok ? 'best' : 'mistake', sym: tr.ok ? '✓' : '✕', label: '' } : null;
+      var prev = it.idx > 0 ? state.line[it.idx - 1] : null;
+      if (!renderPreviewBoard()) {
+        if (animateNext) sound(animateNext.capture ? 'capture' : 'move');
+        board.render({ fen: fen, orientation: state.orientation,
+          lastMove: att ? { from: att.from, to: att.to } : (prev ? { from: prev.from, to: prev.to } : null),
+          check: pi.king, arrows: arrows, badge: badge, animate: animateNext, interactive: tr.status === 'try' && !pi.terminal });
+      }
+      animateNext = null;
+      var numv = posInfo(it.fen).fullmove;
+      var where = t('Zug {n}, {c} am Zug', { n: numv, c: colorName(it.color) });
+      html = '<div class="v-icon neutral">?</div><div class="v-title">' + t('Aktives Review · Moment {a} von {b}', { a: tr.i + 1, b: tr.items.length }) + '</div>';
+      if (!revealed) {
+        html += '<div class="v-text">' + esc(where) + '. ' + t('Hier fiel eine wichtige Entscheidung. Was spielst du?') + '</div>' +
+          (tr.status === 'checking' ? '<div class="v-msg">' + t('Stockfish prüft …') + '</div>' : '') +
+          (tr.hint ? '<div class="v-hint">' + t('Tipp:') + ' ' + activeHint(it) + '</div>' : '') +
+          '<div class="v-actions"><button type="button" class="btn ghost small" data-act="hint"' + (tr.hint ? ' disabled' : '') + '>' + t('Tipp') + '</button>' +
+          '<button type="button" class="btn ghost small" data-act="show">' + t('Auflösen') + '</button>' +
+          '<button type="button" class="btn ghost small" data-act="stop">' + t('Beenden') + '</button></div>';
+      } else {
+        it.okResult = !!tr.ok;
+        var bestSan = nota(uciSan(it.fen, it.cls.bestUci));
+        html += '<div class="v-text">' + esc(where) + '.</div>' +
+          (tr.msg ? '<div class="v-msg ' + (tr.ok ? 'right' : 'wrong') + '">' + esc(tr.msg) + '</div>' : '') +
+          '<ul class="ar-compare">' +
+          '<li><span class="sym c-' + it.cls.key + '">' + C.CATS[it.cls.key].sym + '</span>' + t('In der Partie: {m} – {k}', { m: '<b>' + esc(moveLabel(it.played)) + '</b>', k: catLabel(it.cls.key) }) + '</li>' +
+          '<li><span class="sym c-best">★</span>' + t('Stockfish: {m}', { m: '<b>' + esc(bestSan) + '</b>' }) + '</li></ul>' +
+          (it.kind === 'error' ? causeHtml(diagnosisFor(it.played, it.cls), it.idx) : previewButtons(it.idx, ['idea'])) +
+          '<div class="v-actions"><button type="button" class="btn accent small" data-act="next">' + (tr.i + 1 < tr.items.length ? t('Nächster Moment') : t('Auswertung')) + '</button>' +
+          '<button type="button" class="btn ghost small" data-act="stop">' + t('Beenden') + '</button></div>';
+      }
+      el.innerHTML = html;
+    }
+    renderPreviewBar();
+    $('bestMove').innerHTML = '<span class="ev">' + t('im Training verborgen') + '</span>';
+    $('engineMeta').textContent = '';
+    $('lines').innerHTML = '<li class="empty">' + t('Während des Trainings ausgeblendet.') + '</li>';
+    renderEval(fen, null, pi, false);
+    renderPlayers(results);
+    renderTrainerBox();
+    renderStatus();
+    renderControls(pi, null, false);
+  }
+  // Tipp ohne die Lösung zu verraten: Worauf achten?
+  function activeHint(it) {
+    if (it.kind === 'found') return t('In dieser Stellung gibt es genau einen starken Zug – such nach Schach, Schlagen und Drohungen.');
+    var dg = diagnosisFor(it.played, it.cls);
+    var id = dg && dg.d ? dg.d.cause : null;
+    if (id === 'threat_missed' || id === 'mate_blind') return t('Was droht dein Gegner? Schau dir seinen letzten Zug genau an.');
+    if (id === 'tactic_missed') return t('Du hast hier eine Chance – such nach Schach, Schlagen und Drohungen für dich.');
+    if (id === 'hung_piece' || id === 'greedy') return t('Achte darauf, welche Figuren nach deinem Zug ungedeckt sind.');
+    if (id === 'tactic_allowed') return t('Welche Doppelangriffe oder Fesselungen hätte dein Gegner nach deinem Zug?');
+    if (id === 'technique') return t('Denk an den König und die Freibauern.');
+    return t('Welche deiner Figuren steht am schlechtesten? Verbessere sie.');
   }
 
   function renderTrainerBox() {
@@ -10140,14 +10332,17 @@ if (typeof module !== 'undefined') module.exports = (typeof window !== 'undefine
       var b = e.target.closest('[data-act]');
       if (!b || !train) return;
       var a = b.dataset.act;
+      stopPreview(true);
       if (a === 'next') trainNext();
+      else if (a === 'show' && train.source === 'active') activeReveal();
       else if (a === 'show') trainReveal();
       else if (a === 'hint') { train.hint = true; render(); }
       else if (a === 'stop') stopTraining();
       else if (a === 'pro') openPro('trainer');
-      else if (a === 'again') { var src = train.source; stopTraining(true); if (src === 'srs') startTrainer(); else startTraining(); }
+      else if (a === 'again') { var src = train.source; stopTraining(true); if (src === 'srs') startTrainer(); else if (src === 'active') startActiveReview(); else startTraining(); }
     });
     $('btnShareReview').onclick = shareReview;
+    $('btnActive').onclick = function () { startActiveReview(); var v = $('verdict'); if (v && v.scrollIntoView) v.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); };
     $('previewBar').addEventListener('click', function (e) {
       var b = e.target.closest('[data-pv]');
       if (!b || !preview) return;

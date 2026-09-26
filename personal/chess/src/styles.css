@@ -758,3 +758,10 @@ select {
 .pv-step { border: 0; background: transparent; padding: 3px 6px; border-radius: 6px; font: 600 13.5px/1.2 var(--f-mono); color: var(--ink-2); cursor: pointer; }
 .pv-step.cur { background: var(--accent); color: var(--accent-ink); }
 .pv-actions { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+
+/* ---------- Aktives Review ---------- */
+body.ar-active #sheetCard, body.ar-active #review, body.ar-active .acc-chip, body.ar-active #engineCard { display: none !important; }
+.ar-compare { list-style: none; margin: 8px 0 0; padding: 0; display: grid; gap: 6px; font-size: 14px; color: var(--ink-2); }
+.ar-compare li { display: flex; align-items: center; gap: 8px; }
+.ar-compare .sym { display: inline-grid; place-items: center; width: 22px; height: 22px; border-radius: 50%; font: 700 10.5px/1 var(--f-body); color: #fff; letter-spacing: -.04em; flex: none; }
+.v-icon.neutral + .v-title { }

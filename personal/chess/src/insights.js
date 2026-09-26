@@ -47,7 +47,7 @@
       var dg = null;
       if (/mistake|blunder|miss/.test(r.key)) {
         dg = coach().diagnose({ fenBefore: mv.fenBefore, fenAfter: mv.fenAfter, move: mv, cls: r, after: ea, before: eb,
-          threat: opts.threat ? opts.threat(mv.fenBefore) : null, phase: phase,
+          threat: opts.threat ? opts.threat(mv.fenBefore) : null, phase: phase, prevMove: i ? moves[i - 1] : null,
           clock: { left: mv.clock, spent: mv.spent }, base: tc ? tc.base : null });
       }
       out.push({ san: mv.san, uci: mv.uci, color: mv.color, key: r.key, loss: r.loss == null ? null : Math.round(r.loss * 10) / 10,

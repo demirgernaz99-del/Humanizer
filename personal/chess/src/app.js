@@ -165,7 +165,9 @@
     var tc = CO.parseTimeControl(state.headers.TimeControl);
     var d = null;
     try {
+      var ix = state.line.indexOf(mv);
       d = CO.diagnose({ fenBefore: mv.fenBefore, fenAfter: mv.fenAfter, move: mv, cls: cls, after: ea, before: eb, threat: te,
+                        prevMove: ix > 0 ? state.line[ix - 1] : null,
                         phase: mv.phase, clock: { left: mv.clock, spent: mv.spent }, base: tc ? tc.base : null });
     } catch (e) { d = null; }
     var res = d ? { d: d, desc: CO.describeCause(d, { lang: I.lang(), notation: state.settings.notation, moverColor: mv.color }),
@@ -726,6 +728,8 @@
 
   function render() {
     renderChrome();
+    // Während des aktiven Reviews keine Bewertungen zeigen, die die Lösung verraten
+    document.body.classList.toggle('ar-active', !!(train && train.source === 'active'));
     if (state.mode === 'insights') { renderInsightsView(); renderStatus(); return; }
     var results = classifyAll();
     ensureThreatQueue(results);
@@ -767,16 +771,7 @@
     var interactive = !pi.terminal && (state.mode === 'analyse' || state.mode === 'trainer' ||
       (state.ply === state.line.length && pi.turn === s.humanColor && !ai.thinking));
     if (preview && preview.ply !== state.ply) stopPreview(true);
-    if (preview) {
-      var pst = preview.i ? preview.steps[preview.i - 1] : null, pfen = pst ? pst.fen : preview.start, ppi = posInfo(pfen);
-      var nxt = preview.steps[preview.i];
-      if (animateNext) sound(ppi.inCheck ? 'check' : animateNext.capture ? 'capture' : 'move');
-      board.render({
-        fen: pfen, orientation: state.orientation, lastMove: pst ? { from: pst.from, to: pst.to } : null, check: ppi.king,
-        arrows: nxt ? [Object.assign(uciToMove(nxt.uci), { kind: preview.kind === 'threat' || preview.kind === 'ref' ? 'threat' : 'best' })] : [],
-        badge: null, tint: null, animate: animateNext, interactive: false
-      });
-    } else {
+    if (!renderPreviewBoard()) {
       if (animateNext) sound(pi.inCheck ? 'check' : animateNext.capture ? 'capture' : 'move');
       board.render({
         fen: fen, orientation: state.orientation, lastMove: last ? { from: last.from, to: last.to } : null,
@@ -974,6 +969,19 @@
     clearTimeout(preview.timer);
     preview = null;
     if (!silent) render();
+  }
+  // Zeichnet das Brett im Vorschau-Modus; false, wenn keine Vorschau läuft
+  function renderPreviewBoard() {
+    if (!preview) return false;
+    var pst = preview.i ? preview.steps[preview.i - 1] : null, pfen = pst ? pst.fen : preview.start, ppi = posInfo(pfen);
+    var nxt = preview.steps[preview.i];
+    if (animateNext) sound(ppi.inCheck ? 'check' : animateNext.capture ? 'capture' : 'move');
+    board.render({
+      fen: pfen, orientation: state.orientation, lastMove: pst ? { from: pst.from, to: pst.to } : null, check: ppi.king,
+      arrows: nxt ? [Object.assign(uciToMove(nxt.uci), { kind: preview.kind === 'threat' || preview.kind === 'ref' ? 'threat' : 'best' })] : [],
+      badge: null, tint: null, animate: animateNext, interactive: false
+    });
+    return true;
   }
   function renderPreviewBar() {
     var bar = $('previewBar');
@@ -1437,6 +1445,9 @@
 
     // Training
     var tc2 = trainColor(), cand = trainItems(results, tc2);
+    var ab = $('btnActive'), done = reviewComplete(results), moments = done ? activeItems(results, tc2).length : 0;
+    ab.disabled = !done || !moments;
+    ab.textContent = !done ? t('Aktives Review nach der Analyse') : moments ? t('Aktives Review ({n} Momente)', { n: moments }) : t('Aktives Review: keine kritischen Momente');
     var btn = $('btnTrain');
     var rated = results.filter(function (r) { return r; }).length;
     btn.disabled = !cand.length;
@@ -1471,6 +1482,30 @@
     var tc = $('verdict'); if (tc && tc.scrollIntoView) tc.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
   }
   function startTraining() { beginTraining(trainItems(classifyAll(), trainColor()), 'game'); }
+
+  /* Aktives Review: die entscheidenden Momente einer Farbe – eigene Fehler und Stellen, an denen ein
+     besonderer Zug gefunden wurde. Erst selbst ziehen, dann Vergleich mit Partie und Stockfish. */
+  var ACTIVE_MAX = 6;
+  function activeItems(results, color) {
+    var errs = [], found = [];
+    state.line.forEach(function (m, i) {
+      var r = results[i];
+      if (!r || m.color !== color || !r.bestUci) return;
+      if (isBadKey(r.key)) errs.push({ idx: i, fen: m.fenBefore, played: m, cls: r, color: m.color, kind: 'error' });
+      else if (r.key === 'brilliant' || r.key === 'great') found.push({ idx: i, fen: m.fenBefore, played: m, cls: r, color: m.color, kind: 'found' });
+    });
+    errs.sort(function (a, b) { return (b.cls.loss || 0) - (a.cls.loss || 0); });
+    var pick = errs.slice(0, Math.max(ACTIVE_MAX - Math.min(found.length, 2), ACTIVE_MAX - found.length));
+    pick = pick.concat(found.slice(0, ACTIVE_MAX - pick.length));
+    return pick.sort(function (a, b) { return a.idx - b.idx; });
+  }
+  function reviewComplete(results) { return accuracyFor('w', results) != null && accuracyFor('b', results) != null; }
+  function startActiveReview() {
+    var results = classifyAll();
+    if (!reviewComplete(results)) return;
+    stopPreview(true);
+    beginTraining(activeItems(results, trainColor()), 'active');
+  }
 
   // Trainer: fällige Aufgaben aus allen analysierten Partien
   function trainerRemaining() {
@@ -1529,7 +1564,8 @@
     var eb = an.entry(it.fen);
     var bestWp = eb && eb.lines[0] && eb.depth >= MIN_D ? C.scoreWp(eb.lines[0].score) : it.cls.wpBefore;
     var wp = null;
-    if (att.uci === it.played.uci) wp = -1; // der Partiezug selbst
+    if (att.uci === it.played.uci && it.kind === 'found') wp = bestWp != null ? bestWp : 100; // Partiezug war der besondere Zug
+    else if (att.uci === it.played.uci) wp = -1; // der Partiezug selbst
     else if (att.uci === it.cls.bestUci) wp = bestWp != null ? bestWp : 100;
     else if (posInfo(att.fenAfter).terminal === 'mate') wp = 100;
     else if (posInfo(att.fenAfter).terminal === 'draw') wp = 50;
@@ -1545,6 +1581,19 @@
     if (bestWp == null) bestWp = wp;
     var loss = wp < 0 ? 100 : Math.max(0, bestWp - wp);
     var san = nota(att.san);
+    if (train.source === 'active') {
+      // Ein Versuch wie in einer echten Partie – danach die Auflösung
+      var ok = loss < 5;
+      train.status = 'reveal'; train.ok = ok;
+      train.lossTxt = wp < 0 ? null : loss;
+      train.sameAsGame = att.uci === it.played.uci;
+      if (ok) { train.solved++; sound('brilliant'); }
+      finishItem(ok);
+      train.msg = ok ? (att.uci === it.cls.bestUci ? t('{m} – genau der Zug von Stockfish!', { m: san }) : t('{m} – genauso gut wie der Zug von Stockfish.', { m: san }))
+        : train.sameAsGame ? t('{m} – derselbe Zug wie in der Partie.', { m: san })
+        : t('{m} kostet {l} % Gewinnchance.', { m: san, l: loss.toFixed(0) });
+      return;
+    }
     if (loss < 5) {
       train.status = 'right';
       var first = train.firstTry && !train.hint;
@@ -1561,6 +1610,14 @@
         updateEngine(); render();
       }, 1100);
     }
+  }
+  // Aktives Review: ohne eigenen Zug auflösen
+  function activeReveal() {
+    var it = train.items[train.i];
+    clearTimeout(train.timer);
+    train.attempt = null; train.status = 'reveal'; train.ok = false; train.msg = '';
+    finishItem(false);
+    updateEngine(); render();
   }
   function trainReveal() {
     if (!train) return;
@@ -1584,6 +1641,7 @@
     var tr = train, it = tr.items[tr.i];
     var fen = viewFen(), pi = posInfo(fen);
     var el = $('verdict'), html;
+    if (tr.source === 'active') { renderActive(results, tr, it, fen, pi, el); return; }
     if (tr.status === 'done' || !it) {
       var limitNote = tr.limit ? '<div class="v-hint">' + t('Das Tageslimit der kostenlosen Version ist erreicht. Mit Pro trainierst du unbegrenzt.') + '</div>' : '';
       html = '<div class="v-icon c-best">✓</div><div class="v-title">' + t('Training beendet') + '</div>' +
@@ -1647,6 +1705,82 @@
     renderTrainerBox();
     renderStatus();
     renderControls(pi, null, false);
+  }
+
+  function renderActive(results, tr, it, fen, pi, el) {
+    var html;
+    if (tr.status === 'done' || !it) {
+      var better = tr.items.filter(function (x) { return x.kind === 'error' && x.okResult; }).length;
+      var errs = tr.items.filter(function (x) { return x.kind === 'error'; }).length;
+      html = '<div class="v-icon c-best">✓</div><div class="v-title">' + t('Aktives Review abgeschlossen') + '</div>' +
+        '<div class="v-text">' + t('{a} von {b} Momenten gelöst.', { a: '<b>' + tr.solved + '</b>', b: tr.items.length }) +
+        (errs ? ' ' + t('Bei {c} von {d} Fehlern aus der Partie hast du jetzt einen besseren Zug gefunden.', { c: better, d: errs }) : '') + '</div>' +
+        '<div class="v-hint">' + t('Jetzt siehst du die vollständige Analyse mit allen Bewertungen.') + '</div>' +
+        '<div class="v-actions"><button type="button" class="btn accent small" data-act="stop">' + t('Zur vollständigen Analyse') + '</button>' +
+        '<button type="button" class="btn ghost small" data-act="again">' + t('Nochmal') + '</button></div>';
+      el.innerHTML = html;
+      board.render({ fen: fenAt(state.ply), orientation: state.orientation, lastMove: null, arrows: [], interactive: false });
+    } else {
+      var att = tr.attempt, revealed = tr.status === 'reveal' || tr.status === 'shown';
+      var arrows = [];
+      if (revealed) {
+        arrows.push(Object.assign(uciToMove(it.cls.bestUci), { kind: 'better' }));
+        if (it.kind === 'error') arrows.push(Object.assign(uciToMove(it.played.uci), { kind: 'threat', width: 10 }));
+      }
+      var badge = att && revealed ? { square: att.to, key: tr.ok ? 'best' : 'mistake', sym: tr.ok ? '✓' : '✕', label: '' } : null;
+      var prev = it.idx > 0 ? state.line[it.idx - 1] : null;
+      if (!renderPreviewBoard()) {
+        if (animateNext) sound(animateNext.capture ? 'capture' : 'move');
+        board.render({ fen: fen, orientation: state.orientation,
+          lastMove: att ? { from: att.from, to: att.to } : (prev ? { from: prev.from, to: prev.to } : null),
+          check: pi.king, arrows: arrows, badge: badge, animate: animateNext, interactive: tr.status === 'try' && !pi.terminal });
+      }
+      animateNext = null;
+      var numv = posInfo(it.fen).fullmove;
+      var where = t('Zug {n}, {c} am Zug', { n: numv, c: colorName(it.color) });
+      html = '<div class="v-icon neutral">?</div><div class="v-title">' + t('Aktives Review · Moment {a} von {b}', { a: tr.i + 1, b: tr.items.length }) + '</div>';
+      if (!revealed) {
+        html += '<div class="v-text">' + esc(where) + '. ' + t('Hier fiel eine wichtige Entscheidung. Was spielst du?') + '</div>' +
+          (tr.status === 'checking' ? '<div class="v-msg">' + t('Stockfish prüft …') + '</div>' : '') +
+          (tr.hint ? '<div class="v-hint">' + t('Tipp:') + ' ' + activeHint(it) + '</div>' : '') +
+          '<div class="v-actions"><button type="button" class="btn ghost small" data-act="hint"' + (tr.hint ? ' disabled' : '') + '>' + t('Tipp') + '</button>' +
+          '<button type="button" class="btn ghost small" data-act="show">' + t('Auflösen') + '</button>' +
+          '<button type="button" class="btn ghost small" data-act="stop">' + t('Beenden') + '</button></div>';
+      } else {
+        it.okResult = !!tr.ok;
+        var bestSan = nota(uciSan(it.fen, it.cls.bestUci));
+        html += '<div class="v-text">' + esc(where) + '.</div>' +
+          (tr.msg ? '<div class="v-msg ' + (tr.ok ? 'right' : 'wrong') + '">' + esc(tr.msg) + '</div>' : '') +
+          '<ul class="ar-compare">' +
+          '<li><span class="sym c-' + it.cls.key + '">' + C.CATS[it.cls.key].sym + '</span>' + t('In der Partie: {m} – {k}', { m: '<b>' + esc(moveLabel(it.played)) + '</b>', k: catLabel(it.cls.key) }) + '</li>' +
+          '<li><span class="sym c-best">★</span>' + t('Stockfish: {m}', { m: '<b>' + esc(bestSan) + '</b>' }) + '</li></ul>' +
+          (it.kind === 'error' ? causeHtml(diagnosisFor(it.played, it.cls), it.idx) : previewButtons(it.idx, ['idea'])) +
+          '<div class="v-actions"><button type="button" class="btn accent small" data-act="next">' + (tr.i + 1 < tr.items.length ? t('Nächster Moment') : t('Auswertung')) + '</button>' +
+          '<button type="button" class="btn ghost small" data-act="stop">' + t('Beenden') + '</button></div>';
+      }
+      el.innerHTML = html;
+    }
+    renderPreviewBar();
+    $('bestMove').innerHTML = '<span class="ev">' + t('im Training verborgen') + '</span>';
+    $('engineMeta').textContent = '';
+    $('lines').innerHTML = '<li class="empty">' + t('Während des Trainings ausgeblendet.') + '</li>';
+    renderEval(fen, null, pi, false);
+    renderPlayers(results);
+    renderTrainerBox();
+    renderStatus();
+    renderControls(pi, null, false);
+  }
+  // Tipp ohne die Lösung zu verraten: Worauf achten?
+  function activeHint(it) {
+    if (it.kind === 'found') return t('In dieser Stellung gibt es genau einen starken Zug – such nach Schach, Schlagen und Drohungen.');
+    var dg = diagnosisFor(it.played, it.cls);
+    var id = dg && dg.d ? dg.d.cause : null;
+    if (id === 'threat_missed' || id === 'mate_blind') return t('Was droht dein Gegner? Schau dir seinen letzten Zug genau an.');
+    if (id === 'tactic_missed') return t('Du hast hier eine Chance – such nach Schach, Schlagen und Drohungen für dich.');
+    if (id === 'hung_piece' || id === 'greedy') return t('Achte darauf, welche Figuren nach deinem Zug ungedeckt sind.');
+    if (id === 'tactic_allowed') return t('Welche Doppelangriffe oder Fesselungen hätte dein Gegner nach deinem Zug?');
+    if (id === 'technique') return t('Denk an den König und die Freibauern.');
+    return t('Welche deiner Figuren steht am schlechtesten? Verbessere sie.');
   }
 
   function renderTrainerBox() {
@@ -2372,14 +2506,17 @@
       var b = e.target.closest('[data-act]');
       if (!b || !train) return;
       var a = b.dataset.act;
+      stopPreview(true);
       if (a === 'next') trainNext();
+      else if (a === 'show' && train.source === 'active') activeReveal();
       else if (a === 'show') trainReveal();
       else if (a === 'hint') { train.hint = true; render(); }
       else if (a === 'stop') stopTraining();
       else if (a === 'pro') openPro('trainer');
-      else if (a === 'again') { var src = train.source; stopTraining(true); if (src === 'srs') startTrainer(); else startTraining(); }
+      else if (a === 'again') { var src = train.source; stopTraining(true); if (src === 'srs') startTrainer(); else if (src === 'active') startActiveReview(); else startTraining(); }
     });
     $('btnShareReview').onclick = shareReview;
+    $('btnActive').onclick = function () { startActiveReview(); var v = $('verdict'); if (v && v.scrollIntoView) v.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); };
     $('previewBar').addEventListener('click', function (e) {
       var b = e.target.closest('[data-pv]');
       if (!b || !preview) return;

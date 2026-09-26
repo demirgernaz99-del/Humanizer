@@ -205,7 +205,21 @@
      Eine Hauptursache pro Fehler (plus Umstand: zu schnell / Zeitnot), damit man gezielt üben kann.
      Die Drohung vor dem Zug kommt aus einer Nullzug-Analyse: dieselbe Stellung, aber der Gegner ist am Zug.
      ctx wie bei facts(), zusätzlich: before (Analyse vor dem Zug), threat (Analyse der Nullzug-Stellung), phase. */
-  var CAUSES = ['mate_blind', 'threat_missed', 'greedy', 'hung_piece', 'tactic_missed', 'technique', 'positional'];
+  var CAUSES = ['mate_blind', 'threat_missed', 'greedy', 'hung_piece', 'tactic_allowed', 'tactic_missed', 'technique', 'positional'];
+
+  /* Materialbilanz entlang der Widerlegung: Wie viel Material hat der Ziehende nach bis zu 4 Halbzügen
+     (Gegner, eigener Zug, Gegner, eigener Zug) im Vergleich zu vor seinem Zug? Negativ = verloren. */
+  function pvMaterialDelta(fenBefore, fenAfter, pv, color) {
+    if (!fenAfter || !pv || !pv.length) return 0;
+    var m0 = C().material(Chess(fenBefore), color);
+    var c = Chess(fenAfter), n = pv.length >= 4 ? 4 : pv.length >= 2 ? 2 : 1;
+    for (var i = 0; i < n; i++) {
+      var m = null;
+      try { m = c.move(uciMove(pv[i])); } catch (e) { m = null; }
+      if (!m) break;
+    }
+    return C().material(c, color) - m0;
+  }
 
   function nullFen(fen) {
     var p = fen.split(' ');
@@ -246,13 +260,19 @@
     var threat = threatOf(ctx);
     var captured = !!(mv.captured || (play(ctx.fenBefore, uci) || { move: {} }).move.captured);
     var ignored = threat && sameIdea(threat, ref, fenAfter);
+    var color = ctx.fenBefore.split(' ')[1];
+    var matLoss = ref && ref.pv ? -pvMaterialDelta(ctx.fenBefore, fenAfter, ref.pv, color) : 0;
+    var hangs = has('hangs') || has('hangs_moved');
     var cause;
     if (ignored) cause = 'threat_missed';
     else if (has('mate_allowed')) cause = 'mate_blind';
     else if (cls.key === 'miss') cause = 'tactic_missed';   // eine Gewinnchance ausgelassen wiegt schwerer als die Folgen
-    else if (captured && (has('hangs') || has('hangs_moved') || has('fork_allowed'))) cause = 'greedy';
-    else if (has('hangs') || has('hangs_moved') || has('fork_allowed')) cause = 'hung_piece';
+    else if (captured && (hangs || has('fork_allowed') || matLoss >= 1.5)) cause = 'greedy';
+    else if (hangs) cause = 'hung_piece';
+    else if (has('fork_allowed') || matLoss >= 2) cause = 'tactic_allowed';
     else if (cls.key === 'miss' || has('mate_missed') || has('fork_missed') || has('win_missed')) cause = 'tactic_missed';
+    // Geschlagen (kein Zurückschlagen) und es war ein Fehler: die Beute hatte einen Haken
+    else if (captured && !(ctx.prevMove && ctx.prevMove.captured && ctx.prevMove.to === mv.to)) cause = 'greedy';
     else if (ctx.phase === 'endgame') cause = 'technique';
     else cause = 'positional';
     var circ = has('time_trouble') ? 'time_trouble' : has('fast') ? 'fast' : null;
@@ -268,6 +288,7 @@
       threat_missed: ['Drohung übersehen', 'Frag vor jedem Zug: Was will der Gegner mit seinem letzten Zug? Üben kannst du das mit „Was droht?“ (Taste T).'],
       greedy: ['Vergiftete Beute', 'Vor dem Schlagen einen Zug weiter denken: Was schlägt oder droht der Gegner danach?'],
       hung_piece: ['Figur eingestellt', 'Blunder-Check vor dem Loslassen: Ist jede Figur nach meinem Zug noch gedeckt?'],
+      tactic_allowed: ['Taktik des Gegners übersehen', 'Prüfe nach deinem Zug: Hat der Gegner einen Doppelangriff, eine Fesselung oder einen Abzug?'],
       tactic_missed: ['Chance übersehen', 'Suche zuerst für dich selbst: Schach, Schlagen, Drohungen – bevor du einen ruhigen Zug machst.'],
       technique: ['Endspieltechnik', 'Im Endspiel zählen der aktive König, Freibauern und das Verhindern von Gegenspiel.'],
       positional: ['Stellungsfehler', 'Kein taktischer Grund: Der Zug verschlechtert die Stellung auf Dauer. Vergleiche ihn mit der besseren Idee.'],
@@ -284,6 +305,7 @@
       threat_missed: ['Missed the threat', 'Before every move, ask: what does my opponent want with their last move? Practise with “What\'s the threat?” (T key).'],
       greedy: ['Poisoned bait', 'Before capturing, think one move further: what does your opponent take or threaten next?'],
       hung_piece: ['Hung a piece', 'Blunder check before you let go: is every piece still protected after my move?'],
+      tactic_allowed: ['Allowed a tactic', 'After your move, check: does your opponent have a double attack, a pin or a discovered attack?'],
       tactic_missed: ['Missed a chance', 'Look for your own checks, captures and threats first – before making a quiet move.'],
       technique: ['Endgame technique', 'In the endgame, an active king, passed pawns and stopping counterplay are what count.'],
       positional: ['Positional error', 'No tactical reason: the move worsens your position in the long run. Compare it with the better idea.'],

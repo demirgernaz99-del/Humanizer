@@ -96,6 +96,24 @@ d = CO.diagnose({ fenBefore: '8/5k2/8/8/8/2K5/5P2/8 w - - 0 50', move: mv('8/5k2
   before: E('c3d4', { cp: 500 }), threat: null, after: E('f7f6', { cp: 0 }) });
 eq(d && d.cause, 'technique', 'Endspieltechnik');
 eq(CO.diagnose({ fenBefore: quiet, move: mv(quiet, 'h3'), cls: { key: 'good' } }), null, 'guter Zug: keine Diagnose');
+// 7) Vergiftete Beute über eine Folge: Blackburne-Schilling-Falle 4.Sxe5? Dg5! (Doppelangriff auf e5 und g2)
+var bs = after('e4 e5 Nf3 Nc6 Bc4 Nd4');
+d = CO.diagnose({ fenBefore: bs, move: mv(bs, 'Nxe5'), phase: 'opening',
+  cls: { key: 'mistake', bestUci: 'f3d4', bestScore: { cp: 40 } }, before: E('f3d4', { cp: 40 }), threat: E('d4f3', { cp: 30 }),
+  after: { depth: 16, lines: [{ uci: 'd8g5', score: { cp: 250 }, pv: ['d8g5', 'e5f7', 'g5g2', 'h1f1', 'g2e4'] }] } });
+eq(d && d.cause, 'greedy', 'Vergiftete Beute über die Folge erkannt (Sxe5? Dg5!)');
+// 8) Taktik des Gegners übersehen: Gabel zugelassen
+var fk = 'r3k2r/ppp2ppp/8/8/3n4/8/PPP2PPP/R3K1NR w KQkq - 0 1';
+d = CO.diagnose({ fenBefore: fk, move: mv(fk, 'Ne2'), phase: 'middlegame',
+  cls: { key: 'blunder', bestUci: 'e1d1', bestScore: { cp: -300 } }, before: E('e1d1', { cp: -300 }), threat: E('d4c2', { cp: 800 }),
+  after: { depth: 16, lines: [{ uci: 'd4c2', score: { cp: 900 }, pv: ['d4c2', 'e1d2', 'c2a1'] }] } });
+ok(d && (d.cause === 'threat_missed' || d.cause === 'tactic_allowed'), 'Gabel zugelassen: ' + (d && d.cause));
+// Zurückschlagen ist keine gierige Beute
+var rc = after('e4 e5 Nf3 Nc6 d4 exd4');
+d = CO.diagnose({ fenBefore: rc, move: mv(rc, 'Nxd4'), phase: 'opening', prevMove: mv(after('e4 e5 Nf3 Nc6 d4'), 'exd4'),
+  cls: { key: 'mistake', bestUci: 'f1c4', bestScore: { cp: 40 } }, before: E('f1c4', { cp: 40 }), threat: E('d4d3', { cp: 20 }),
+  after: E('d8h4', { cp: 120 }) });
+ok(d && d.cause !== 'greedy', 'Zurückschlagen ≠ gierig: ' + (d && d.cause));
 eq(CO.describeCause({ cause: 'hung_piece' }, { lang: 'en' }).title, 'Hung a piece', 'englischer Titel');
 
 /* ---------- Phasen ---------- */
