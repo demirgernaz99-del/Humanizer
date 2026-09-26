@@ -795,3 +795,14 @@ body.ar-active #sheetCard, body.ar-active #review, body.ar-active .acc-chip, bod
 .pl-foot { display: flex; align-items: center; justify-content: space-between; gap: 8px; font-size: 13px; color: var(--muted); }
 .v-task { margin: 2px 0 4px; font-weight: 600; font-size: 14px; color: var(--ink); }
 .cause-focus .btn { margin-top: 8px; }
+
+/* ---------- Zeitmanagement ---------- */
+.time-chart { margin-top: 10px; display: grid; gap: 6px; }
+.time-chart svg { width: 100%; height: 70px; display: block; }
+.tc-crit { fill: #d6453d; } .tc-norm { fill: var(--muted); opacity: .55; }
+.tc-err.c-mistake { fill: var(--c-mistake); } .tc-err.c-blunder { fill: var(--c-blunder); } .tc-err.c-miss { fill: var(--c-miss); }
+.tc-legend { display: flex; gap: 12px; flex-wrap: wrap; font-size: 12px; color: var(--muted); }
+.tc-legend i { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 5px; vertical-align: -1px; }
+.tc-legend i.tc-crit { background: #d6453d; } .tc-legend i.tc-norm { background: var(--muted); opacity: .55; }
+.tc-legend i.tc-dot { background: var(--c-mistake); border-radius: 50%; }
+.tc-notes { margin: 0; padding-left: 18px; font-size: 13.5px; color: var(--ink-2); line-height: 1.5; }

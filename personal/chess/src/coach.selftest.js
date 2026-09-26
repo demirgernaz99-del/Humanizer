@@ -116,6 +116,21 @@ d = CO.diagnose({ fenBefore: rc, move: mv(rc, 'Nxd4'), phase: 'opening', prevMov
 ok(d && d.cause !== 'greedy', 'Zurückschlagen ≠ gierig: ' + (d && d.cause));
 eq(CO.describeCause({ cause: 'hung_piece' }, { lang: 'en' }).title, 'Hung a piece', 'englischer Titel');
 
+/* ---------- Zeitmanagement ---------- */
+eq(CO.criticality({ lines: [{ score: { cp: 300 } }, { score: { cp: -200 } }] }, 20) > 30, true, 'nur ein guter Zug = kritisch');
+eq(CO.criticality({ lines: [{ score: { cp: 30 } }, { score: { cp: 25 } }] }, 20) < 3, true, 'gleichwertige Züge = ruhig');
+eq(CO.criticality({ lines: [{ score: { cp: 30 } }] }, 20), 0, 'ohne zweite Linie: nur der Verlust zählt');
+eq(CO.criticality({ lines: [{ score: { cp: 30 } }, { score: { cp: 25 } }] }, 20, 22), 22, 'teurer Zug = kritische Stellung');
+eq(CO.criticality({ lines: [{ score: { cp: 30 } }] }, 1, 0), null, 'erzwungener Zug zählt nicht');
+var tp = CO.timeProfile([
+  { spent: 2, crit: 40, loss: 25 }, { spent: 3, crit: 20, loss: 2 }, { spent: 60, crit: 30, loss: 0 },
+  { spent: 90, crit: 1, loss: 0 }, { spent: 4, crit: 2, loss: 0 }, { spent: null, crit: 50 }], 600);
+eq(tp.nCrit, 3, 'kritische Züge gezählt');
+eq(tp.fastCrit, 2, 'zu schnell in kritischen Stellungen');
+eq(tp.fastCritErr, 1, 'davon ein Fehler');
+eq(tp.wasted, 1, 'Zeit in ruhiger Stellung verschwendet (90 s)');
+eq(Math.round(tp.critAvg), Math.round(65 / 3), 'Ø Zeit in kritischen Stellungen');
+
 /* ---------- Phasen ---------- */
 var start = new L.Chess().fen();
 eq(CO.phaseOf(start, true), 'opening', 'Startstellung = Eröffnung');

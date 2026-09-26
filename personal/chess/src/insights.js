@@ -63,7 +63,8 @@
       out.push({ san: mv.san, uci: mv.uci, color: mv.color, key: r.key, loss: r.loss == null ? null : Math.round(r.loss * 10) / 10,
                  acc: r.accuracy == null ? null : Math.round(r.accuracy * 10) / 10, wpBefore: r.wpBefore,
                  phase: phase, clock: mv.clock == null ? null : mv.clock, spent: mv.spent == null ? null : mv.spent,
-                 tags: tags, cause: dg ? dg.cause : null, bestUci: r.bestUci, fenBefore: mv.fenBefore });
+                 tags: tags, cause: dg ? dg.cause : null, crit: critR(coach().criticality(eb, mv.legalCount, r.loss)),
+                 bestUci: r.bestUci, fenBefore: mv.fenBefore });
       prev = r;
     }
     var sum = C().summarize(out.map(function (m) { return { color: m.color, cls: { key: m.key, accuracy: m.acc, wpBefore: m.wpBefore } }; }));
@@ -90,6 +91,7 @@
     return list;
   }
 
+  function critR(x) { return x == null ? null : Math.round(x * 10) / 10; }
   function mean(a) { return a.length ? a.reduce(function (s, x) { return s + x; }, 0) / a.length : null; }
 
   /* Profil über viele Partien. entries: Bibliothekseinträge mit analysis und userColor. */
@@ -100,7 +102,7 @@
                 phases: { opening: [], middlegame: [], endgame: [] }, byColor: { w: { n: 0, pts: 0, acc: [] }, b: { n: 0, pts: 0, acc: [] } },
                 perGame: { blunder: 0, mistake: 0, miss: 0, inaccuracy: 0 }, highlights: { brilliant: 0, great: 0 },
                 errors: 0, tags: {}, causes: {}, time: { errors: 0, pressure: 0, fast: 0, withClock: 0 }, openings: [], leaks: [] };
-    var leaks = {};
+    var leaks = {}, timeMoves = [];
     var accs = [], openings = {};
     games.forEach(function (g) {
       var me = g.userColor, a = g.analysis;
@@ -116,6 +118,7 @@
         if (m.color !== me) return;
         if (m.clock != null) hasClock = true;
         if (m.acc != null && res.phases[m.phase]) res.phases[m.phase].push(m.acc);
+        if (m.spent != null && m.crit != null) timeMoves.push({ spent: m.spent, crit: m.crit, loss: m.loss });
         if (res.perGame[m.key] != null) res.perGame[m.key]++;
         if (res.highlights[m.key] != null) res.highlights[m.key]++;
         if (/mistake|blunder|miss/.test(m.key)) {
@@ -163,6 +166,8 @@
       var o = openings[k];
       return { name: o.name, color: o.color, eco: o.eco, n: o.n, score: o.pts / o.n, acc: mean(o.acc), exit: mean(o.exitMoves) };
     }).sort(function (a, b) { return b.n - a.n || b.score - a.score; });
+    // Zeitmanagement über alle eigenen Züge mit Uhrzeit
+    res.timeMgmt = timeMoves.length ? coach().timeProfile(timeMoves, null) : null;
     // Abweichungen, die im Schnitt mindestens 4 % Gewinnchance kosten – die teuersten zuerst
     res.leaks = Object.keys(leaks).map(function (k) { var L = leaks[k]; return Object.assign({}, L, { loss: L.loss / L.n, score: L.pts / L.n }); })
       .filter(function (L) { return L.loss >= 4; })

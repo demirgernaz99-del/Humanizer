@@ -349,4 +349,14 @@ EN = {
 "{a} von {b}": "{a} of {b}", "Dein Trainingsplan diese Woche": "Your training plan this week", "größter Hebel": "biggest lever",
 "{d} von {g} diese Woche · {n} fällig": "{d} of {g} this week · {n} due", "Wiederholen": "Repeat", "Üben": "Practise",
 "Genau das trainieren": "Train exactly this",
+# Zeitmanagement
+"kritisch": "critical", "kritische Stellung": "critical position", "andere": "other", "Bedenkzeit je Zug": "Thinking time per move",
+"In kritischen Stellungen Ø {a} Bedenkzeit, in ruhigen Ø {b}.": "Critical positions: avg. {a} thinking time, quiet ones: avg. {b}.",
+"{n}× schnell gezogen, obwohl es auf den Zug ankam – {e} davon wurden zu Fehlern.": "{n}× moved quickly although the move mattered – {e} of them became mistakes.",
+"{n}× viel Zeit in Stellungen ohne echte Entscheidung ({s} insgesamt).": "{n}× spent a lot of time in positions without a real decision ({s} in total).",
+"Gut: Du nimmst dir Zeit, wenn es darauf ankommt.": "Good: you take your time when it matters.",
+"Tipp: Spar Zeit in ruhigen Stellungen – für die Momente, in denen nur ein Zug hilft.": "Tip: save time in quiet positions – for the moments when only one move works.",
+"Zeitmanagement": "Time management", "kritische Stellungen": "critical positions", "ruhige Stellungen": "quiet positions",
+"Ø Bedenkzeit – in kritischen Stellungen hilft nur ein Zug, in ruhigen sind mehrere gleich gut.": "Avg. thinking time – in critical positions only one move works, in quiet ones several are equally good.",
+"Du denkst in kritischen Stellungen kaum länger nach als in ruhigen – genau dort entscheiden sich Partien.": "You barely think longer in critical positions than in quiet ones – yet that's exactly where games are decided.",
 }

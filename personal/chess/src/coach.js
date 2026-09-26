@@ -363,6 +363,35 @@
   function causeTitle(id, l) { var T = CAUSE_TXT[l === 'en' ? 'en' : 'de']; return T[id] ? T[id][0] : id; }
   function causeTip(id, l) { var T = CAUSE_TXT[l === 'en' ? 'en' : 'de']; return T[id] ? T[id][1] : ''; }
 
+  /* ---------- Zeitmanagement: Bedenkzeit gegen Schwierigkeit der Stellung ----------
+     crit = Abstand bester zu zweitbester Zug in Prozentpunkten Gewinnchance (hoch = nur ein Zug hilft).
+     moves: [{ spent, crit, loss }] einer Farbe; base = Grundbedenkzeit (s) oder null. */
+  var TIME = { crit: 15, quiet: 3, fast: 5 };
+  // Wie viel stand bei diesem Zug auf dem Spiel? Abstand bester/zweitbester Zug – oder, falls größer,
+  // was der gespielte Zug tatsächlich gekostet hat (loss in Prozentpunkten).
+  function criticality(entry, legalCount, loss) {
+    if (!entry || !entry.lines || !entry.lines.length || legalCount === 1) return null;
+    var gap = entry.lines.length >= 2 ? Math.max(0, C().scoreWp(entry.lines[0].score) - C().scoreWp(entry.lines[1].score)) : 0;
+    return Math.max(gap, loss || 0);
+  }
+  function timeProfile(moves, base) {
+    var waste = Math.max(45, base ? base * 0.04 : 0);
+    var crit = [], quiet = [], out = { fastCrit: 0, fastCritErr: 0, wasted: 0, wastedSec: 0, critAvg: null, quietAvg: null, nCrit: 0, nQuiet: 0 };
+    moves.forEach(function (m) {
+      if (m.spent == null || m.crit == null) return;
+      if (m.crit >= TIME.crit) {
+        crit.push(m.spent);
+        if (m.spent <= TIME.fast) { out.fastCrit++; if (m.loss != null && m.loss >= 10) out.fastCritErr++; }
+      } else if (m.crit < TIME.quiet) {
+        quiet.push(m.spent);
+        if (m.spent >= waste) { out.wasted++; out.wastedSec += m.spent; }
+      }
+    });
+    function avg(a) { return a.length ? a.reduce(function (s, x) { return s + x; }, 0) / a.length : null; }
+    out.critAvg = avg(crit); out.quietAvg = avg(quiet); out.nCrit = crit.length; out.nQuiet = quiet.length;
+    return out;
+  }
+
   /* ---------- Partiephasen ---------- */
 
   function majorsMinors(fen) {
@@ -414,7 +443,7 @@
   root.SK.coach = {
     explain: explain, facts: facts, tagsFor: tagsFor, render: render, motifOf: motifOf, forkTargets: forkTargets, phaseOf: phaseOf, PHASES: PHASES,
     diagnose: diagnose, describeCause: describeCause, causeTitle: causeTitle, causeTip: causeTip, CAUSES: CAUSES, nullFen: nullFen, threatOf: threatOf,
-    trainTitle: trainTitle, trainTask: trainTask,
+    trainTitle: trainTitle, trainTask: trainTask, criticality: criticality, timeProfile: timeProfile, TIME: TIME,
     parseClk: parseClk, parseTimeControl: parseTimeControl, timeSpent: timeSpent, fmtClock: fmtClock, deSan: deSan
   };
 })();

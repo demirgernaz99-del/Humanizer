@@ -1462,6 +1462,42 @@
     el.innerHTML = '<div class="eyebrow">' + t('Fazit') + '</div>' + paras.join('');
   }
 
+  /* Zeitmanagement: Bedenkzeit je Zug gegen die Schwierigkeit der Stellung (für dich bzw. die Farbe unten) */
+  function renderTimeChart(results, tc) {
+    var el = $('timeChart'), color = trainColor();
+    var moves = [];
+    state.line.forEach(function (m, i) {
+      if (m.color !== color) return;
+      var r = results[i];
+      moves.push({ i: i, m: m, r: r, spent: m.spent, crit: CO.criticality(entryAt(i), m.legalCount, r && r.loss), loss: r && r.loss });
+    });
+    var withT = moves.filter(function (x) { return x.spent != null; });
+    if (withT.length < 4) { el.innerHTML = ''; return; }
+    var maxS = Math.max.apply(null, withT.map(function (x) { return x.spent; }).concat([10]));
+    var W = moves.length * 10, H = 70;
+    var bars = moves.map(function (x, k) {
+      if (x.spent == null) return '';
+      var h = Math.max(2, Math.sqrt(x.spent / maxS) * (H - 12)), crit = x.crit != null && x.crit >= CO.TIME.crit;
+      var bad = x.r && /mistake|blunder|miss/.test(x.r.key);
+      var tip = moveLabel(x.m) + ': ' + CO.fmtClock(x.spent) + (crit ? ' · ' + t('kritisch') : '');
+      return '<g><title>' + esc(tip) + '</title><rect x="' + (k * 10 + 1) + '" y="' + (H - h) + '" width="8" height="' + h + '" rx="1.5" class="' + (crit ? 'tc-crit' : 'tc-norm') + '"/>' +
+        (bad ? '<circle cx="' + (k * 10 + 5) + '" cy="' + Math.max(4, H - h - 5) + '" r="3.2" class="tc-err c-' + x.r.key + '"/>' : '') + '</g>';
+    }).join('');
+    var prof = CO.timeProfile(moves, tc ? tc.base : null), notes = [];
+    var who = state.user && state.user.color === color ? '' : colorName(color) + ': ';
+    if (prof.nCrit && prof.critAvg != null && prof.quietAvg != null) {
+      notes.push(who + t('In kritischen Stellungen Ø {a} Bedenkzeit, in ruhigen Ø {b}.', { a: CO.fmtClock(prof.critAvg), b: CO.fmtClock(prof.quietAvg) }));
+    }
+    if (prof.fastCrit) notes.push(t('{n}× schnell gezogen, obwohl es auf den Zug ankam – {e} davon wurden zu Fehlern.', { n: prof.fastCrit, e: prof.fastCritErr }));
+    if (prof.wasted) notes.push(t('{n}× viel Zeit in Stellungen ohne echte Entscheidung ({s} insgesamt).', { n: prof.wasted, s: CO.fmtClock(prof.wastedSec) }));
+    if (prof.critAvg != null && prof.quietAvg != null) {
+      notes.push(prof.critAvg >= prof.quietAvg * 1.5 ? t('Gut: Du nimmst dir Zeit, wenn es darauf ankommt.') : t('Tipp: Spar Zeit in ruhigen Stellungen – für die Momente, in denen nur ein Zug hilft.'));
+    }
+    el.innerHTML = '<svg viewBox="0 0 ' + W + ' ' + H + '" preserveAspectRatio="none" role="img" aria-label="' + esc(t('Bedenkzeit je Zug')) + '">' + bars + '</svg>' +
+      '<div class="tc-legend"><span><i class="tc-crit"></i>' + t('kritische Stellung') + '</span><span><i class="tc-norm"></i>' + t('andere') + '</span><span><i class="tc-dot"></i>' + t('Fehler') + '</span></div>' +
+      (notes.length ? '<ul class="tc-notes">' + notes.map(function (n) { return '<li>' + esc(n) + '</li>'; }).join('') + '</ul>' : '');
+  }
+
   function renderReviewExtras(results) {
     // Phasen
     var ps = phaseStats(results), rows = '';
@@ -1512,6 +1548,7 @@
         '<tr><td class="lab">' + t('Ø Bedenkzeit pro Zug') + '</td><td class="n">' + avg(tm.w.spent) + '</td><td class="n">' + avg(tm.b.spent) + '</td></tr>' +
         '<tr><td class="lab">' + t('Fehler in Zeitnot') + '</td><td class="n">' + tm.w.press + '/' + tm.w.err + '</td><td class="n">' + tm.b.press + '/' + tm.b.err + '</td></tr>' +
         '<tr><td class="lab">' + t('Fehler nach ≤ 3 s') + '</td><td class="n">' + tm.w.fast + '/' + tm.w.err + '</td><td class="n">' + tm.b.fast + '/' + tm.b.err + '</td></tr>';
+      renderTimeChart(results, tc);
     }
 
     // Training
@@ -2265,6 +2302,19 @@
     html += '<section class="card"><h2>' + t('Fehlermuster') + '</h2>' +
       (tagRows.length ? bars(tagRows.map(function (x) { return { label: x.label, v: x.v, max: maxTag, fmt: String }; })) : '<p class="muted">' + t('Noch keine Fehler mit erkennbarem Muster.') + '</p>') +
       '<p class="muted small">' + t('Bei {n} eigenen Fehlern, Patzern und verpassten Chancen.', { n: r.errors }) + '</p></section>';
+    var tmg = r.timeMgmt;
+    if (tmg && tmg.nCrit >= 5 && tmg.critAvg != null && tmg.quietAvg != null) {
+      var ratio = tmg.quietAvg > 0 ? tmg.critAvg / tmg.quietAvg : null;
+      html += '<section class="card"><h2>' + t('Zeitmanagement') + '</h2>' +
+        bars([{ label: t('kritische Stellungen'), v: tmg.critAvg, max: Math.max(tmg.critAvg, tmg.quietAvg, 1), fmt: CO.fmtClock },
+              { label: t('ruhige Stellungen'), v: tmg.quietAvg, max: Math.max(tmg.critAvg, tmg.quietAvg, 1), fmt: CO.fmtClock }]) +
+        '<p class="muted small">' + t('Ø Bedenkzeit – in kritischen Stellungen hilft nur ein Zug, in ruhigen sind mehrere gleich gut.') + '</p>' +
+        '<ul class="tc-notes">' +
+        (ratio != null ? '<li>' + esc(ratio >= 1.5 ? t('Gut: Du nimmst dir Zeit, wenn es darauf ankommt.') : t('Du denkst in kritischen Stellungen kaum länger nach als in ruhigen – genau dort entscheiden sich Partien.')) + '</li>' : '') +
+        (tmg.fastCrit ? '<li>' + esc(t('{n}× schnell gezogen, obwohl es auf den Zug ankam – {e} davon wurden zu Fehlern.', { n: tmg.fastCrit, e: tmg.fastCritErr })) + '</li>' : '') +
+        (tmg.wasted ? '<li>' + esc(t('{n}× viel Zeit in Stellungen ohne echte Entscheidung ({s} insgesamt).', { n: tmg.wasted, s: CO.fmtClock(tmg.wastedSec) })) + '</li>' : '') +
+        '</ul></section>';
+    }
     html += '<section class="card ins-wide"><h2>' + t('Eröffnungen') + '</h2>' + openingsTable(r.openings) + leaksHtml(r.leaks) + '</section>';
     html += '<section class="card ins-wide"><h2>' + t('Analysierte Partien') + '</h2>' + gamesList(ent.shown) + '</section>';
     html += '</div>';
