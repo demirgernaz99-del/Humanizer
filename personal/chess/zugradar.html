@@ -384,8 +384,10 @@ select {
 
 /* Urteil zum letzten Zug */
 .verdict { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 4px 12px; align-items: start; }
+/* Alles rechts vom Symbol; nur Antwort und Knöpfe gehen über die volle Breite */
+.verdict > * { grid-column: 2; }
 .verdict .v-icon {
-  grid-row: span 3; width: 44px; height: 44px; border-radius: 50%;
+  grid-column: 1; grid-row: span 3; width: 44px; height: 44px; border-radius: 50%;
   display: grid; place-items: center; color: #fff; font: 800 18px/1 var(--f-display); letter-spacing: -.04em;
 }
 .verdict .v-icon.neutral { background: var(--panel-2); color: var(--muted); border: 1px solid var(--line); }
@@ -1220,7 +1222,7 @@ body.dropping::after {
 </div>
 
 <script>
-(function(){var r=typeof window!=='undefined'?window:globalThis;r.SK=r.SK||{};r.SK.seller={"_hinweis": "Deine Geschäftsdaten. Nach Änderungen: python3 build.py. Leere Felder erscheinen auf der Website als [bitte ausfüllen].", "brand": "Zugradar", "siteUrl": "https://demirgernaz99-del.github.io/Humanizer/personal/chess/", "checkoutUrl": "", "prices": {"monthly": "4,99 €", "yearly": "34,99 €", "lifetime": "69 €"}, "pricesEn": {"monthly": "€4.99", "yearly": "€34.99", "lifetime": "€69"}, "license": {"provider": "lemonsqueezy", "storeId": null, "productIds": [], "organizationId": "", "benefitIds": [], "api": ""}, "legal": {"name": "", "street": "", "city": "", "country": "Deutschland", "email": "", "phone": "", "vatId": ""}, "merchantOfRecord": "Lemon Squeezy (Lemon Squeezy LLC)", "_hinweis_license": "provider: 'lemonsqueezy' (storeId, productIds) oder 'polar' (organizationId, optional benefitIds). api nur bei Proxy ausfüllen."};r.SK.build={"version": "1.0 (d2afbd4)"};})();
+(function(){var r=typeof window!=='undefined'?window:globalThis;r.SK=r.SK||{};r.SK.seller={"_hinweis": "Deine Geschäftsdaten. Nach Änderungen: python3 build.py. Leere Felder erscheinen auf der Website als [bitte ausfüllen].", "brand": "Zugradar", "siteUrl": "https://demirgernaz99-del.github.io/Humanizer/personal/chess/", "checkoutUrl": "", "prices": {"monthly": "4,99 €", "yearly": "34,99 €", "lifetime": "69 €"}, "pricesEn": {"monthly": "€4.99", "yearly": "€34.99", "lifetime": "€69"}, "license": {"provider": "lemonsqueezy", "storeId": null, "productIds": [], "organizationId": "", "benefitIds": [], "api": ""}, "legal": {"name": "", "street": "", "city": "", "country": "Deutschland", "email": "", "phone": "", "vatId": ""}, "merchantOfRecord": "Lemon Squeezy (Lemon Squeezy LLC)", "_hinweis_license": "provider: 'lemonsqueezy' (storeId, productIds) oder 'polar' (organizationId, optional benefitIds). api nur bei Proxy ausfüllen."};r.SK.build={"version": "1.0 (d1f2531)"};})();
 </script>
 <script>
 /* SK.i18n – Deutsch/Englisch. Der deutsche Text ist zugleich der Schlüssel (wie gettext):

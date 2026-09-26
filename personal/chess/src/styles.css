@@ -367,8 +367,10 @@ select {
 
 /* Urteil zum letzten Zug */
 .verdict { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 4px 12px; align-items: start; }
+/* Alles rechts vom Symbol; nur Antwort und Knöpfe gehen über die volle Breite */
+.verdict > * { grid-column: 2; }
 .verdict .v-icon {
-  grid-row: span 3; width: 44px; height: 44px; border-radius: 50%;
+  grid-column: 1; grid-row: span 3; width: 44px; height: 44px; border-radius: 50%;
   display: grid; place-items: center; color: #fff; font: 800 18px/1 var(--f-display); letter-spacing: -.04em;
 }
 .verdict .v-icon.neutral { background: var(--panel-2); color: var(--muted); border: 1px solid var(--line); }
