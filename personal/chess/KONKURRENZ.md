@@ -19,7 +19,26 @@ für KI-Erklärungen (DecodeChess).
 | **DecodeChess** | erklärt Stellungen in Worten (KI + Stockfish) | keine eigene Review-Oberfläche wie chess.com, Fokus auf Einzelstellungen | ab ca. 8,25 $/Monat |
 | **Chess DNA** | Mustererkennung über alle Partien | Beta, kein Einzelpartie-Review | derzeit kostenlos (Beta) |
 
-## 3. Was Zugradar heute besser macht
+## 3. Strategie: nicht nachbauen, sondern das Problem besser lösen
+
+chess.com und lichess beantworten vor allem die Frage **„Welcher Zug wäre besser gewesen?“**. Genau diese Antwort
+liefert jede Engine. Ein Spieler wird davon aber nicht automatisch besser, denn er weiß nicht, **warum** er den Zug
+nicht gefunden hat, und damit auch nicht, was er üben soll. Zugradar setzt dort an:
+
+1. **Ursache statt Einstufung.** Jeder eigene Fehler bekommt einen Denkfehler: Drohung übersehen, Matt übersehen,
+   Figur eingestellt, zu gierig (vergiftete Beute), Taktik zugelassen oder übersehen, Endspieltechnik, Stellungsfehler.
+   Dazu kommt der Umstand „zu schnell“ oder „in Zeitnot“. Grundlage sind die Nullzug-Analyse (was drohte vor dem Zug?),
+   die Widerlegung der Engine (was kostet sie an Material?) und die Uhr.
+2. **Erst denken, dann Lösung.** Das aktive Review fragt an den entscheidenden Momenten „Was hättest du gespielt?“.
+   Das ist Lernpsychologie (Abrufübung) statt passivem Durchklicken.
+3. **Training nach Ursache.** Der Trainingsplan zählt die Denkfehler über alle Partien und übt gezielt den häufigsten,
+   mit Stellungen aus den eigenen Partien.
+4. **Kontext, den die anderen nicht zeigen.** Eröffnungs-Check (wo genau die Theorie verlassen wurde und was es kostete)
+   und Zeitmanagement (Bedenkzeit gegen die Schwierigkeit der Stellung).
+5. **Auch die Partien, die zählen.** Turnier- und Vereinspartien kommen als PGN-Datei. chess.com und lichess sind auf
+   eigene Online-Partien ausgelegt; Zugradar öffnet ganze Turnierdateien (auch ChessBase-Exporte) und analysiert alle.
+
+## 4. Was Zugradar heute besser macht
 
 1. **Unbegrenztes volles Review, kostenlos.** Genau dort hat chess.com die Schraube angezogen (1 pro Tag). Das ist die
    stärkste Werbebotschaft.
@@ -36,34 +55,40 @@ für KI-Erklärungen (DecodeChess).
    Partien (Aimchess-Idee), Trainer aus eigenen Fehlern und Auto-Import.
 9. **Fair Play eingebaut**: Laufende Partien werden nie gelesen. Das wirkt vertrauensbildend gegenüber Vereinen
    und Plattformen.
+10. **Denkfehler-Diagnose, aktives Review, Trainingsplan, Eröffnungs-Check, Zeitmanagement und PGN-Dateien**
+    (siehe Abschnitt 3). Diese Kombination bietet in dieser Form kein anderes Review.
 
-## 4. Positionierung und Botschaften
+## 5. Positionierung und Botschaften
 
-- **Kernbotschaft:** „Jedes Review. Voll. Kostenlos. Und du siehst, wie gerechnet wird.“
+- **Kernbotschaft:** „Andere zeigen dir den besten Zug. Zugradar zeigt dir, warum du ihn nicht gefunden hast.“
+- **Zweite Botschaft:** „Jedes Review. Voll. Kostenlos. Und du siehst, wie gerechnet wird.“
 - **Zielgruppen:**
   1. chess.com-Spieler, die das Tageslimit stört
-  2. Vereinsspieler und Jugendtrainer (Datenschutz, kein Konto)
+  2. Vereinsspieler und Jugendtrainer (Turnier-PGN, Datenschutz, kein Konto)
   3. Improver, die über viele Partien besser werden wollen (Pro)
 - **Kanäle:** Teilen-Bilder brillanter Züge, Schachvereine, YouTube/Twitch-Formate („Stockfish bewertet eure
   Partien“), Vergleichsartikel „chess.com Review ohne Limit“ (sachlich, mit Datum).
 
-## 5. Was noch fehlt (Ausbaustufen nach Wirkung)
+## 6. Was noch fehlt (Ausbaustufen nach Wirkung)
 
 | Priorität | Funktion | Warum |
 |---|---|---|
 | 1 | **Eigene Domain + Website online** (GitHub Pages einschalten) | Ohne Website kein Verkauf, und in Vorschauen sind chess.com und lichess technisch gesperrt |
 | 2 | **Eröffnungs-Explorer** (Master-Partien) | lichess hat das kostenlos; ein Grund, warum Spieler zwischen den Tools wechseln |
 | 3 | **Endspiel-Tablebase** (≤ 7 Steine, „Gewinn in 23“) | perfekte Endspielbewertung, lichess hat das |
-| 4 | **Coach-Erklärungen auch für gute Züge** („Warum ist Kb6 der beste Zug?“) | chess.com-Coach kann das (Diamond) |
+| 4 | **Idee hinter guten Zügen** („Warum ist Kb6 der beste Zug?“) weiter ausbauen | die Denkfehler-Karte zeigt schon die bessere Fortsetzung auf dem Brett; Erklärungen in Worten für gute Züge fehlen noch |
 | 5 | **Android-App** (Play Store über Trusted Web Activity) | Reichweite, Vertrauen, Suche im Store |
 | 6 | **Konto mit Synchronisation** | Partien und Trainer auf Handy und PC gleichzeitig |
 
-## 6. Ehrliche Einordnung
+## 7. Ehrliche Einordnung
 
 - chess.com hat Millionen Nutzer, Lektionen, Puzzles und Spieler. Zugradar greift **nicht die Plattform** an, sondern
   das **Review danach**. Dort ist der Unterschied messbar (Limit, Formeln, Preis).
 - Die Leistungs-Elo ist eine grobe Schätzung. So steht es auch in der App. Nicht mit „genauer als chess.com“ werben,
   sondern mit „nachvollziehbar“.
+- Die Denkfehler-Diagnose nennt die **wahrscheinlichste** Ursache nach festen Regeln. Sie kann danebenliegen, etwa
+  wenn jemand eine Drohung gesehen, aber falsch eingeschätzt hat. In der Werbung deshalb „zeigt, woran es lag“ statt
+  „weiß, was du gedacht hast“.
 
 ## Quellen
 
@@ -78,3 +103,4 @@ für KI-Erklärungen (DecodeChess).
 - Aimchess, DecodeChess, Chess DNA: <https://chessdna.app/learn/best-aimchess-alternative.html>, <https://decodechess.com/>,
   <https://mychessplan.com/best-chess-analysis-app-2026/>
 - lichess-Analyse: <https://lichess.org/forum/lichess-feedback/learn-from-your-mistakes-dominates-opening-explorer--tablebase>
+- Eröffnungsdaten: <https://github.com/lichess-org/chess-openings> (CC0)

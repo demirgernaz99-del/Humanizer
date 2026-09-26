@@ -346,7 +346,7 @@
       <h2 id="helpTitle" data-t>Hilfe</h2>
       <h3 data-t>In drei Schritten</h3>
       <ol class="help-steps">
-        <li data-t-html><b>Partie laden:</b> Benutzernamen von chess.com oder lichess eingeben oder eine PGN einfügen.</li>
+        <li data-t-html><b>Partie laden:</b> Benutzernamen von chess.com oder lichess eingeben, eine PGN einfügen oder eine PGN-Datei mit vielen Partien öffnen.</li>
         <li data-t-html><b>Zug für Zug durchgehen:</b> Jeder Zug bekommt ein Symbol. Der Coach erklärt Fehler und zeigt den besseren Zug.</li>
         <li data-t-html><b>Besser werden:</b> Fehler der Partie nachspielen, Insights über viele Partien ansehen, im Trainer wiederholen.</li>
       </ol>
@@ -354,6 +354,7 @@
       <div class="help-legend" id="helpLegend"></div>
       <h3 data-t>So rechnet Zugradar</h3>
       <p data-t-html>Grundlage ist die <b>Gewinnchance</b> vor und nach jedem Zug (Formel wie bei lichess). Kostet ein Zug weniger als 2 % Gewinnchance, ist er exzellent; ab 20 % ist es ein Patzer. <b>Brillant</b> heißt: (fast) bester Zug mit einem echten Materialopfer, das Stockfish bestätigt. Die <b>Leistung</b> kommt aus dem durchschnittlichen Bauernverlust pro Zug (ACPL): Elo ≈ 3100 · e<sup>−ACPL/100</sup>. Stockfish kennt den Partieverlauf und damit auch Remis durch Zugwiederholung.</p>
+      <p data-t-html><b>Denkfehler:</b> Bei jedem eigenen Fehler prüft Zugradar der Reihe nach: Hatte der Gegner vor deinem Zug eine Drohung (dafür lässt Stockfish ihn zweimal ziehen), und dein Zug tut nichts dagegen? Dann <i>Drohung übersehen</i>. Lässt der Zug ein Matt zu: <i>Matt zugelassen</i>. Hast du Material genommen und verlierst danach mehr: <i>Vergiftete Beute</i>. Bleibt eine Figur ungedeckt: <i>Figur eingestellt</i>. Erlaubt der Zug eine Gabel oder Ähnliches, oder hattest du selbst eine Taktik: <i>Taktik des Gegners übersehen</i> bzw. <i>Chance übersehen</i>. Sonst: <i>Endspieltechnik</i> oder <i>Stellungsfehler</i>. Nach höchstens 3 s oder mit unter 30 s auf der Uhr steht <i>zu schnell</i> bzw. <i>in Zeitnot</i> dabei.</p>
       <h3 data-t>Tastenkürzel</h3>
       <table class="keys" id="helpKeys"></table>
       <h3 data-t>Deine Daten</h3>

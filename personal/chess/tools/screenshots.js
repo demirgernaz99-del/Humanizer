@@ -1,4 +1,4 @@
-/* Erzeugt die Produktbilder für die Landingpage (shots/*.jpg) und das Vorschaubild für soziale Netze (icons/og-image.png).
+/* Erzeugt die Produktbilder für die Landingpage (shots/*.jpg: Analyse, Denkfehler, Review, Training) und das Vorschaubild für soziale Netze (icons/og-image.png).
    Voraussetzung: Node.js mit Playwright und ein lokaler Server im Ordner personal/chess:
        python3 -m http.server 8765
        node tools/screenshots.js            # optional: PLAYWRIGHT=/pfad/zu/playwright node tools/screenshots.js
@@ -46,6 +46,15 @@ async function appPage(browser, lang, viewport, mobile) {
     await p.evaluate(() => window.__zugradar.go(47));
     await p.waitForTimeout(1500);
     await p.screenshot({ path: path.join(OUT, 'shots', lang + '-analyse.jpg'), type: 'jpeg', quality: 84 });
+
+    // 1b) Desktop: Denkfehler-Diagnose an der Fallen-Partie (5.Sxf7 übersieht die Drohung Dxg2)
+    await p.evaluate((pgn) => window.__zugradar.importText(pgn, { user: { name: 'Anna', color: 'w' } }), TRAP);
+    await analysed(p, 180000);
+    await p.evaluate(() => window.__zugradar.go(9));
+    await p.waitForFunction(() => document.querySelector('#verdict .v-cause') && !document.querySelector('#verdict .cause-pending'), null, { timeout: 60000 })
+      .catch(() => console.warn('Hinweis: Denkfehler noch nicht fertig – ' + lang + '-diagnose.jpg prüfen.'));
+    await p.waitForTimeout(1500);
+    await p.screenshot({ path: path.join(OUT, 'shots', lang + '-diagnose.jpg'), type: 'jpeg', quality: 84 });
     await ctx.close();
 
     // 2) Handy: Partie-Review

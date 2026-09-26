@@ -167,7 +167,7 @@ for f in ("stockfish-18-lite-single.js", "stockfish-18-lite-single.wasm", "stock
 if all(os.path.exists(path("engine", f)) for f in ("stockfish-18-lite-single.js", "stockfish-18-lite-single.wasm")):
     ok("Engine-Dateien vorhanden (Stockfish 18 + Ersatz)")
 
-shots = ["shots/%s-%s.jpg" % (l, n) for l in ("de", "en") for n in ("analyse", "review", "training")] + ["icons/og-image.png"]
+shots = ["shots/%s-%s.jpg" % (l, n) for l in ("de", "en") for n in ("analyse", "diagnose", "review", "training")] + ["icons/og-image.png"]
 missing_shots = [f for f in shots if not os.path.exists(path(f))]
 if missing_shots:
     warn("Produktbilder fehlen: " + ", ".join(missing_shots) + " → node tools/screenshots.js")

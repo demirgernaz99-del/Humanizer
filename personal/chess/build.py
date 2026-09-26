@@ -100,7 +100,7 @@ jsonld = {
     "@context": "https://schema.org", "@type": "SoftwareApplication",
     "name": seller.get("brand", "Zugradar"), "applicationCategory": "GameApplication",
     "operatingSystem": "Web", "inLanguage": ["de", "en"],
-    "description": "Schachanalyse mit Stockfish 18 im Browser: bester Zug, brillante und großartige Züge, Coach-Erklärungen, Insights und Taktik-Trainer.",
+    "description": "Schachanalyse mit Stockfish 18 im Browser: bester Zug, brillante Züge, Denkfehler-Diagnose (warum ein Fehler passierte), Eröffnungs-Check, Zeitanalyse, Insights und Trainer aus eigenen Partien.",
     "offers": [{"@type": "Offer", "name": "Free", "price": "0", "priceCurrency": "EUR"}] + [
         {"@type": "Offer", "name": "Pro " + label, "price": price_num(prices.get(k)), "priceCurrency": "EUR"}
         for k, label in (("monthly", "(monatlich)"), ("yearly", "(jährlich)"), ("lifetime", "(einmalig)")) if prices.get(k)],

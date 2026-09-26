@@ -11,10 +11,11 @@ Der Leitfaden ersetzt keine Rechts- oder Steuerberatung. Die markierten Punkte s
 | Live-Analyse, bester Zug, Engine-Linien | ✓ | ✓ |
 | Bewertung jedes Zuges inkl. brillant/großartig, Coach-Erklärungen | ✓ | ✓ |
 | Partie-Review (Genauigkeit, Phasen, Schlüsselmomente, Uhr), Fehler-Training der Partie | ✓ unbegrenzt | ✓ |
+| Denkfehler-Diagnose (warum ein Fehler passierte), Aktives Review, Eröffnungs-Check, Zeitmanagement | ✓ | ✓ |
 | Spiel gegen die KI, PGN-Import/-Export, Teilen-Bilder | ✓ (mit Wasserzeichen) | ✓ (ohne) |
-| Partien von chess.com/lichess laden | ✓ | ✓ |
+| Partien von chess.com/lichess laden, PGN-Dateien mit vielen Partien (Turnier, Verein, ChessBase) | ✓ | ✓ |
 | Insights über viele Partien | 5 Partien | 100 Partien |
-| Taktik-Trainer aus eigenen Fehlern (Wiederholung) | 5 Aufgaben/Tag | unbegrenzt |
+| Trainer aus eigenen Fehlern (Wiederholung), Trainingsplan nach Denkfehler | 5 Aufgaben/Tag | unbegrenzt |
 | Auto-Import beendeter Partien | – | ✓ |
 | Review-Tiefe | bis 16 | bis 22 |
 | Brett-Designs | 2 | 5 |
@@ -115,7 +116,11 @@ Updates: Dateien in `src/` oder `pages/` ändern → `python3 build.py` → comm
   Das ist dein Wachstumsmotor auf Instagram, TikTok und in WhatsApp-Gruppen.
 - **Communities:** r/chess, r/chessbeginners, Schach-Discords, Facebook-Gruppen. Lies vorher die Regeln zur Eigenwerbung
   und zeig lieber ein spannendes Review als Werbung.
-- **Schachvereine:** Ein kurzes Mail an Vereine (Jugendtrainer!) mit einem Vereins-Rabattcode.
+- **Schachvereine:** Ein kurzes Mail an Vereine (Jugendtrainer!) mit einem Vereins-Rabattcode. Das stärkste Argument
+  für Vereine: Die Turnier-PGN (z. B. von der Vereinsmeisterschaft) lässt sich komplett öffnen und analysieren, ohne
+  Konto und ohne dass Daten den Rechner verlassen. chess.com und lichess sind auf Online-Partien ausgelegt.
+- **Die Botschaft:** „Andere zeigen dir den besten Zug. Zugradar zeigt dir, warum du ihn nicht gefunden hast.“ Zeig
+  dazu die Denkfehler-Karte (Screenshot `shots/de-diagnose.jpg`), nicht das Brett allein.
 - **Streamer und YouTuber:** Affiliate-Provision anbieten; Format-Idee: „Stockfish bewertet eure Partien live nach dem Spiel“.
 - **Suchmaschinen:** Die Landingpage bringt Beschreibung, Vorschaubild für soziale Netze, strukturierte Daten
   (Preise), `sitemap.xml` und `robots.txt` mit. Mit eigener Domain die Seite in der Google Search Console anmelden.
@@ -129,5 +134,5 @@ Updates: Dateien in `src/` oder `pages/` ändern → `python3 build.py` → comm
 1. Eigene Domain und eigenes Repository
 2. Android-App über die Play-Store-Hülle für Web-Apps (Trusted Web Activity), später iOS
 3. Konto mit Synchronisation zwischen Geräten (braucht einen kleinen Server)
-4. Eröffnungs-Datenbank und Endspiel-Tablebases
+4. Endspiel-Tablebases (≤ 7 Steine) und Eröffnungs-Explorer mit Meisterpartien
 5. Weitere Sprachen (Spanisch, Französisch) – die Übersetzungsstruktur ist vorhanden (`tools/en.py` als Vorlage)

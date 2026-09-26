@@ -14,7 +14,7 @@
 <meta property="og:image:height" content="630">
 <meta name="twitter:card" content="summary_large_image">
 <link rel="canonical" href="https://demirgernaz99-del.github.io/Humanizer/personal/chess/">
-<script type="application/ld+json">{"@context": "https://schema.org", "@type": "SoftwareApplication", "name": "Zugradar", "applicationCategory": "GameApplication", "operatingSystem": "Web", "inLanguage": ["de", "en"], "description": "Schachanalyse mit Stockfish 18 im Browser: bester Zug, brillante und großartige Züge, Coach-Erklärungen, Insights und Taktik-Trainer.", "offers": [{"@type": "Offer", "name": "Free", "price": "0", "priceCurrency": "EUR"}, {"@type": "Offer", "name": "Pro (monatlich)", "price": "4.99", "priceCurrency": "EUR"}, {"@type": "Offer", "name": "Pro (jährlich)", "price": "34.99", "priceCurrency": "EUR"}, {"@type": "Offer", "name": "Pro (einmalig)", "price": "69", "priceCurrency": "EUR"}], "url": "https://demirgernaz99-del.github.io/Humanizer/personal/chess/zugradar.html", "image": "https://demirgernaz99-del.github.io/Humanizer/personal/chess/icons/og-image.png", "screenshot": "https://demirgernaz99-del.github.io/Humanizer/personal/chess/shots/de-analyse.jpg"}</script>
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "SoftwareApplication", "name": "Zugradar", "applicationCategory": "GameApplication", "operatingSystem": "Web", "inLanguage": ["de", "en"], "description": "Schachanalyse mit Stockfish 18 im Browser: bester Zug, brillante Züge, Denkfehler-Diagnose (warum ein Fehler passierte), Eröffnungs-Check, Zeitanalyse, Insights und Trainer aus eigenen Partien.", "offers": [{"@type": "Offer", "name": "Free", "price": "0", "priceCurrency": "EUR"}, {"@type": "Offer", "name": "Pro (monatlich)", "price": "4.99", "priceCurrency": "EUR"}, {"@type": "Offer", "name": "Pro (jährlich)", "price": "34.99", "priceCurrency": "EUR"}, {"@type": "Offer", "name": "Pro (einmalig)", "price": "69", "priceCurrency": "EUR"}], "url": "https://demirgernaz99-del.github.io/Humanizer/personal/chess/zugradar.html", "image": "https://demirgernaz99-del.github.io/Humanizer/personal/chess/icons/og-image.png", "screenshot": "https://demirgernaz99-del.github.io/Humanizer/personal/chess/shots/de-analyse.jpg"}</script>
 <meta name="theme-color" content="#111416">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icons/favicon-32.png" type="image/png">
@@ -124,6 +124,7 @@ table.cmp { width: 100%; border-collapse: collapse; font-size: 15px; min-width: 
 .shot img { display: block; width: 100%; height: auto; border-radius: 12px; border: 1px solid var(--line); background: #16191b; box-shadow: 0 24px 60px rgba(0, 0, 0, .45); }
 .shot.phone img { border-radius: 20px; }
 .shot figcaption { margin-top: 10px; font-size: 14px; color: var(--muted); }
+.diff-shot { max-width: 980px; margin: 0 auto 30px; }
 @media (max-width: 980px) { .shots { grid-template-columns: 1fr 1fr; } .shot.wide { grid-column: 1 / -1; } }
 @media (max-width: 520px) { .shots { grid-template-columns: minmax(0, 1fr); } .shot.phone { max-width: 300px; justify-self: center; } }
 .plan .key-link { justify-self: start; font-size: 14px; color: var(--muted); text-decoration: underline; text-underline-offset: 3px; }
@@ -184,7 +185,7 @@ footer a:hover { color: var(--ink); }
       <div>
         <div class="eyebrow" data-i="hero_eyebrow">Stockfish 18 · direkt im Browser</div>
         <h1 data-i-html="hero_title">Jeder Zug.<br>Sofort bewertet. <em>Brillant</em> erkannt.</h1>
-        <p class="lead" data-i="hero_lead">Zugradar zeigt dir in jeder Stellung den besten Zug, erkennt echte Opfer als brillant und erklärt in Klartext, warum ein Zug gut oder schlecht war. Ohne Konto und ohne Tageslimit für deine Partie-Reviews.</p>
+        <p class="lead" data-i="hero_lead">Zugradar zeigt dir in jeder Stellung den besten Zug und erkennt echte Opfer als brillant. Vor allem sagt es dir, warum du danebengelegen hast: Drohung übersehen, zu gierig, zu schnell gespielt. Danach trainierst du genau das. Ohne Konto und ohne Tageslimit für deine Partie-Reviews.</p>
         <div class="cta">
           <a class="btn primary" href="zugradar.html" data-i="hero_cta">Kostenlos starten</a>
           <a class="btn" href="#preise" data-i="hero_cta2">Pro ansehen</a>
@@ -211,6 +212,23 @@ footer a:hover { color: var(--ink); }
         <div><code data-i="pm1">5. Sxe5!!</code><span data-i="proof1">Légals Matt, 1750: Die Dame hängt, doch wer sie nimmt, wird mattgesetzt.</span></div>
         <div><code data-i="pm2">16. Db8+!!</code><span data-i="proof2">Morphys Opernpartie, 1858: Damenopfer, danach Matt mit dem Turm.</span></div>
         <div><code data-i="pm3">24. Txd4!!</code><span data-i="proof3">Kasparow – Topalow, 1999: der Beginn der berühmtesten Kombination der Neuzeit.</span></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="block" id="anders">
+    <div class="wrap">
+      <div class="eyebrow" data-i="diff_eyebrow">Was nur Zugradar macht</div>
+      <h2 data-i="diff_title">Nicht nur welcher Zug. Sondern warum.</h2>
+      <p class="sub" data-i="diff_sub">Andere Tools zeigen dir den besten Zug. Zugradar findet heraus, warum du ihn nicht gespielt hast, und trainiert genau das. Vom Fehler über die Ursache bis zur Übung, in einer App.</p>
+      <figure class="shot diff-shot"><img data-shot="diagnose" src="shots/de-diagnose.jpg" width="1280" height="800" loading="lazy" alt="Denkfehler-Diagnose: 5.Sxf7 ist ein Patzer, Ursache: Drohung übersehen, mit Knöpfen für Drohung, Widerlegung und bessere Fortsetzung"><figcaption data-i="shot4">Denkfehler-Diagnose: Die Ursache steht neben dem Zug, Drohung und Widerlegung spielst du auf dem Brett durch.</figcaption></figure>
+      <div class="features">
+        <div class="feature"><div class="sym" style="background:#d6453d">?!</div><h3 data-i="u1_t">Denkfehler-Diagnose</h3><p data-i="u1_p">Zu jedem Fehler die Ursache: Drohung übersehen, Figur eingestellt, zu gierig, Taktik übersehen, Endspieltechnik. Dazu, ob Zeitnot oder Hast dahinterstand.</p></div>
+        <div class="feature"><div class="sym" style="background:var(--teal)">!?</div><h3 data-i="u2_t">Erst selbst suchen</h3><p data-i="u2_p">Das aktive Review stoppt an den entscheidenden Momenten und fragt: Was hättest du gespielt? Erst danach kommt die Lösung. Was du selbst findest, behältst du.</p></div>
+        <div class="feature"><div class="sym" style="background:#8a5f0f">→</div><h3><span data-i="u3_t">Trainingsplan nach Ursache</span></h3><p data-i="u3_p">Zugradar zählt deine Denkfehler über alle Partien und übt gezielt den häufigsten, mit Stellungen aus deinen eigenen Partien und einem Wochenziel.</p></div>
+        <div class="feature"><div class="sym" style="background:var(--blue)">e4</div><h3 data-i="u4_t">Eröffnungs-Check</h3><p data-i="u4_p">3.815 Eröffnungen mit deutschen Namen. Du siehst, bei welchem Zug du die Theorie verlassen hast, was die Hauptzüge waren und was dich die Abweichung gekostet hat.</p></div>
+        <div class="feature"><div class="sym" style="background:var(--green)">5s</div><h3 data-i="u5_t">Bedenkzeit, wo sie zählt</h3><p data-i="u5_p">Zugradar misst, wie kritisch jede Stellung war, und legt deine Bedenkzeit daneben. So siehst du, ob du in den entscheidenden Momenten nachdenkst oder in ruhigen Zeit verschenkst.</p></div>
+        <div class="feature"><div class="sym" style="background:#5d6f7c">∑</div><h3 data-i="u6_t">Turnier- und Vereinspartien</h3><p data-i="u6_p">PGN-Datei öffnen oder ins Fenster ziehen, auch ChessBase-Exporte mit Umlauten. Zugradar listet die Partien, erkennt dich als Spieler und analysiert alle auf einmal.</p></div>
       </div>
     </div>
   </section>
@@ -260,6 +278,7 @@ footer a:hover { color: var(--ink); }
             <tr><td data-i="c4">Erklärungen</td><td class="us" data-i="c4a">kostenlos</td><td data-i="c4b">Coach, voll erst mit Diamond</td><td data-i="c4c">–</td></tr>
             <tr><td data-i="c5">Zeitnot-Analyse</td><td class="us" data-i="c5a">Fehler in Zeitnot und nach ≤ 3 s</td><td data-i="c5b">Uhrzeiten sichtbar</td><td data-i="c5c">Zeitdiagramm</td></tr>
             <tr><td data-i="c7">Genauigkeit und Leistung</td><td class="us" data-i="c7a">offene Formel, Leistungs-Elo pro Partie</td><td data-i="c7b">Game Rating, Formel nicht öffentlich</td><td data-i="c7c">Genauigkeit und ACPL, keine Elo-Schätzung</td></tr>
+            <tr><td data-i="c8">Warum ein Fehler passierte</td><td class="us" data-i="c8a">Ursache pro Fehler, Training danach ausgerichtet</td><td data-i="c8b">Coach erklärt den Zug</td><td data-i="c8c">–</td></tr>
             <tr><td data-i="c6">Konto nötig</td><td class="us" data-i="c6a">nein</td><td data-i="c6b">ja</td><td data-i="c6c">für eigene Partien ja</td></tr>
           </tbody>
         </table>
@@ -282,7 +301,8 @@ footer a:hover { color: var(--ink); }
             <li data-i="p_f2">Alle Zug-Bewertungen inklusive brillant</li>
             <li data-i="p_f3">Coach-Erklärungen und Partie-Review ohne Limit</li>
             <li data-i="p_f4">Spiel gegen die KI in 8 Stärken</li>
-            <li data-i="p_f5">Partien von chess.com und lichess laden</li>
+            <li data-i="p_f7">Denkfehler-Diagnose, Eröffnungs-Check und Zeitanalyse in jedem Review</li>
+            <li data-i="p_f5">Partien von chess.com, lichess und aus PGN-Dateien laden</li>
             <li data-i="p_f6">Insights über 5 Partien, 5 Trainer-Aufgaben am Tag</li>
           </ul>
           <a class="btn" href="zugradar.html" data-i="p_free_cta">Kostenlos starten</a>
@@ -293,7 +313,7 @@ footer a:hover { color: var(--ink); }
           <div class="alt" id="priceAlt"><span data-i="or">oder</span> 4,99 € <span data-i="per_month">pro Monat</span> · 69 € <span data-i="once">einmalig</span></div>
           <ul>
             <li data-i="p_p1">Insights über bis zu 100 Partien</li>
-            <li data-i="p_p2">Taktik-Trainer ohne Tageslimit</li>
+            <li data-i="p_p2">Trainer ohne Tageslimit, auch gezielt nach Denkfehler</li>
             <li data-i="p_p3">Auto-Import jeder beendeten Partie</li>
             <li data-i="p_p4">Review bis Tiefe 22</li>
             <li data-i="p_p5">Alle Brett-Designs, Teilen ohne Wasserzeichen</li>
@@ -330,6 +350,8 @@ footer a:hover { color: var(--ink); }
         <details><summary data-i="q4">Funktioniert es auf dem Handy?</summary><p data-i="a4">Ja. Öffne die App im Browser und wähle „Zum Home-Bildschirm“. Dann startet Zugradar wie eine normale App, auch offline.</p></details>
         <details><summary data-i="q5">Wie stark ist die Engine?</summary><p data-i="a5">Stockfish 18 mit neuronalem Netz (NNUE) läuft direkt auf deinem Gerät. Das ist weit stärker als jeder Großmeister.</p></details>
         <details><summary data-i="q7">Warum weicht meine Genauigkeit von chess.com ab?</summary><p data-i="a7">chess.com hält seine Formel geheim. Zugradar rechnet offen: Grundlage ist die Gewinnchance vor und nach jedem Zug (wie bei lichess), die Leistungs-Elo kommt aus dem durchschnittlichen Bauernverlust. Die Zahlen sind deshalb ähnlich, aber nicht identisch – und bei uns kannst du jede nachvollziehen.</p></details>
+        <details><summary data-i="q8">Woher weiß Zugradar, warum ich einen Fehler gemacht habe?</summary><p data-i="a8">Es prüft, was in der Stellung los war. Hatte der Gegner eine Drohung? Dafür lässt Stockfish ihn einmal doppelt ziehen. Stand eine Figur ungedeckt? Hast du Material genommen und dabei etwas übersehen? Wie viel Zeit hattest du, und wie lange hast du nachgedacht? Daraus ergibt sich die wahrscheinlichste Ursache. Die Regeln stehen in der Hilfe der App.</p></details>
+        <details><summary data-i="q9">Kann ich meine Turnier- und Vereinspartien analysieren?</summary><p data-i="a9">Ja. Öffne die PGN-Datei, zum Beispiel aus ChessBase, von der Turnierseite oder vom Verein, oder zieh sie ins Fenster. Zugradar listet alle Partien, erkennt dich als Spieler und analysiert sie für Insights und Trainer.</p></details>
         <details><summary data-i="q6">Wie kündige ich Pro?</summary><p data-i="a6">Monats- und Jahresabos kannst du jederzeit über den Link in deiner Kauf-E-Mail kündigen. Die Einmal-Lizenz gilt dauerhaft.</p></details>
       </div>
     </div>
@@ -356,14 +378,14 @@ footer a:hover { color: var(--ink); }
 </footer>
 
 <script>
-(function(){var r=typeof window!=='undefined'?window:globalThis;r.SK=r.SK||{};r.SK.seller={"_hinweis": "Deine Geschäftsdaten. Nach Änderungen: python3 build.py. Leere Felder erscheinen auf der Website als [bitte ausfüllen].", "brand": "Zugradar", "siteUrl": "https://demirgernaz99-del.github.io/Humanizer/personal/chess/", "checkoutUrl": "", "prices": {"monthly": "4,99 €", "yearly": "34,99 €", "lifetime": "69 €"}, "pricesEn": {"monthly": "€4.99", "yearly": "€34.99", "lifetime": "€69"}, "license": {"provider": "lemonsqueezy", "storeId": null, "productIds": [], "organizationId": "", "benefitIds": [], "api": ""}, "legal": {"name": "", "street": "", "city": "", "country": "Deutschland", "email": "", "phone": "", "vatId": ""}, "merchantOfRecord": "Lemon Squeezy (Lemon Squeezy LLC)", "_hinweis_license": "provider: 'lemonsqueezy' (storeId, productIds) oder 'polar' (organizationId, optional benefitIds). api nur bei Proxy ausfüllen."};r.SK.build={"version": "1.0 (d1f2531)"};})();
+(function(){var r=typeof window!=='undefined'?window:globalThis;r.SK=r.SK||{};r.SK.seller={"_hinweis": "Deine Geschäftsdaten. Nach Änderungen: python3 build.py. Leere Felder erscheinen auf der Website als [bitte ausfüllen].", "brand": "Zugradar", "siteUrl": "https://demirgernaz99-del.github.io/Humanizer/personal/chess/", "checkoutUrl": "", "prices": {"monthly": "4,99 €", "yearly": "34,99 €", "lifetime": "69 €"}, "pricesEn": {"monthly": "€4.99", "yearly": "€34.99", "lifetime": "€69"}, "license": {"provider": "lemonsqueezy", "storeId": null, "productIds": [], "organizationId": "", "benefitIds": [], "api": ""}, "legal": {"name": "", "street": "", "city": "", "country": "Deutschland", "email": "", "phone": "", "vatId": ""}, "merchantOfRecord": "Lemon Squeezy (Lemon Squeezy LLC)", "_hinweis_license": "provider: 'lemonsqueezy' (storeId, productIds) oder 'polar' (organizationId, optional benefitIds). api nur bei Proxy ausfüllen."};r.SK.build={"version": "1.0 (a190500)"};})();
 (function () {
   var SELLER = window.SK && window.SK.seller || {};
   var EN = {
     nav_features: 'Features', nav_pricing: 'Pricing', nav_faq: 'FAQ', nav_open: 'Open app',
     hero_eyebrow: 'Stockfish 18 · right in your browser',
     hero_title: 'Every move.<br>Rated instantly. <em>Brilliant</em> spotted.',
-    hero_lead: 'Zugradar shows the best move in every position, recognises real sacrifices as brilliant and explains in plain words why a move was good or bad. No account, no daily limit on your game reviews.',
+    hero_lead: 'Zugradar shows the best move in every position and recognises real sacrifices as brilliant. Above all, it tells you why you went wrong: a missed threat, too greedy, played too fast. Then you train exactly that. No account, no daily limit on your game reviews.',
     hero_cta: 'Start for free', hero_cta2: 'See Pro', hero_note: 'Works on phone, tablet and desktop. Your data stays on your device.',
     demo_move: '24. Rxd4', pm1: '5. Nxe5!!', pm2: '16. Qb8+!!', pm3: '24. Rxd4!!', demo_is: 'is brilliant', demo_text: 'The rook on d4 is sacrificed – Stockfish confirms the sacrifice works.',
     proof_eyebrow: 'Tested on games everyone knows', proof_title: 'Brilliant moves, detected by open rules.',
@@ -372,6 +394,15 @@ footer a:hover { color: var(--ink); }
     proof3: 'Kasparov – Topalov, 1999: the start of the most famous combination of modern times.',
     shots_eyebrow: 'See it in action', shots_title: 'The real app, not a mock-up.',
     shots_sub: 'Analysis on desktop at the top, review and mistake training on a phone below. Every image comes straight from Zugradar.',
+    diff_eyebrow: 'Only in Zugradar', diff_title: 'Not just which move. Why.',
+    diff_sub: 'Other tools show you the best move. Zugradar works out why you didn\'t play it – and trains exactly that. From the mistake to its cause to the exercise, in one app.',
+    shot4: 'Thinking-error diagnosis: the cause sits next to the move, and you can play through the threat and the refutation on the board.',
+    u1_t: 'Thinking-error diagnosis', u1_p: 'Every mistake gets its cause: missed threat, hung piece, too greedy, missed tactic, endgame technique – and whether time trouble or haste was behind it.',
+    u2_t: 'Find it yourself first', u2_p: 'Active review stops at the decisive moments and asks: what would you have played? Only then comes the answer. What you find yourself, you keep.',
+    u3_t: 'A training plan by cause', u3_p: 'Zugradar counts your thinking errors across all games and drills the most frequent one – with positions from your own games and a weekly goal.',
+    u4_t: 'Opening check', u4_p: '3,815 named openings. See the exact move where you left theory, what the main moves were and what the deviation cost you.',
+    u5_t: 'Thinking time where it counts', u5_p: 'Zugradar measures how critical each position was and puts your thinking time next to it – so you see whether you think in the decisive moments or burn time in quiet ones.',
+    u6_t: 'Tournament and club games', u6_p: 'Open a PGN file or drag it into the window – ChessBase exports included. Zugradar lists the games, recognises you as a player and analyses them all at once.',
     shot1: 'Analysis: best move live, brilliant moves, coach explanation', shot2: 'Review: accuracy, eval graph, move stats', shot3: 'Training: your mistakes as puzzles',
     feat_eyebrow: 'Features', feat_title: 'Everything a game review should do – and more.',
     feat_sub: 'Analysis and single-game reviews are free and unlimited. Pro is for the tools across many games.',
@@ -390,13 +421,14 @@ footer a:hover { color: var(--ink); }
     c4: 'Explanations', c4a: 'free', c4b: 'Coach, fully only with Diamond', c4c: '–',
     c5: 'Time-trouble analysis', c5a: 'errors in time trouble and after ≤ 3 s', c5b: 'clock times shown', c5c: 'time chart',
     c6: 'Account required', c6a: 'no', c6b: 'yes', c6c: 'for your own games, yes',
+    c8: 'Why a mistake happened', c8a: 'a cause for every mistake, training built around it', c8b: 'Coach explains the move', c8c: '–',
     c7: 'Accuracy and performance', c7a: 'open formula, performance Elo per game', c7b: 'Game Rating, formula not public', c7c: 'accuracy and ACPL, no Elo estimate',
     cmp_fine: 'As of September 2026, based on the providers\' public information. chess.com and lichess are trademarks of their owners; Zugradar is not affiliated with them.',
     price_eyebrow: 'Pricing', price_title: 'Analyse for free. Improve on purpose with Pro.', price_sub: 'Try Pro free for 7 days, no payment details. Subscriptions can be cancelled any time.',
     p_f1: 'Live analysis with Stockfish 18', p_f2: 'All move ratings including brilliant', p_f3: 'Coach explanations and game reviews without limits',
-    p_f4: 'Play the AI at 8 strengths', p_f5: 'Load games from chess.com and lichess', p_f6: 'Insights across 5 games, 5 trainer puzzles a day', p_free_cta: 'Start for free',
+    p_f4: 'Play the AI at 8 strengths', p_f5: 'Load games from chess.com, lichess and PGN files', p_f7: 'Thinking-error diagnosis, opening check and time analysis in every review', p_f6: 'Insights across 5 games, 5 trainer puzzles a day', p_free_cta: 'Start for free',
     per_year: 'per year', or: 'or', per_month: 'per month', once: 'one-time',
-    p_p1: 'Insights across up to 100 games', p_p2: 'Tactics trainer without a daily limit', p_p3: 'Auto-import of every finished game',
+    p_p1: 'Insights across up to 100 games', p_p2: 'Trainer without a daily limit, also by thinking error', p_p3: 'Auto-import of every finished game',
     p_p4: 'Review up to depth 22', p_p5: 'All board themes, sharing without a watermark', p_pro_cta: 'Get Pro',
     p_key: 'Already bought? Enter your licence key',
     price_fine: 'Payment and invoicing via ' + (SELLER.merchantOfRecord || 'our reseller') + ' as merchant of record, VAT included.',
@@ -409,6 +441,8 @@ footer a:hover { color: var(--ink); }
     q4: 'Does it work on my phone?', a4: 'Yes. Open the app in your browser and choose “Add to Home Screen”. Zugradar then starts like a normal app, even offline.',
     q5: 'How strong is the engine?', a5: 'Stockfish 18 with a neural network (NNUE) runs right on your device – far stronger than any grandmaster.',
     q7: 'Why does my accuracy differ from chess.com?', a7: 'chess.com keeps its formula secret. Zugradar calculates in the open: it is based on the winning chances before and after every move (like lichess), and the performance Elo comes from the average centipawn loss. The numbers are therefore similar but not identical – and with us you can trace every one of them.',
+    q8: 'How does Zugradar know why I made a mistake?', a8: 'It checks what was going on in the position. Did your opponent have a threat? Stockfish lets them move twice to find out. Was a piece left unprotected? Did you grab material and overlook something? How much time did you have, and how long did you think? From that follows the most likely cause. The rules are in the app\'s help.',
+    q9: 'Can I analyse my tournament and club games?', a9: 'Yes. Open the PGN file – from ChessBase, the tournament website or your club – or drag it into the window. Zugradar lists all games, recognises you as a player and analyses them for insights and the trainer.',
     q6: 'How do I cancel Pro?', a6: 'Cancel monthly and yearly plans any time via the link in your purchase email. The one-time licence is yours for good.',
     final_title: 'Your next game deserves a review.', final_cta: 'Open Zugradar',
     ft_imprint: 'Legal notice', ft_privacy: 'Privacy', ft_terms: 'Terms of use', ft_licenses: 'Licences'
@@ -437,7 +471,7 @@ footer a:hover { color: var(--ink); }
     var alt = document.getElementById('priceAlt');
     if (alt && p.monthly) alt.innerHTML = (l === 'en' ? 'or ' : 'oder ') + p.monthly + (l === 'en' ? ' per month · ' : ' pro Monat · ') + p.lifetime + (l === 'en' ? ' one-time' : ' einmalig');
     document.getElementById('lang').textContent = l === 'de' ? 'EN' : 'DE';
-    var ALT = { analyse: 'Zugradar analysis: 24.Rxd4 is brilliant, best move, engine lines and move list', review: 'Game review with eval graph, accuracy and move stats', training: 'Mistake training: find a better move' };
+    var ALT = { diagnose: 'Thinking-error diagnosis: 5.Nxf7 is a blunder, cause: missed threat, with buttons for threat, refutation and better line', analyse: 'Zugradar analysis: 24.Rxd4 is brilliant, best move, engine lines and move list', review: 'Game review with eval graph, accuracy and move stats', training: 'Mistake training: find a better move' };
     document.querySelectorAll('img[data-shot]').forEach(function (img) {
       var name = img.getAttribute('data-shot');
       if (!img.hasAttribute('data-alt-de')) img.setAttribute('data-alt-de', img.alt);
