@@ -144,17 +144,27 @@ eq(ps.b.elo, 1140, 'Elo-Schätzung Schwarz');
 ok(ps.b.elo > ps.w.elo, 'weniger Verlust → höhere Schätzung');
 eq(C.summarize(perf.slice(0, 6)).w.elo, null, 'zu wenige Züge → keine Schätzung');
 
-/* ---------- Eröffnungsbuch ---------- */
-var bad = 0;
-B.LINES.forEach(function (row) {
-  var c = new L.Chess();
-  try { row[1].split(' ').forEach(function (s) { c.move(s); }); } catch (e) { bad++; console.log('Ungültige Buchzeile:', row[0], row[1]); }
-});
-eq(bad, 0, 'alle Buchzeilen legal');
+/* ---------- Eröffnungen (Datenbank, 3.815 benannte Linien) ---------- */
 B.build(L);
-eq(B.nameFor([start, after('e4'), after('e4 c5'), after('e4 c5 Nf3 d6 d4 cxd4 Nxd4 Nf6 Nc3 a6')].filter(function (f, i) { return i < 3; })), 'Sizilianische Verteidigung', 'Name Sizilianisch');
-eq(B.nameFor([start, after('e4'), after('e4 e5'), after('e4 e5 Nf3'), after('e4 e5 Nf3 Nc6'), after('e4 e5 Nf3 Nc6 Bb5')]), 'Spanische Partie', 'Name Spanisch');
+ok(B.size() > 3500, 'Datenbank geladen: ' + B.size() + ' Eröffnungen');
+eq(B.nameFor([start, after('e4'), after('e4 c5')]), 'Sicilian Defense', 'Name Sizilianisch');
+eq(B.deName('Sicilian Defense'), 'Sizilianische Verteidigung', 'deutsch: Sizilianisch');
+eq(B.nameFor([start, after('e4'), after('e4 e5'), after('e4 e5 Nf3'), after('e4 e5 Nf3 Nc6'), after('e4 e5 Nf3 Nc6 Bb5')]), 'Ruy Lopez', 'Name Spanisch');
+eq(B.deName('Ruy Lopez'), 'Spanische Partie', 'deutsch: Spanisch');
+var naj = 'e4 c5 Nf3 d6 d4 cxd4 Nxd4 Nf6 Nc3 a6 Be3 e5'.split(' '), nf = [start];
+naj.forEach(function (x, i) { nf.push(after(naj.slice(0, i + 1).join(' '))); });
+var ni = B.infoFor(nf);
+eq(ni && ni.eco, 'B90', 'ECO Najdorf');
+eq(B.deName(ni.name), 'Sizilianische Verteidigung: Najdorf-Variante, Englischer Angriff', 'deutsch: Najdorf, Englischer Angriff');
+eq(B.deName('French Defense: Advance Variation'), 'Französische Verteidigung: Vorstoßvariante', 'deutsch: Vorstoßvariante');
+eq(B.deName("Queen's Gambit Declined: Exchange Variation"), 'Abgelehntes Damengambit: Abtauschvariante', 'deutsch: Abtauschvariante');
+eq(B.deName('Sicilian Defense: Dragon Variation'), 'Sizilianische Verteidigung: Drachenvariante', 'deutsch: Drachenvariante');
+eq(B.deName('Italian Game: Evans Gambit Accepted'), 'Italienische Partie: Angenommenes Evans-Gambit', 'deutsch: angenommenes Gambit');
 ok(!!B.lookup(after('Nf3 d5 d4')), 'Zugumstellung wird erkannt (Nf3 d5 d4 = d4 d5 Nf3)');
+eq(B.lookup(after('a4 h5 h4 a5')), null, 'Unsinn ist keine Theorie');
+var cont = B.continuations(after('e4 c5 Nf3 d6 d4 cxd4 Nxd4 Nf6 Nc3'));
+ok(cont.some(function (x) { return x.san === 'a6' && /Najdorf/.test(x.name); }), 'Theoriezüge mit Namen (a6 = Najdorf)');
+ok(cont.length >= 5, 'mehrere Theoriezüge: ' + cont.length);
 
 /* ---------- UCI-Parser ---------- */
 var info = E.parseInfo('info depth 14 seldepth 20 multipv 2 score cp -35 nodes 24176 nps 396327 hashfull 9 time 61 pv f3e5 d6e5 d1g4');

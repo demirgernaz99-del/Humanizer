@@ -37,7 +37,7 @@ parts = {
     "@@CONFIG@@": "config.js", "@@I18N@@": "i18n.js", "@@I18N_EN@@": "i18n-en.js", "@@LICENSE@@": "license.js",
     "@@LIBRARY@@": "library.js", "@@INSIGHTS@@": "insights.js", "@@SHARE@@": "share.js",
     "@@STYLES@@": "styles.css", "@@PIECES@@": "pieces.css", "@@CHESS@@": "vendor/chess.js",
-    "@@OPENINGS@@": "openings.js", "@@CLASSIFY@@": "classify.js", "@@COACH@@": "coach.js",
+    "@@OPENINGS_DB@@": "openings-db.js", "@@OPENINGS@@": "openings.js", "@@CLASSIFY@@": "classify.js", "@@COACH@@": "coach.js",
     "@@CONNECT@@": "connect.js", "@@ENGINE@@": "engine.js", "@@BOARD@@": "board.js", "@@APP@@": "app.js",
 }
 pieces_css = read("src", "pieces.css")

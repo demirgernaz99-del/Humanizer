@@ -765,3 +765,21 @@ body.ar-active #sheetCard, body.ar-active #review, body.ar-active .acc-chip, bod
 .ar-compare li { display: flex; align-items: center; gap: 8px; }
 .ar-compare .sym { display: inline-grid; place-items: center; width: 22px; height: 22px; border-radius: 50%; font: 700 10.5px/1 var(--f-body); color: #fff; letter-spacing: -.04em; flex: none; }
 .v-icon.neutral + .v-title { }
+
+/* ---------- Eröffnung ---------- */
+.theory { margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--line); display: grid; gap: 8px; }
+.th-moves { display: flex; flex-wrap: wrap; gap: 6px; }
+.th-move { display: inline-flex; align-items: baseline; gap: 6px; border: 1px solid var(--line); background: var(--panel-2); border-radius: 8px; padding: 5px 9px; cursor: pointer; color: var(--ink); max-width: 100%; }
+.th-move:hover { border-color: var(--accent); }
+.th-move b { font: 600 13.5px/1.2 var(--f-mono); }
+.th-move span { font-size: 12.5px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 190px; }
+.oc { padding: 10px 12px; border-radius: 10px; background: var(--panel-2); border: 1px solid var(--line); display: grid; gap: 6px; }
+.oc p { margin: 0; font-size: 14px; line-height: 1.5; color: var(--ink-2); }
+.oc-name { font-weight: 600; display: flex; gap: 8px; align-items: baseline; }
+.oc-name .eco { font: 600 12px/1 var(--f-mono); color: var(--muted); border: 1px solid var(--line); border-radius: 5px; padding: 3px 5px; }
+.oc .sym { display: inline-grid; place-items: center; min-width: 20px; height: 20px; border-radius: 10px; font: 700 10px/1 var(--f-body); color: #fff; vertical-align: 1px; }
+.otable .eco, .leaks .eco { font: 600 11px/1 var(--f-mono); color: var(--muted); border: 1px solid var(--line); border-radius: 4px; padding: 2px 4px; }
+.leaks { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.leaks li { padding: 10px 12px; border-radius: 10px; border: 1px solid var(--line); border-left: 4px solid var(--c-mistake); background: var(--panel-2); }
+.leaks .lk-head { display: flex; align-items: center; gap: 8px; }
+.leaks p { margin: 4px 0 0; font-size: 13.5px; color: var(--ink-2); line-height: 1.5; }

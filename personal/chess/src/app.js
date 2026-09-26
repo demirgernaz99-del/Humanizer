@@ -757,6 +757,7 @@
     var threat = threatInfo();
     if (threat && threat.serious) arrows.push(Object.assign(uciToMove(threat.uci), { kind: 'threat', width: 13 }));
     renderThreat(threat);
+    renderTheory(fen, pi);
     var badge = null, tint = null;
     if (last && cls && cls.key) {
       var cat = C.CATS[cls.key];
@@ -1088,6 +1089,74 @@
     return (nps >= 1e6 ? (nps / 1e6).toFixed(1).replace('.', ',') + ' Mio.' : Math.round(nps / 1000) + ' Tsd.') + ' Knoten/s';
   }
 
+  /* ---------- Eröffnung: Theoriezüge in der Stellung und Eröffnungs-Check der Partie ---------- */
+  var theoryMemo = { fen: null, list: [] };
+  function theoryHere(fen) {
+    if (theoryMemo.fen !== fen) { theoryMemo = { fen: fen, list: SK.book.lookup(fen) || fen === START ? SK.book.continuations(fen) : [] }; }
+    return theoryMemo.list;
+  }
+  var theorySig = '';
+  function renderTheory(fen, pi) {
+    var box = $('theoryBox');
+    var list = !train && !pi.terminal && state.mode !== 'play' ? theoryHere(fen) : [];
+    box.hidden = !list.length;
+    if (!list.length) return;
+    var sig = fen + '|' + state.ply + '|' + I.lang() + '|' + state.settings.notation;
+    if (sig === theorySig) return;
+    theorySig = sig;
+    var here = SK.book.infoFor(fensUpTo(state.ply));
+    var parent = here && here.name ? SK.book.display(here.name) : null;
+    box.innerHTML = '<div class="eyebrow">' + t('Theorie in dieser Stellung') + (here && here.eco ? ' · ' + esc(here.eco) : '') + '</div>' +
+      '<div class="th-moves">' + list.slice(0, 6).map(function (x) {
+        var nm = x.name ? SK.book.display(x.name) : '';
+        var short = nm ? SK.book.shortName(nm, parent) : '';
+        return '<button type="button" class="th-move" data-uci="' + x.uci + '" title="' + esc(nm) + '"><b>' + esc(nota(x.san)) + '</b>' +
+          (short ? '<span>' + esc(short) + '</span>' : '') + '</button>';
+      }).join('') + '</div>';
+  }
+  // Wo hat die Partie die Theorie verlassen – wer, mit welchem Zug, und was wäre Theorie gewesen?
+  function bookExit(results) {
+    if (!bookStart()) return null;
+    for (var i = 0; i < state.line.length; i++) {
+      var mv = state.line[i];
+      if (SK.book.lookup(mv.fenAfter)) continue;
+      if (i === 0) return null;
+      var alt = SK.book.continuations(mv.fenBefore).slice(0, 3);
+      return { i: i, mv: mv, cls: results[i], alt: alt, info: SK.book.infoFor(fensUpTo(i)) };
+    }
+    return { i: state.line.length, mv: null, info: SK.book.infoFor(fensUpTo(state.line.length)) };
+  }
+  function renderOpeningCheck(results) {
+    var el = $('openingCheck'), ex = state.line.length >= 2 ? bookExit(results) : null;
+    el.hidden = !ex || !ex.info;
+    if (el.hidden) return;
+    var html = '<h3 class="sub-head">' + t('Eröffnung') + '</h3><div class="oc">' +
+      '<div class="oc-name"><span class="eco">' + esc(ex.info.eco || '') + '</span>' + esc(SK.book.display(ex.info.name)) + '</div>';
+    if (!ex.mv) {
+      html += '<p>' + t('Die Partie ist bis zum Ende in der Theorie geblieben.') + '</p>';
+    } else {
+      var who = state.user && state.user.color ? (ex.mv.color === state.user.color ? t('Du') : t('Dein Gegner')) : colorName(ex.mv.color);
+      var cls = ex.cls, verdict = '';
+      if (cls && cls.key) {
+        verdict = /inaccuracy|mistake|blunder|miss/.test(cls.key)
+          ? t('Das hat {l} % Gewinnchance gekostet.', { l: Math.round(cls.loss || 0) })
+          : t('Kein Problem: {k}.', { k: catLabel(cls.key) });
+      }
+      html += '<p>' + t('{w} hat die Theorie mit {m} verlassen.', { w: who, m: '<button type="button" class="linkish" data-ply="' + (ex.i + 1) + '">' + esc(moveLabel(ex.mv)) + '</button>' }) +
+        (cls && cls.key ? ' <span class="sym c-' + cls.key + '">' + C.CATS[cls.key].sym + '</span> ' : ' ') + verdict + '</p>';
+      if (ex.alt.length) {
+        var par = SK.book.display(ex.info.name);
+        html += '<p class="muted small">' + t('Theorie wäre gewesen: {m}.', { m: ex.alt.map(function (x) {
+          var nm = x.name ? SK.book.shortName(SK.book.display(x.name), par) : '';
+          return '<b>' + esc(nota(x.san)) + '</b>' + (nm ? ' (' + esc(nm) + ')' : '');
+        }).join(', ') }) + '</p>';
+      }
+    }
+    el.innerHTML = html + '</div>';
+  }
+
+  var threatHtmlSig = '';
+  function setThreatHtml(el, html) { if (html !== threatHtmlSig) { threatHtmlSig = html; el.innerHTML = html; } }
   function renderThreat(th) {
     var el = $('threatLine'), btn = $('btnThreat');
     btn.setAttribute('aria-pressed', String(threatOn));
@@ -1096,14 +1165,14 @@
     if (!threatOn) return;
     var pi = posInfoAt(state.ply);
     var opp = colorName(pi.turn === 'w' ? 'b' : 'w');
-    if (pi.terminal) { el.textContent = t('Partie beendet – keine Drohung.'); return; }
-    if (pi.inCheck) { el.textContent = t('Du stehst im Schach – das ist die Drohung.'); return; }
-    if (!th) { el.textContent = t('Drohungen erscheinen, sobald Hinweise sichtbar sind.'); return; }
-    if (th.pending) { el.innerHTML = '<span class="th-icon">!</span>' + t('Suche, was {c} droht …', { c: opp }); return; }
-    if (!th.serious) { el.innerHTML = '<span class="th-icon ok">✓</span>' + t('{c} droht gerade nichts Ernstes.', { c: opp }); return; }
-    el.innerHTML = '<span class="th-icon">!</span>' + (th.mate
+    if (pi.terminal) { setThreatHtml(el, esc(t('Partie beendet – keine Drohung.'))); return; }
+    if (pi.inCheck) { setThreatHtml(el, esc(t('Du stehst im Schach – das ist die Drohung.'))); return; }
+    if (!th) { setThreatHtml(el, esc(t('Drohungen erscheinen, sobald Hinweise sichtbar sind.'))); return; }
+    if (th.pending) { setThreatHtml(el, '<span class="th-icon">!</span>' + t('Suche, was {c} droht …', { c: opp })); return; }
+    if (!th.serious) { setThreatHtml(el, '<span class="th-icon ok">✓</span>' + t('{c} droht gerade nichts Ernstes.', { c: opp })); return; }
+    setThreatHtml(el, '<span class="th-icon">!</span>' + (th.mate
       ? t('{c} droht {m} – Matt in {n}.', { c: opp, m: '<b>' + esc(th.san) + '</b>', n: th.mate })
-      : t('{c} droht {m} (gewinnt etwa {p} Bauern).', { c: opp, m: '<b>' + esc(th.san) + '</b>', p: num1(Math.min(th.gain, 9)) }));
+      : t('{c} droht {m} (gewinnt etwa {p} Bauern).', { c: opp, m: '<b>' + esc(th.san) + '</b>', p: num1(Math.min(th.gain, 9)) })));
   }
   function toggleThreat() {
     threatOn = !threatOn;
@@ -1155,8 +1224,9 @@
   function renderMoves(results) {
     var box = $('moves');
     var sig = state.ply + '|' + state.line.map(function (m, i) { var r = results[i]; return m.id + (r ? r.key : '-'); }).join(',') + '|' + state.settings.notation + '|' + I.lang();
-    var op = state.line.length && bookStart() ? SK.book.display(SK.book.nameFor(fensUpTo(state.line.length))) : null;
-    $('opening').textContent = op || '';
+    var oi = state.line.length && bookStart() ? SK.book.infoFor(fensUpTo(state.line.length)) : null;
+    $('opening').textContent = oi ? oi.eco + ' · ' + SK.book.display(oi.name) : '';
+    $('opening').title = oi ? SK.book.display(oi.name) : '';
     if (sig === movesSig) return;
     movesSig = sig;
     if (!state.line.length) {
@@ -1223,6 +1293,7 @@
     }
     $('acc').innerHTML = box('w', names.w) + box('b', names.b);
     renderReviewSummary(results, sum, names);
+    renderOpeningCheck(results);
     var rows = C.ORDER.filter(function (k) { return k !== 'forced'; }).map(function (k) {
       var w = sum.w.counts[k], b = sum.b.counts[k];
       return '<tr><td class="n' + (w ? '' : ' zero') + '">' + w + '</td><td class="lab"><span class="sym c-' + k + '">' + C.CATS[k].sym + '</span>' + catLabel(k) + '</td><td class="n' + (b ? '' : ' zero') + '">' + b + '</td></tr>';
@@ -2168,7 +2239,7 @@
     html += '<section class="card"><h2>' + t('Fehlermuster') + '</h2>' +
       (tagRows.length ? bars(tagRows.map(function (x) { return { label: x.label, v: x.v, max: maxTag, fmt: String }; })) : '<p class="muted">' + t('Noch keine Fehler mit erkennbarem Muster.') + '</p>') +
       '<p class="muted small">' + t('Bei {n} eigenen Fehlern, Patzern und verpassten Chancen.', { n: r.errors }) + '</p></section>';
-    html += '<section class="card ins-wide"><h2>' + t('Eröffnungen') + '</h2>' + openingsTable(r.openings) + '</section>';
+    html += '<section class="card ins-wide"><h2>' + t('Eröffnungen') + '</h2>' + openingsTable(r.openings) + leaksHtml(r.leaks) + '</section>';
     html += '<section class="card ins-wide"><h2>' + t('Analysierte Partien') + '</h2>' + gamesList(ent.shown) + '</section>';
     html += '</div>';
     body.innerHTML = html;
@@ -2204,11 +2275,23 @@
   function openingsTable(list) {
     var rows = list.filter(function (o) { return o.name !== '—'; }).slice(0, 8);
     if (!rows.length) return '<p class="muted">' + t('Noch keine Eröffnungen erkannt.') + '</p>';
-    return '<div class="tbl-wrap"><table class="otable"><thead><tr><th>' + t('Eröffnung') + '</th><th>' + t('Farbe') + '</th><th>' + t('Partien') + '</th><th>' + t('Punkte') + '</th><th>' + t('Genauigkeit') + '</th></tr></thead><tbody>' +
+    return '<div class="tbl-wrap"><table class="otable"><thead><tr><th>' + t('Eröffnung') + '</th><th>' + t('Farbe') + '</th><th>' + t('Partien') + '</th><th>' + t('Punkte') + '</th><th>' + t('Genauigkeit') + '</th>' +
+      '<th title="' + esc(t('Bei welchem Zug die Partien im Schnitt die Theorie verlassen haben')) + '">' + t('Theorie bis') + '</th></tr></thead><tbody>' +
       rows.map(function (o) {
-        return '<tr><td>' + esc(SK.book.display(o.name)) + '</td><td><span class="swatch sm ' + o.color + '"></span></td><td class="n">' + o.n + '</td>' +
-          '<td class="n ' + (o.score >= 0.55 ? 'good' : o.score < 0.4 ? 'bad' : '') + '">' + pct(o.score) + '</td><td class="n">' + num1(o.acc) + '</td></tr>';
+        return '<tr><td>' + (o.eco ? '<span class="eco">' + esc(o.eco) + '</span> ' : '') + esc(SK.book.display(o.name)) + '</td><td><span class="swatch sm ' + o.color + '"></span></td><td class="n">' + o.n + '</td>' +
+          '<td class="n ' + (o.score >= 0.55 ? 'good' : o.score < 0.4 ? 'bad' : '') + '">' + pct(o.score) + '</td><td class="n">' + num1(o.acc) + '</td>' +
+          '<td class="n">' + (o.exit != null ? t('Zug {n}', { n: Math.round(o.exit) }) : '–') + '</td></tr>';
       }).join('') + '</tbody></table></div>';
+  }
+  // Repertoire-Lecks: eigene Abweichungen von der Theorie, die regelmäßig Gewinnchance kosten
+  function leaksHtml(leaks) {
+    if (!leaks || !leaks.length) return '';
+    return '<h3 class="sub-head">' + t('Wo dich die Eröffnung Punkte kostet') + '</h3><ul class="leaks">' + leaks.map(function (L) {
+      var san = nota(L.san), mv = L.move + (L.color === 'w' ? '. ' : '… ') + san;
+      return '<li><div class="lk-head"><b>' + esc(SK.book.display(L.name)) + '</b><span class="swatch sm ' + L.color + '"></span></div>' +
+        '<p>' + t('Du verlässt die Theorie mit {m} ({n}×) und verlierst dabei im Schnitt {l} % Gewinnchance.', { m: '<b>' + esc(mv) + '</b>', n: L.n, l: Math.round(L.loss) }) +
+        (L.theory && L.theory.length ? ' ' + t('Theorie ist hier: {t}.', { t: L.theory.map(function (x) { return '<b>' + esc(nota(x)) + '</b>'; }).join(', ') }) : '') + '</p></li>';
+    }).join('') + '</ul>';
   }
   function gamesList(list) {
     return '<ul class="lib">' + list.slice(0, 30).map(function (e) {
@@ -2484,6 +2567,14 @@
     $('moves').addEventListener('click', function (e) {
       var c = e.target.closest('.mv[data-ply]');
       if (c && !train) go(+c.dataset.ply);
+    });
+    $('theoryBox').addEventListener('click', function (e) {
+      var b = e.target.closest('[data-uci]');
+      if (b && !train) userMove(uciToMove(b.dataset.uci));
+    });
+    $('openingCheck').addEventListener('click', function (e) {
+      var b = e.target.closest('[data-ply]');
+      if (b && !train) go(+b.getAttribute('data-ply'));
     });
     $('reviewSummary').addEventListener('click', function (e) {
       var b = e.target.closest('[data-ply]');

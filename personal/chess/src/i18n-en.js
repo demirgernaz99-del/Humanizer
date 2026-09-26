@@ -522,6 +522,19 @@
   "Achte darauf, welche Figuren nach deinem Zug ungedeckt sind.": "Watch which pieces are left unprotected after your move.",
   "Denk an den König und die Freibauern.": "Think about the king and the passed pawns.",
   "Welche deiner Figuren steht am schlechtesten? Verbessere sie.": "Which of your pieces is placed worst? Improve it.",
-  "Welche Doppelangriffe oder Fesselungen hätte dein Gegner nach deinem Zug?": "What double attacks or pins would your opponent have after your move?"
+  "Welche Doppelangriffe oder Fesselungen hätte dein Gegner nach deinem Zug?": "What double attacks or pins would your opponent have after your move?",
+  "Theorie in dieser Stellung": "Theory in this position",
+  "Die Partie ist bis zum Ende in der Theorie geblieben.": "The game stayed in theory until the end.",
+  "Dein Gegner": "Your opponent",
+  "Das hat {l} % Gewinnchance gekostet.": "That cost {l}% winning chances.",
+  "Kein Problem: {k}.": "No problem: {k}.",
+  "{w} hat die Theorie mit {m} verlassen.": "{w} left theory with {m}.",
+  "Theorie wäre gewesen: {m}.": "Theory would have been: {m}.",
+  "Bei welchem Zug die Partien im Schnitt die Theorie verlassen haben": "On average, the move at which your games left theory",
+  "Theorie bis": "Theory until",
+  "Zug {n}": "move {n}",
+  "Wo dich die Eröffnung Punkte kostet": "Where your opening costs you points",
+  "Du verlässt die Theorie mit {m} ({n}×) und verlierst dabei im Schnitt {l} % Gewinnchance.": "You leave theory with {m} ({n}×) and lose {l}% winning chances on average.",
+  "Theorie ist hier: {t}.": "Theory here: {t}."
 };
 })();

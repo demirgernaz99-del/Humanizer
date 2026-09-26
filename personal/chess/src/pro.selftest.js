@@ -218,7 +218,11 @@ Promise.resolve()
   ok(game.moves[5].tags.indexOf('mate_allowed') >= 0, 'Tag: Matt zugelassen');
   ok(game.moves[5].tags.indexOf('fast') >= 0, 'Tag: zu schnell (1 s)');
   eq(game.moves[0].key, 'book', '1.e4 als Theorie');
-  eq(game.opening, 'Parham-Angriff', 'Eröffnungsname');
+  eq(game.opening, "King's Pawn Game: Wayward Queen Attack", 'Eröffnungsname (Datenbank)');
+  eq(game.eco, 'C20', 'ECO-Code');
+  eq(require(path.join(__dirname, 'openings.js')).deName(game.opening), 'Königsbauernspiel: Parham-Angriff', 'deutscher Eröffnungsname');
+  ok(game.bookExit && game.bookExit.move === 3 && game.bookExit.color === 'b' && game.bookExit.san === 'Nf6', 'Theorie verlassen mit 3…Sf6: ' + JSON.stringify(game.bookExit));
+  ok(game.bookExit && game.bookExit.key === 'blunder' && game.bookExit.theory.length > 0, 'Abweichung bewertet, Theoriezüge genannt: ' + JSON.stringify(game.bookExit && game.bookExit.theory));
   eq(game.puzzles.length, 1, 'eine Aufgabe für Schwarz');
   eq(game.puzzles[0].bestUci, 'g7g6', 'Aufgabe mit richtiger Lösung');
   eq(INS.analyzeGame(moves, function () { return null; }, {}), null, 'ohne Engine-Daten: null');
@@ -236,7 +240,16 @@ Promise.resolve()
     g('eeeee', 'w', 'draw', 90, ['best', 'brilliant'], [[], []], 'Italienische Partie'),
     { id: 'x', end: 1, userColor: null, analysis: null }
   ];
+  // Eröffnungs-Check: zwei Sizilianer mit derselben teuren Abweichung, eine harmlose Abweichung
+  entries[1].analysis.bookExit = { ply: 4, move: 2, color: 'b', san: 'a6', key: 'mistake', loss: 12, theory: ['d6', 'Nc6'] };
+  entries[2].analysis.bookExit = { ply: 4, move: 2, color: 'b', san: 'a6', key: 'inaccuracy', loss: 8, theory: ['d6', 'Nc6'] };
+  entries[3].analysis.bookExit = { ply: 6, move: 3, color: 'b', san: 'e6', key: 'good', loss: 1, theory: [] };
+  entries[0].analysis.bookExit = { ply: 5, move: 3, color: 'b', san: 'h6', key: 'inaccuracy', loss: 9, theory: [] };
   var r = INS.aggregate(entries);
+  eq(r.leaks.length, 1, 'Eröffnungs-Leck: nur eigene, teure Abweichung');
+  ok(r.leaks[0].san === 'a6' && r.leaks[0].n === 2 && Math.round(r.leaks[0].loss) === 10, 'Leck zusammengefasst: ' + JSON.stringify(r.leaks[0]));
+  var sic = r.openings.filter(function (o) { return /Sizili/.test(o.name); })[0];
+  eq(Math.round(sic.exit * 10) / 10, 2.3, 'Theorie im Schnitt bis Zug 2,3');
   eq(r.n, 5, 'nur analysierte Partien mit bekannter Farbe');
   eq(r.wins + r.draws + r.losses, 5, 'Ergebnisse gezählt');
   eq(Math.round(r.score * 100), 30, 'Punkteschnitt 30 %');

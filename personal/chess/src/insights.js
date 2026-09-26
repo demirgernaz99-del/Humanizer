@@ -25,6 +25,7 @@
     var out = [], prev = null, chain = moves.length && posKey(moves[0].fenBefore) === START_KEY;
     var tc = coach().parseTimeControl(opts.timeControl);
     var fensBook = moves.length ? [moves[0].fenBefore] : [];
+    var exit = null;
     for (var i = 0; i < moves.length; i++) {
       var mv = moves[i];
       var eb = lookup(mv.fenBefore), ea = lookup(mv.fenAfter);
@@ -35,12 +36,21 @@
         if (!(eb && eb.lines.some(function (l) { return l.uci === mv.uci; }))) return null;
       }
       var phase = coach().phaseOf(mv.fenBefore, chain && i > 0);
+      var wasBook = chain;
       chain = chain && !!book().lookup(mv.fenAfter);
       if (chain) fensBook.push(mv.fenAfter);
+      var leftBook = wasBook && !chain && !exit;
       var prevLoss = prev && prev.loss != null ? Math.round(prev.loss) : null;
       var r = C().classifyMove({ fenBefore: mv.fenBefore, move: mv, before: eb, after: after, legalCount: mv.legalCount,
         inCheck: mv.inCheck, prevLoss: prevLoss, lastMove: i ? moves[i - 1] : null, inBook: chain });
       if (!r) return null;
+      // Eröffnungs-Check: Wo wurde die Theorie verlassen – von wem, mit welchem Zug, was wäre Theorie gewesen?
+      if (leftBook && i > 0) {
+        var theory = [];
+        try { theory = book().continuations(mv.fenBefore).slice(0, 3).map(function (x) { return x.san; }); } catch (e) { theory = []; }
+        exit = { ply: i + 1, move: Math.floor(i / 2) + 1, color: mv.color, san: mv.san, key: r.key,
+                 loss: r.loss == null ? null : Math.round(r.loss * 10) / 10, theory: theory };
+      }
       var tags = coach().tagsFor({ fenBefore: mv.fenBefore, fenAfter: mv.fenAfter, move: mv, cls: r, after: ea,
         notation: 'en', clock: { left: mv.clock, spent: mv.spent }, base: tc ? tc.base : null });
       // Denkfehler: Ursache des Fehlers (mit Drohungs-Analyse, falls vorhanden)
@@ -57,9 +67,10 @@
       prev = r;
     }
     var sum = C().summarize(out.map(function (m) { return { color: m.color, cls: { key: m.key, accuracy: m.acc, wpBefore: m.wpBefore } }; }));
+    var oinfo = book().infoFor ? book().infoFor(fensBook) : null;
     return {
       depth: opts.depth || minDepth, at: Date.now(),
-      opening: book().nameFor(fensBook),
+      opening: oinfo ? oinfo.name : book().nameFor(fensBook), eco: oinfo ? oinfo.eco : null, bookExit: exit,
       acc: { w: sum.w.accuracy, b: sum.b.accuracy },
       moves: out.map(function (m) { var c = Object.assign({}, m); delete c.fenBefore; delete c.bestUci; delete c.wpBefore; return c; }),
       puzzles: puzzlesFrom(out, opts.gameId, opts.userColor)
@@ -88,7 +99,8 @@
     var res = { n: games.length, wins: 0, draws: 0, losses: 0, score: null, acc: null, trend: [],
                 phases: { opening: [], middlegame: [], endgame: [] }, byColor: { w: { n: 0, pts: 0, acc: [] }, b: { n: 0, pts: 0, acc: [] } },
                 perGame: { blunder: 0, mistake: 0, miss: 0, inaccuracy: 0 }, highlights: { brilliant: 0, great: 0 },
-                errors: 0, tags: {}, causes: {}, time: { errors: 0, pressure: 0, fast: 0, withClock: 0 }, openings: [] };
+                errors: 0, tags: {}, causes: {}, time: { errors: 0, pressure: 0, fast: 0, withClock: 0 }, openings: [], leaks: [] };
+    var leaks = {};
     var accs = [], openings = {};
     games.forEach(function (g) {
       var me = g.userColor, a = g.analysis;
@@ -120,8 +132,18 @@
       if (hasClock) res.time.withClock++;
       var on = a.opening || '—';
       var ok = on + '|' + me;
-      var o = openings[ok] || (openings[ok] = { name: on, color: me, n: 0, pts: 0, acc: [] });
+      var o = openings[ok] || (openings[ok] = { name: on, color: me, eco: a.eco || null, n: 0, pts: 0, acc: [], exitMoves: [] });
       o.n++; if (pts != null) o.pts += pts; if (acc != null) o.acc.push(acc);
+      var ex = a.bookExit;
+      if (ex) {
+        o.exitMoves.push(ex.move);
+        // Eigene Abweichungen von der Theorie, die etwas kosten → „Lecks“ im Repertoire
+        if (ex.color === me && ex.loss != null) {
+          var lk = on + '|' + me + '|' + ex.move + '|' + ex.san;
+          var L = leaks[lk] || (leaks[lk] = { name: on, color: me, move: ex.move, san: ex.san, theory: ex.theory || [], n: 0, loss: 0, pts: 0 });
+          L.n++; L.loss += ex.loss; if (pts != null) L.pts += pts;
+        }
+      }
     });
     var n = games.length;
     if (n) {
@@ -139,8 +161,12 @@
     });
     res.openings = Object.keys(openings).map(function (k) {
       var o = openings[k];
-      return { name: o.name, color: o.color, n: o.n, score: o.pts / o.n, acc: mean(o.acc) };
+      return { name: o.name, color: o.color, eco: o.eco, n: o.n, score: o.pts / o.n, acc: mean(o.acc), exit: mean(o.exitMoves) };
     }).sort(function (a, b) { return b.n - a.n || b.score - a.score; });
+    // Abweichungen, die im Schnitt mindestens 4 % Gewinnchance kosten – die teuersten zuerst
+    res.leaks = Object.keys(leaks).map(function (k) { var L = leaks[k]; return Object.assign({}, L, { loss: L.loss / L.n, score: L.pts / L.n }); })
+      .filter(function (L) { return L.loss >= 4; })
+      .sort(function (a, b) { return b.loss * b.n - a.loss * a.n; }).slice(0, 5);
     // gleitender Trend: Durchschnitt der letzten 5 Partien gegenüber den 5 davor
     var la = accs.slice(-5), pa = accs.slice(-10, -5);
     res.trendDelta = la.length >= 3 && pa.length >= 3 ? mean(la) - mean(pa) : null;
