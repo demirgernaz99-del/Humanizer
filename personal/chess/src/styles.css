@@ -733,3 +733,28 @@ select {
 .threat-line { margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--line); font-size: 14px; color: var(--ink-2); display: flex; align-items: center; gap: 8px; }
 .threat-line .th-icon { display: inline-grid; place-items: center; width: 20px; height: 20px; border-radius: 50%; background: #d6453d; color: #fff; font: 800 12px/1 var(--f-body); flex: none; }
 .threat-line .th-icon.ok { background: var(--c-best); }
+
+/* ---------- Denkfehler ---------- */
+.v-cause { margin-top: 10px; padding: 10px 12px; border-radius: 10px; background: var(--panel-2); border: 1px solid var(--line); border-left: 4px solid var(--c-mistake); display: grid; gap: 4px; }
+.v-cause.cause-threat_missed, .v-cause.cause-mate_blind { border-left-color: #d6453d; }
+.v-cause.cause-tactic_missed { border-left-color: var(--c-miss); }
+.v-cause.cause-positional, .v-cause.cause-technique { border-left-color: var(--c-inaccuracy); }
+.cause-head { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+.cause-lab { font: 600 11px/1.2 var(--f-body); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+.cause-head b { font-size: 15px; }
+.cause-pending { color: var(--muted); cursor: help; }
+.v-cause p { margin: 0; font-size: 13.5px; line-height: 1.5; color: var(--ink-2); }
+.cause-tip span { font-weight: 700; color: var(--ink); margin-right: 2px; }
+.cause-focus { margin-top: 12px; padding: 10px 12px; border-radius: 10px; background: color-mix(in srgb, var(--accent) 8%, var(--panel)); border: 1px solid var(--accent); }
+.cause-focus p { margin: 4px 0 0; font-size: 13.5px; color: var(--ink-2); line-height: 1.5; }
+
+/* ---------- Vorschau auf dem Brett ---------- */
+.preview-bar { background: var(--panel); border: 1px solid var(--accent); border-radius: 10px; padding: 8px 10px; display: grid; gap: 6px; }
+.preview-bar[hidden] { display: none; }
+.pv-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; font-size: 14px; }
+.pv-nav { display: flex; gap: 4px; }
+.pv-nav button { width: 32px; height: 30px; border-radius: 7px; border: 1px solid var(--line); background: var(--panel-2); color: var(--ink); font-size: 18px; line-height: 1; cursor: pointer; }
+.pv-moves { display: flex; flex-wrap: wrap; gap: 4px; }
+.pv-step { border: 0; background: transparent; padding: 3px 6px; border-radius: 6px; font: 600 13.5px/1.2 var(--f-mono); color: var(--ink-2); cursor: pointer; }
+.pv-step.cur { background: var(--accent); color: var(--accent-ink); }
+.pv-actions { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }

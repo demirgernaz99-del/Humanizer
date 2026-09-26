@@ -201,6 +201,121 @@
 
   function sanOf(fen, uci) { var p = play(fen, uci); return p ? p.move.san : uci; }
 
+  /* ---------- Denkfehler: WARUM ist der Fehler passiert? ----------
+     Eine Hauptursache pro Fehler (plus Umstand: zu schnell / Zeitnot), damit man gezielt üben kann.
+     Die Drohung vor dem Zug kommt aus einer Nullzug-Analyse: dieselbe Stellung, aber der Gegner ist am Zug.
+     ctx wie bei facts(), zusätzlich: before (Analyse vor dem Zug), threat (Analyse der Nullzug-Stellung), phase. */
+  var CAUSES = ['mate_blind', 'threat_missed', 'greedy', 'hung_piece', 'tactic_missed', 'technique', 'positional'];
+
+  function nullFen(fen) {
+    var p = fen.split(' ');
+    p[1] = p[1] === 'w' ? 'b' : 'w'; p[3] = '-';
+    return p.join(' ');
+  }
+  // Ernste Drohung des Gegners vor dem Zug (Matt oder ≥ 1,5 Bauern Gewinn gegenüber jetzt), sonst null
+  function threatOf(ctx) {
+    var th = ctx.threat && ctx.threat.lines && ctx.threat.lines[0];
+    if (!th || !th.uci || !th.score) return null;
+    var bl = ctx.before && ctx.before.lines && ctx.before.lines[0];
+    var S = bl ? C().scorePawns(bl.score) : 0;   // Stellung aus Sicht des Ziehenden
+    var T = C().scorePawns(th.score);             // Nullzug-Stellung aus Sicht des Gegners
+    var mate = th.score.mate != null && th.score.mate > 0 ? th.score.mate : null;
+    var gain = T + S;
+    if (!mate && gain < 1.5) return null;
+    var tm = motifOf(nullFen(ctx.fenBefore), th.uci);
+    return { uci: th.uci, san: tm ? tm.san : th.uci, mate: mate, gain: gain, motif: tm };
+  }
+  // Setzt die Widerlegung dieselbe Idee um wie die Drohung (gleicher Zug, gleiches Matt, gleiche Beute)?
+  function sameIdea(threat, ref, fenAfter) {
+    if (!threat || !ref || !ref.uci) return false;
+    if (ref.uci === threat.uci) return true;
+    if (threat.mate && ref.score && ref.score.mate > 0) return true;
+    var rm = fenAfter ? motifOf(fenAfter, ref.uci) : null, tm = threat.motif;
+    return !!(rm && tm && tm.wins && rm.wins && tm.wins.square === rm.wins.square);
+  }
+
+  function diagnose(ctx) {
+    var cls = ctx.cls;
+    if (!cls || !/mistake|blunder|miss/.test(cls.key)) return null;
+    var fs = facts(ctx), ids = fs.map(function (f) { return f.id; });
+    function has(id) { return ids.indexOf(id) >= 0; }
+    var mv = ctx.move, uci = mv.from + mv.to + (mv.promotion || '');
+    var fenAfter = ctx.fenAfter;
+    if (!fenAfter) { var pa = play(ctx.fenBefore, uci); fenAfter = pa ? pa.chess.fen() : null; }
+    var ref = ctx.after && ctx.after.lines && ctx.after.lines[0];
+    var threat = threatOf(ctx);
+    var captured = !!(mv.captured || (play(ctx.fenBefore, uci) || { move: {} }).move.captured);
+    var ignored = threat && sameIdea(threat, ref, fenAfter);
+    var cause;
+    if (ignored) cause = 'threat_missed';
+    else if (has('mate_allowed')) cause = 'mate_blind';
+    else if (cls.key === 'miss') cause = 'tactic_missed';   // eine Gewinnchance ausgelassen wiegt schwerer als die Folgen
+    else if (captured && (has('hangs') || has('hangs_moved') || has('fork_allowed'))) cause = 'greedy';
+    else if (has('hangs') || has('hangs_moved') || has('fork_allowed')) cause = 'hung_piece';
+    else if (cls.key === 'miss' || has('mate_missed') || has('fork_missed') || has('win_missed')) cause = 'tactic_missed';
+    else if (ctx.phase === 'endgame') cause = 'technique';
+    else cause = 'positional';
+    var circ = has('time_trouble') ? 'time_trouble' : has('fast') ? 'fast' : null;
+    var fast = fs.filter(function (f) { return f.id === 'fast'; })[0];
+    return { cause: cause, circumstance: circ, spent: fast ? fast.n : null,
+             threat: ignored ? { uci: threat.uci, san: threat.san, mate: threat.mate, motif: threat.motif } : null,
+             sq: mv.to };
+  }
+
+  var CAUSE_TXT = {
+    de: {
+      mate_blind: ['Matt zugelassen', 'Prüfe vor jedem Zug alle Schachgebote des Gegners – auch die unwahrscheinlichen.'],
+      threat_missed: ['Drohung übersehen', 'Frag vor jedem Zug: Was will der Gegner mit seinem letzten Zug? Üben kannst du das mit „Was droht?“ (Taste T).'],
+      greedy: ['Vergiftete Beute', 'Vor dem Schlagen einen Zug weiter denken: Was schlägt oder droht der Gegner danach?'],
+      hung_piece: ['Figur eingestellt', 'Blunder-Check vor dem Loslassen: Ist jede Figur nach meinem Zug noch gedeckt?'],
+      tactic_missed: ['Chance übersehen', 'Suche zuerst für dich selbst: Schach, Schlagen, Drohungen – bevor du einen ruhigen Zug machst.'],
+      technique: ['Endspieltechnik', 'Im Endspiel zählen der aktive König, Freibauern und das Verhindern von Gegenspiel.'],
+      positional: ['Stellungsfehler', 'Kein taktischer Grund: Der Zug verschlechtert die Stellung auf Dauer. Vergleiche ihn mit der besseren Idee.'],
+      threat_mate: '{opp} drohte {s} mit Matt – dein Zug hat nichts dagegen getan.',
+      threat_wins: '{opp} drohte {s} und damit {a} zu gewinnen – dein Zug hat nichts dagegen getan.',
+      threat_fork: '{opp} drohte die Gabel {s} – dein Zug hat nichts dagegen getan.',
+      threat_any: '{opp} drohte {s} – dein Zug hat nichts dagegen getan.',
+      greedy_txt: 'Das Schlagen auf {q} kostet mehr, als es bringt.',
+      fast: 'Dabei nur {n} s nachgedacht.', time_trouble: 'In Zeitnot gespielt.',
+      white: 'Weiß', black: 'Schwarz'
+    },
+    en: {
+      mate_blind: ['Allowed mate', 'Before every move, check all of your opponent\'s checks – even the unlikely ones.'],
+      threat_missed: ['Missed the threat', 'Before every move, ask: what does my opponent want with their last move? Practise with “What\'s the threat?” (T key).'],
+      greedy: ['Poisoned bait', 'Before capturing, think one move further: what does your opponent take or threaten next?'],
+      hung_piece: ['Hung a piece', 'Blunder check before you let go: is every piece still protected after my move?'],
+      tactic_missed: ['Missed a chance', 'Look for your own checks, captures and threats first – before making a quiet move.'],
+      technique: ['Endgame technique', 'In the endgame, an active king, passed pawns and stopping counterplay are what count.'],
+      positional: ['Positional error', 'No tactical reason: the move worsens your position in the long run. Compare it with the better idea.'],
+      threat_mate: '{opp} threatened {s} with mate – your move did nothing about it.',
+      threat_wins: '{opp} threatened {s}, winning {a} – your move did nothing about it.',
+      threat_fork: '{opp} threatened the fork {s} – your move did nothing about it.',
+      threat_any: '{opp} threatened {s} – your move did nothing about it.',
+      greedy_txt: 'Capturing on {q} costs more than it gains.',
+      fast: 'Played after only {n} s.', time_trouble: 'Played in time trouble.',
+      white: 'White', black: 'Black'
+    }
+  };
+  // Diagnose → { title, text, tip } in der gewünschten Sprache; notation 'de' übersetzt Figurenbuchstaben
+  function describeCause(d, opts) {
+    if (!d) return null;
+    var l = lang(opts), T = CAUSE_TXT[l], N = opts && opts.notation === 'en' ? function (x) { return x; } : deSan;
+    var parts = [];
+    if (d.threat) {
+      var oppCol = opts && opts.moverColor === 'w' ? T.black : T.white;
+      var m = d.threat.motif, key = d.threat.mate ? 'threat_mate' : m && m.fork && m.fork.length ? 'threat_fork' : m && m.wins ? 'threat_wins' : 'threat_any';
+      parts.push(T[key].replace('{opp}', oppCol).replace('{s}', N(d.threat.san))
+        .replace('{a}', m && m.wins ? (l === 'de' ? AKK[m.wins.type] : 'the ' + PIECE_NAMES.en.short[m.wins.type]) : ''));
+    } else if (d.cause === 'greedy') {
+      parts.push(T.greedy_txt.replace('{q}', d.sq));
+    }
+    if (d.circumstance === 'fast' && d.spent != null) parts.push(T.fast.replace('{n}', d.spent));
+    else if (d.circumstance === 'time_trouble') parts.push(T.time_trouble);
+    return { id: d.cause, title: T[d.cause][0], text: parts.join(' '), tip: T[d.cause][1] };
+  }
+  function causeTitle(id, l) { var T = CAUSE_TXT[l === 'en' ? 'en' : 'de']; return T[id] ? T[id][0] : id; }
+  function causeTip(id, l) { var T = CAUSE_TXT[l === 'en' ? 'en' : 'de']; return T[id] ? T[id][1] : ''; }
+
   /* ---------- Partiephasen ---------- */
 
   function majorsMinors(fen) {
@@ -251,6 +366,7 @@
 
   root.SK.coach = {
     explain: explain, facts: facts, tagsFor: tagsFor, render: render, motifOf: motifOf, forkTargets: forkTargets, phaseOf: phaseOf, PHASES: PHASES,
+    diagnose: diagnose, describeCause: describeCause, causeTitle: causeTitle, causeTip: causeTip, CAUSES: CAUSES, nullFen: nullFen, threatOf: threatOf,
     parseClk: parseClk, parseTimeControl: parseTimeControl, timeSpent: timeSpent, fmtClock: fmtClock, deSan: deSan
   };
 })();

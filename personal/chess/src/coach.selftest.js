@@ -47,6 +47,57 @@ lines = CO.explain({ fenBefore: hang, move: mv(hang, 'Qd5'), cls: { key: 'mistak
 ok(lines.some(function (l) { return /Zeitnot/.test(l); }), 'Zeitnot erkannt');
 eq(CO.explain({ fenBefore: hang, move: mv(hang, 'Qd2'), cls: { key: 'good' } }).length, 0, 'unauffälliger Zug ohne Kommentar');
 
+/* ---------- Denkfehler (Ursache) ---------- */
+function E(uci, score) { return { depth: 16, lines: [{ uci: uci, score: score, pv: [uci] }] }; }
+// 1) Drohung übersehen: Schäferzug-Stellung, Weiß droht Dxf7#, Schwarz spielt Sf6??
+var sch = after('e4 e5 Bc4 Nc6 Qh5');
+var d = CO.diagnose({ fenBefore: sch, move: mv(sch, 'Nf6'), phase: 'opening',
+  cls: { key: 'blunder', bestUci: 'g7g6', bestScore: { cp: -30 }, playedScore: { mate: -1 } },
+  before: E('g7g6', { cp: -30 }), threat: E('h5f7', { mate: 1 }), after: E('h5f7', { mate: 1 }) });
+eq(d && d.cause, 'threat_missed', 'Drohung übersehen (Matt auf f7)');
+ok(d && d.threat && d.threat.mate === 1 && d.threat.san === 'Qxf7#', 'Drohung mit Zug und Matt benannt');
+var txt = CO.describeCause(d, { lang: 'de', moverColor: 'b' });
+ok(/Weiß drohte Dxf7# mit Matt/.test(txt.text) && txt.title === 'Drohung übersehen' && /Was droht/.test(txt.tip), 'Denkfehler-Text: ' + JSON.stringify(txt));
+// 2) Matt zugelassen, ohne dass vorher etwas drohte: 1.f3 e5 2.g4??
+var fool = after('f3 e5');
+d = CO.diagnose({ fenBefore: fool, move: mv(fool, 'g4'), phase: 'opening',
+  cls: { key: 'blunder', bestUci: 'e2e4', bestScore: { cp: -20 } },
+  before: E('e2e4', { cp: -20 }), threat: E('d7d5', { cp: 40 }), after: E('d8h4', { mate: 1 }) });
+eq(d && d.cause, 'mate_blind', 'Matt zugelassen (Narrenmatt)');
+// 3) Figur eingestellt: 1.d4 e5 2.Lg5?? – die Dame schlägt auf g5
+var bg5 = after('d4 e5');
+d = CO.diagnose({ fenBefore: bg5, move: mv(bg5, 'Bg5'), phase: 'opening',
+  cls: { key: 'blunder', bestUci: 'd4e5', bestScore: { cp: 60 } },
+  before: E('d4e5', { cp: 60 }), threat: E('e5d4', { cp: 60 }), after: E('d8g5', { cp: 280 }) });
+eq(d && d.cause, 'hung_piece', 'Figur eingestellt (Lg5)');
+// 4) Vergiftete Beute: 1.e4 e5 2.Dh5 Sc6 3.Dxe5+?? Sxe5
+var pois = after('e4 e5 Qh5 Nc6');
+d = CO.diagnose({ fenBefore: pois, move: mv(pois, 'Qxe5+'), phase: 'opening',
+  cls: { key: 'blunder', bestUci: 'f1c4', bestScore: { cp: 20 } },
+  before: E('f1c4', { cp: 20 }), threat: E('g8f6', { cp: 60 }), after: E('c6e5', { cp: 800 }) });
+eq(d && d.cause, 'greedy', 'Vergiftete Beute (Dxe5+)');
+ok(/Schlagen auf e5/.test(CO.describeCause(d, { lang: 'de' }).text), 'Text zur vergifteten Beute');
+// 5) Chance übersehen: Matt in 1 ausgelassen
+var miss = after('e4 e5 Qh5 Nc6 Bc4 Nf6');
+d = CO.diagnose({ fenBefore: miss, move: mv(miss, 'd3'), phase: 'opening',
+  cls: { key: 'miss', bestUci: 'h5f7', bestScore: { mate: 1 } },
+  before: E('h5f7', { mate: 1 }), threat: null, after: E('f6h5', { cp: 300 }) });
+eq(d && d.cause, 'tactic_missed', 'Chance übersehen (Matt in 1)');
+// 6) Kein taktischer Grund: Stellungsfehler / im Endspiel Technik, dazu Umstand „zu schnell“
+var quiet = 'r1bq1rk1/pp2bppp/2n1pn2/2pp4/3P4/2PBPN2/PP1N1PPP/R1BQ1RK1 w - - 0 10';
+d = CO.diagnose({ fenBefore: quiet, move: mv(quiet, 'h4'), phase: 'middlegame', clock: { left: 300, spent: 2 },
+  cls: { key: 'mistake', bestUci: 'd4c5', bestScore: { cp: 30 } },
+  before: E('d4c5', { cp: 30 }), threat: E('c5d4', { cp: 20 }), after: E('c5d4', { cp: 150 }) });
+eq(d && d.cause, 'positional', 'Stellungsfehler ohne Taktik');
+eq(d && d.circumstance, 'fast', 'Umstand: zu schnell gespielt');
+ok(/nur 2 s/.test(CO.describeCause(d, { lang: 'de' }).text), 'Umstand im Text');
+d = CO.diagnose({ fenBefore: '8/5k2/8/8/8/2K5/5P2/8 w - - 0 50', move: mv('8/5k2/8/8/8/2K5/5P2/8 w - - 0 50', 'f4'), phase: 'endgame',
+  cls: { key: 'mistake', bestUci: 'c3d4', bestScore: { cp: 500 } },
+  before: E('c3d4', { cp: 500 }), threat: null, after: E('f7f6', { cp: 0 }) });
+eq(d && d.cause, 'technique', 'Endspieltechnik');
+eq(CO.diagnose({ fenBefore: quiet, move: mv(quiet, 'h3'), cls: { key: 'good' } }), null, 'guter Zug: keine Diagnose');
+eq(CO.describeCause({ cause: 'hung_piece' }, { lang: 'en' }).title, 'Hung a piece', 'englischer Titel');
+
 /* ---------- Phasen ---------- */
 var start = new L.Chess().fen();
 eq(CO.phaseOf(start, true), 'opening', 'Startstellung = Eröffnung');

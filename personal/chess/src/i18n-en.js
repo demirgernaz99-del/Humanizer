@@ -479,6 +479,21 @@
   "{c} droht {m} – Matt in {n}.": "{c} threatens {m} – mate in {n}.",
   "{c} droht {m} (gewinnt etwa {p} Bauern).": "{c} threatens {m} (wins about {p} pawns).",
   "So rechnet Zugradar": "How Zugradar calculates",
-  "Grundlage ist die <b>Gewinnchance</b> vor und nach jedem Zug (Formel wie bei lichess). Kostet ein Zug weniger als 2 % Gewinnchance, ist er exzellent; ab 20 % ist es ein Patzer. <b>Brillant</b> heißt: (fast) bester Zug mit einem echten Materialopfer, das Stockfish bestätigt. Die <b>Leistung</b> kommt aus dem durchschnittlichen Bauernverlust pro Zug (ACPL): Elo ≈ 3100 · e<sup>−ACPL/100</sup>. Stockfish kennt den Partieverlauf und damit auch Remis durch Zugwiederholung.": "Everything is based on the <b>winning chances</b> before and after each move (same formula as lichess). A move that costs less than 2% is excellent; 20% or more is a blunder. <b>Brilliant</b> means: the (nearly) best move with a real material sacrifice that Stockfish confirms. <b>Performance</b> comes from the average centipawn loss per move (ACPL): Elo ≈ 3100 · e<sup>−ACPL/100</sup>. Stockfish knows the game history and therefore draws by repetition too."
+  "Grundlage ist die <b>Gewinnchance</b> vor und nach jedem Zug (Formel wie bei lichess). Kostet ein Zug weniger als 2 % Gewinnchance, ist er exzellent; ab 20 % ist es ein Patzer. <b>Brillant</b> heißt: (fast) bester Zug mit einem echten Materialopfer, das Stockfish bestätigt. Die <b>Leistung</b> kommt aus dem durchschnittlichen Bauernverlust pro Zug (ACPL): Elo ≈ 3100 · e<sup>−ACPL/100</sup>. Stockfish kennt den Partieverlauf und damit auch Remis durch Zugwiederholung.": "Everything is based on the <b>winning chances</b> before and after each move (same formula as lichess). A move that costs less than 2% is excellent; 20% or more is a blunder. <b>Brilliant</b> means: the (nearly) best move with a real material sacrifice that Stockfish confirms. <b>Performance</b> comes from the average centipawn loss per move (ACPL): Elo ≈ 3100 · e<sup>−ACPL/100</sup>. Stockfish knows the game history and therefore draws by repetition too.",
+  "Denkfehler": "Thinking error",
+  "So übst du das:": "How to practise:",
+  "Stockfish prüft noch, was vor dem Zug drohte.": "Stockfish is still checking what was threatened before the move.",
+  "Dein häufigster Denkfehler: {x} ({k}×).": "Your most frequent thinking error: {x} ({k}×).",
+  "Häufigster Denkfehler: {x} ({k}×).": "Most frequent thinking error: {x} ({k}×).",
+  "Deine Denkfehler": "Your thinking errors",
+  "Warum deine Fehler passieren – bei {n} Fehlern mit bekannter Ursache.": "Why your mistakes happen – across {n} mistakes with a known cause.",
+  "Dein Hebel: {x}": "Your biggest lever: {x}",
+  "Widerlegung zeigen": "Show the refutation",
+  "Bessere Fortsetzung zeigen": "Show the better line",
+  "Idee zeigen": "Show the idea",
+  "Widerlegung nach {m}": "Refutation after {m}",
+  "Die Idee hinter {m}": "The idea behind {m}",
+  "Besser: {m}": "Better: {m}",
+  "Die Drohung vor {m}": "The threat before {m}"
 };
 })();

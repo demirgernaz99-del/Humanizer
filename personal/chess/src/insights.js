@@ -43,10 +43,17 @@
       if (!r) return null;
       var tags = coach().tagsFor({ fenBefore: mv.fenBefore, fenAfter: mv.fenAfter, move: mv, cls: r, after: ea,
         notation: 'en', clock: { left: mv.clock, spent: mv.spent }, base: tc ? tc.base : null });
+      // Denkfehler: Ursache des Fehlers (mit Drohungs-Analyse, falls vorhanden)
+      var dg = null;
+      if (/mistake|blunder|miss/.test(r.key)) {
+        dg = coach().diagnose({ fenBefore: mv.fenBefore, fenAfter: mv.fenAfter, move: mv, cls: r, after: ea, before: eb,
+          threat: opts.threat ? opts.threat(mv.fenBefore) : null, phase: phase,
+          clock: { left: mv.clock, spent: mv.spent }, base: tc ? tc.base : null });
+      }
       out.push({ san: mv.san, uci: mv.uci, color: mv.color, key: r.key, loss: r.loss == null ? null : Math.round(r.loss * 10) / 10,
                  acc: r.accuracy == null ? null : Math.round(r.accuracy * 10) / 10, wpBefore: r.wpBefore,
                  phase: phase, clock: mv.clock == null ? null : mv.clock, spent: mv.spent == null ? null : mv.spent,
-                 tags: tags, bestUci: r.bestUci, fenBefore: mv.fenBefore });
+                 tags: tags, cause: dg ? dg.cause : null, bestUci: r.bestUci, fenBefore: mv.fenBefore });
       prev = r;
     }
     var sum = C().summarize(out.map(function (m) { return { color: m.color, cls: { key: m.key, accuracy: m.acc, wpBefore: m.wpBefore } }; }));
@@ -66,7 +73,8 @@
       if (color && m.color !== color) return;
       if (!/mistake|blunder|miss/.test(m.key) || !m.bestUci || !m.fenBefore) return;
       list.push({ id: (gameId || 'g') + ':' + i, fen: m.fenBefore, bestUci: m.bestUci, key: m.key, wpBefore: m.wpBefore,
-                  played: { uci: m.uci, san: m.san, color: m.color, fenBefore: m.fenBefore }, tags: m.tags, gameId: gameId || null });
+                  played: { uci: m.uci, san: m.san, color: m.color, fenBefore: m.fenBefore }, tags: m.tags, cause: m.cause || null,
+                  gameId: gameId || null });
     });
     return list;
   }
@@ -80,7 +88,7 @@
     var res = { n: games.length, wins: 0, draws: 0, losses: 0, score: null, acc: null, trend: [],
                 phases: { opening: [], middlegame: [], endgame: [] }, byColor: { w: { n: 0, pts: 0, acc: [] }, b: { n: 0, pts: 0, acc: [] } },
                 perGame: { blunder: 0, mistake: 0, miss: 0, inaccuracy: 0 }, highlights: { brilliant: 0, great: 0 },
-                errors: 0, tags: {}, time: { errors: 0, pressure: 0, fast: 0, withClock: 0 }, openings: [] };
+                errors: 0, tags: {}, causes: {}, time: { errors: 0, pressure: 0, fast: 0, withClock: 0 }, openings: [] };
     var accs = [], openings = {};
     games.forEach(function (g) {
       var me = g.userColor, a = g.analysis;
@@ -101,6 +109,7 @@
         if (/mistake|blunder|miss/.test(m.key)) {
           res.errors++;
           (m.tags || []).forEach(function (t) { res.tags[t] = (res.tags[t] || 0) + 1; });
+          if (m.cause) res.causes[m.cause] = (res.causes[m.cause] || 0) + 1;
           if (m.clock != null) {
             res.time.errors++;
             if ((m.tags || []).indexOf('time_trouble') >= 0) res.time.pressure++;

@@ -125,6 +125,56 @@
     return { uci: th.uci, san: nota(uciSan(nf, th.uci)), mate: mate, gain: gain, serious: mate != null || gain >= 1 };
   }
 
+  /* ---------- Denkfehler-Diagnose ----------
+     Für jeden Fehler wird zusätzlich die Stellung davor mit „Nullzug“ analysiert (Was drohte?).
+     Daraus bestimmt SK.coach.diagnose die Hauptursache. */
+  var THREAT_D = 12, THREAT_BATCH_D = 10;
+  function isBadKey(k) { return k === 'mistake' || k === 'blunder' || k === 'miss'; }
+  function threatFenOf(fenBefore) {
+    if (posInfo(fenBefore).inCheck) return null;
+    var nf = CO.nullFen(fenBefore);
+    return L.validateFen(nf).ok ? nf : null;
+  }
+  function threatEntryOf(fenBefore) { var nf = threatFenOf(fenBefore); return nf ? an.entry(nf) : null; }
+  function threatFensFor(results) {
+    var out = [];
+    state.line.forEach(function (m, i) {
+      var r = results[i];
+      if (!r || !isBadKey(r.key)) return;
+      var nf = threatFenOf(m.fenBefore);
+      if (nf && out.indexOf(nf) < 0) out.push(nf);
+    });
+    return out;
+  }
+  var threatSig = '';
+  function ensureThreatQueue(results) {
+    var sig = results.map(function (r, i) { return r && isBadKey(r.key) ? i : ''; }).join(',');
+    if (sig === threatSig) return;
+    threatSig = sig;
+    updateEngine();
+  }
+  var diagMemo = new Map();
+  // → { d: Diagnose, desc: Texte, pending: Drohungs-Analyse fehlt noch } oder null
+  function diagnosisFor(mv, cls) {
+    if (!mv || !cls || !isBadKey(cls.key)) return null;
+    var nf = threatFenOf(mv.fenBefore), te = nf ? an.entry(nf) : null;
+    var eb = entBefore(mv), ea = entAfter(mv);
+    var k = mv.id + '|' + cls.key + '|' + (cls.depth || 0) + '|' + (ea ? ea.depth : 0) + '|' + (te ? te.depth : 0) + '|' + I.lang() + '|' + state.settings.notation;
+    var hit = diagMemo.get(k);
+    if (hit) return hit;
+    var tc = CO.parseTimeControl(state.headers.TimeControl);
+    var d = null;
+    try {
+      d = CO.diagnose({ fenBefore: mv.fenBefore, fenAfter: mv.fenAfter, move: mv, cls: cls, after: ea, before: eb, threat: te,
+                        phase: mv.phase, clock: { left: mv.clock, spent: mv.spent }, base: tc ? tc.base : null });
+    } catch (e) { d = null; }
+    var res = d ? { d: d, desc: CO.describeCause(d, { lang: I.lang(), notation: state.settings.notation, moverColor: mv.color }),
+                    pending: !!nf && !(te && te.depth >= THREAT_BATCH_D) && engine.state === 'ready' } : null;
+    if (diagMemo.size > 3000) diagMemo.clear();
+    diagMemo.set(k, res);
+    return res;
+  }
+
   /* ---------- Remis durch Wiederholung und 50-Züge-Regel ----------
      Beides hängt vom Partieverlauf ab, nicht nur von der Stellung. Pro Halbzug i:
      occ = wie oft die Stellung seit dem letzten Bauernzug/Schlagen vorkam, draw = 'repetition' | 'fifty' | null,
@@ -275,6 +325,8 @@
     items.sort(function (a, b) { return Math.abs(a - ref) - Math.abs(b - ref) || a - b; });
     var queue = items.map(function (k) { var p2 = posInfoAt(k); return { fen: fenAt(k), legal: p2.legal, terminal: p2.terminal, hist: histAt(k) }; })
       .filter(function (x) { return x.legal > 0 && !x.terminal; });
+    // Für jeden Fehler: Was drohte vorher? (Nullzug-Analyse, Grundlage der Denkfehler-Diagnose)
+    threatFensFor(classifyAll()).forEach(function (nf) { queue.push({ fen: nf, legal: 9, depth: THREAT_D, extra: true }); });
     // Danach die Serien-Analyse für Insights (niedrigere Tiefe)
     if (batch.cur) {
       batch.cur.fens.forEach(function (f3) {
@@ -282,6 +334,7 @@
         if (p3.terminal) { an.markTerminal(f3, p3.terminal); return; }
         queue.push({ fen: f3, legal: p3.legal, depth: BATCH_D, batch: true });
       });
+      (batch.cur.threatFens || []).forEach(function (nf) { queue.push({ fen: nf, legal: 9, depth: THREAT_BATCH_D, batch: true }); });
     }
     an.setQueue(queue);
     maybeAI();
@@ -675,6 +728,7 @@
     renderChrome();
     if (state.mode === 'insights') { renderInsightsView(); renderStatus(); return; }
     var results = classifyAll();
+    ensureThreatQueue(results);
     if (train) { renderTrain(results); return; }
     var fen = fenAt(state.ply), pi = posInfoAt(state.ply), entry = entryAt(state.ply);
     var last = state.ply > 0 ? state.line[state.ply - 1] : null;
@@ -712,12 +766,25 @@
     }
     var interactive = !pi.terminal && (state.mode === 'analyse' || state.mode === 'trainer' ||
       (state.ply === state.line.length && pi.turn === s.humanColor && !ai.thinking));
-    if (animateNext) sound(pi.inCheck ? 'check' : animateNext.capture ? 'capture' : 'move');
-    board.render({
-      fen: fen, orientation: state.orientation, lastMove: last ? { from: last.from, to: last.to } : null,
-      check: pi.king, arrows: arrows, badge: badge, tint: tint, animate: animateNext, interactive: interactive
-    });
+    if (preview && preview.ply !== state.ply) stopPreview(true);
+    if (preview) {
+      var pst = preview.i ? preview.steps[preview.i - 1] : null, pfen = pst ? pst.fen : preview.start, ppi = posInfo(pfen);
+      var nxt = preview.steps[preview.i];
+      if (animateNext) sound(ppi.inCheck ? 'check' : animateNext.capture ? 'capture' : 'move');
+      board.render({
+        fen: pfen, orientation: state.orientation, lastMove: pst ? { from: pst.from, to: pst.to } : null, check: ppi.king,
+        arrows: nxt ? [Object.assign(uciToMove(nxt.uci), { kind: preview.kind === 'threat' || preview.kind === 'ref' ? 'threat' : 'best' })] : [],
+        badge: null, tint: null, animate: animateNext, interactive: false
+      });
+    } else {
+      if (animateNext) sound(pi.inCheck ? 'check' : animateNext.capture ? 'capture' : 'move');
+      board.render({
+        fen: fen, orientation: state.orientation, lastMove: last ? { from: last.from, to: last.to } : null,
+        check: pi.king, arrows: arrows, badge: badge, tint: tint, animate: animateNext, interactive: interactive
+      });
+    }
     animateNext = null;
+    renderPreviewBar();
 
     renderEval(fen, entry, pi, engineOn);
     renderPlayers(results);
@@ -869,6 +936,93 @@
     return numv + (mv.color === 'w' ? '. ' : '… ') + nota(mv.san);
   }
 
+  /* ---------- Vorschau: Widerlegung, Drohung oder bessere Fortsetzung Zug für Zug auf dem Brett ----------
+     Die Partie bleibt unverändert; ← → blättern, Esc schließt. */
+  var preview = null;   // { start, steps:[{uci,san,from,to,fen,captured}], i, label, ply, kind, timer }
+  function startPreview(startFen, ucis, label, kind) {
+    stopPreview(true);
+    var c = new L.Chess(startFen), steps = [];
+    for (var k = 0; k < (ucis || []).length && k < 8; k++) {
+      var m = null;
+      try { m = c.move(uciToMove(ucis[k])); } catch (e) { m = null; }
+      if (!m) break;
+      steps.push({ uci: ucis[k], san: m.san, from: m.from, to: m.to, captured: !!m.captured, fen: c.fen(), color: m.color });
+    }
+    if (!steps.length) return;
+    preview = { start: startFen, steps: steps, i: 0, label: label, ply: state.ply, kind: kind || 'line' };
+    previewPlay();
+    render();
+  }
+  function previewPlay() {
+    clearTimeout(preview.timer);
+    preview.timer = setTimeout(function step() {
+      if (!preview || preview.i >= preview.steps.length) return;
+      previewGo(preview.i + 1, true);
+      preview.timer = setTimeout(step, 1150);
+    }, 650);
+  }
+  function previewGo(i, auto) {
+    if (!preview) return;
+    if (!auto) clearTimeout(preview.timer);
+    var n = Math.max(0, Math.min(preview.steps.length, i));
+    if (n === preview.i + 1) { var st = preview.steps[n - 1]; animateNext = { from: st.from, to: st.to, capture: st.captured }; }
+    preview.i = n;
+    render();
+  }
+  function stopPreview(silent) {
+    if (!preview) return;
+    clearTimeout(preview.timer);
+    preview = null;
+    if (!silent) render();
+  }
+  function renderPreviewBar() {
+    var bar = $('previewBar');
+    bar.hidden = !preview;
+    if (!preview) return;
+    var moves = preview.steps.map(function (st, k) {
+      var num = k === 0 || st.color === 'w' ? (k === 0 && st.color === 'b' ? '…' : '') : '';
+      return '<button type="button" class="pv-step' + (k === preview.i - 1 ? ' cur' : '') + '" data-pv="' + (k + 1) + '">' + num + esc(nota(st.san)) + '</button>';
+    }).join(' ');
+    bar.innerHTML = '<div class="pv-head"><b>' + esc(preview.label) + '</b>' +
+      '<span class="pv-nav"><button type="button" data-pv="prev" aria-label="' + esc(t('Zug zurück')) + '">‹</button>' +
+      '<button type="button" data-pv="next" aria-label="' + esc(t('Zug vor')) + '">›</button>' +
+      '<button type="button" data-pv="close" aria-label="' + esc(t('Schließen')) + '">×</button></span></div>' +
+      '<div class="pv-moves">' + moves + '</div>';
+  }
+  function previewButtons(i, kinds) {
+    return '<div class="pv-actions">' + kinds.map(function (k) {
+      var lab = { ref: t('Widerlegung zeigen'), threat: t('Drohung zeigen'), best: t('Bessere Fortsetzung zeigen'), idea: t('Idee zeigen') }[k];
+      return '<button type="button" class="btn ghost small" data-preview="' + k + '" data-i="' + i + '">▶ ' + lab + '</button>';
+    }).join('') + '</div>';
+  }
+  function openPreview(kind, i) {
+    var mv = state.line[i];
+    if (!mv) return;
+    var ea = entryAt(i + 1), eb = entryAt(i);
+    if (kind === 'ref' && ea && ea.lines[0]) startPreview(mv.fenAfter, ea.lines[0].pv, t('Widerlegung nach {m}', { m: moveLabel(mv) }), kind);
+    else if (kind === 'idea' && ea && ea.lines[0]) startPreview(mv.fenAfter, ea.lines[0].pv, t('Die Idee hinter {m}', { m: moveLabel(mv) }), kind);
+    else if (kind === 'best' && eb && eb.lines[0]) {
+      startPreview(mv.fenBefore, eb.lines[0].pv, t('Besser: {m}', { m: nota(uciSan(mv.fenBefore, eb.lines[0].uci)) }), kind);
+    } else if (kind === 'threat') {
+      var nf = threatFenOf(mv.fenBefore), te = nf ? an.entry(nf) : null;
+      if (te && te.lines[0]) { startPreview(nf, te.lines[0].pv.slice(0, 3), t('Die Drohung vor {m}', { m: moveLabel(mv) }), kind); }
+    }
+  }
+
+  // Denkfehler: Ursache, Erklärung, Trainingstipp
+  function causeHtml(dg, i) {
+    if (!dg || !dg.desc) return '';
+    var ds = dg.desc;
+    var kinds = ['ref'];
+    if (dg.d.threat) kinds.unshift('threat');
+    kinds.push('best');
+    return '<div class="v-cause cause-' + ds.id + '">' +
+      '<div class="cause-head"><span class="cause-lab">' + t('Denkfehler') + '</span><b>' + esc(ds.title) + '</b>' +
+      (dg.pending ? '<span class="cause-pending" title="' + esc(t('Stockfish prüft noch, was vor dem Zug drohte.')) + '">…</span>' : '') + '</div>' +
+      (ds.text ? '<p>' + esc(ds.text) + '</p>' : '') +
+      '<p class="cause-tip"><span>' + t('So übst du das:') + '</span> ' + esc(ds.tip) + '</p>' + (i != null ? previewButtons(i, kinds) : '') + '</div>';
+  }
+
   function renderVerdict(last, cls, pi, fen, entry, reply) {
     var el = $('verdict'), html;
     if (pi.terminal) {
@@ -900,6 +1054,9 @@
              '<div class="v-title"><span class="san">' + esc(moveLabel(last)) + '</span> ' + article(cls.key) + '</div>' +
              '<div class="v-text">' + verdictText(last, cls, tips.length > 0) + '</div>';
       if (tips.length) html += '<ul class="v-coach">' + tips.map(function (x) { return '<li>' + esc(x) + '</li>'; }).join('') + '</ul>';
+      var li = state.line.indexOf(last);
+      html += causeHtml(diagnosisFor(last, cls), li);
+      if ((cls.key === 'brilliant' || cls.key === 'great') && li >= 0) html += previewButtons(li, ['idea']);
       if (cls.wpBefore != null && cls.wpAfter != null && cls.key !== 'forced' && cls.key !== 'book') {
         var b = Math.round(cls.wpBefore), a = Math.round(cls.wpAfter);
         html += '<div class="v-wp" title="' + esc(t('Gewinnchance des ziehenden Spielers: mit dem besten Zug → mit dem gespielten Zug')) + '">' +
@@ -1041,7 +1198,9 @@
       : (pr.done >= pr.total ? t('fertig · Tiefe {d}', { d: reviewDepth() }) : t('analysiert {a} / {b}', { a: pr.done, b: pr.total }));
     renderGraph(results);
     var names = gameNames();
-    var sig = sumCache.sig + '|' + state.ply + '|' + I.lang() + '|' + names.w + '|' + names.b + '|' + state.orientation + '|' +
+    // Neu zeichnen auch, sobald eine Drohungs-Analyse (für die Denkfehler) fertig ist
+    var thReady = threatFensFor(results).filter(function (nf) { var e = an.entry(nf); return e && e.depth >= THREAT_BATCH_D; }).length;
+    var sig = sumCache.sig + '|' + thReady + '|' + state.ply + '|' + I.lang() + '|' + names.w + '|' + names.b + '|' + state.orientation + '|' +
               (state.user ? state.user.color : '') + '|' + state.settings.notation + '|' + state.mode;
     if (sig === reviewSig) return;
     reviewSig = sig;
@@ -1198,9 +1357,18 @@
         if (m.color !== c || !r || r.loss == null || !/mistake|blunder|miss/.test(r.key)) return;
         if (!worst || r.loss > worst.r.loss) worst = { m: m, r: r, ply: i + 1 };
       });
+      var causes = {};
+      state.line.forEach(function (m, i) {
+        if (m.color !== c) return;
+        var dg = diagnosisFor(m, results[i]);
+        if (dg && dg.d) causes[dg.d.cause] = (causes[dg.d.cause] || 0) + 1;
+      });
+      var top = Object.keys(causes).sort(function (a, b) { return causes[b] - causes[a]; })[0];
       if (worst) {
         out.push(t(mine ? 'Dein teuerster Zug: {m} (Gewinnchance −{l} %).' : 'Teuerster Zug von {n}: {m} (Gewinnchance −{l} %).',
           { n: nm, m: '<button type="button" class="linkish" data-ply="' + worst.ply + '">' + esc(moveLabel(worst.m)) + '</button>', l: Math.round(worst.r.loss) }));
+        if (top) out.push(t(mine ? 'Dein häufigster Denkfehler: {x} ({k}×).' : 'Häufigster Denkfehler: {x} ({k}×).',
+          { x: '<b>' + esc(CO.causeTitle(top, I.lang())) + '</b>', k: causes[top] }));
       } else {
         out.push(t(mine ? 'Du hast keinen Fehler gemacht und keine Chance verpasst.' : '{n} hat keinen Fehler gemacht und keine Chance verpasst.', { n: nm }));
       }
@@ -1235,7 +1403,8 @@
     state.line.forEach(function (m, i) {
       var r = results[i];
       if (!r || !/brilliant|great|miss|mistake|blunder/.test(r.key)) return;
-      var tip = coachFor(m, r)[0] || '';
+      var dgm = diagnosisFor(m, r);
+      var tip = (dgm && dgm.desc ? dgm.desc.title + (dgm.desc.text ? ': ' + dgm.desc.text : '') : '') || coachFor(m, r)[0] || '';
       var clock = m.clock != null ? '<span class="km-clock" title="' + esc(t('Restzeit nach dem Zug')) + '">' + CO.fmtClock(m.clock) + '</span>' : '';
       items.push('<li><button type="button" class="km' + (i === state.ply - 1 ? ' cur' : '') + '" data-ply="' + (i + 1) + '">' +
         '<span class="sym c-' + r.key + '">' + C.CATS[r.key].sym + '</span>' +
@@ -1627,6 +1796,8 @@
     for (var i = 0; i <= state.line.length; i++) {
       if (!posInfoAt(i).terminal && !an.ready(fenAt(i), need, hkAt(i))) return;
     }
+    var tfs = threatFensFor(classifyAll());
+    for (var ti = 0; ti < tfs.length; ti++) if (!an.ready(tfs[ti], THREAT_BATCH_D)) return;
     var entry = LIB.entryFrom(state.game, state.pgn || exportPgn(), state.headers);
     if (state.user && state.user.color && !entry.userColor) {
       entry.userColor = state.user.color;
@@ -1643,7 +1814,7 @@
     }
     var analysis = INS.analyzeGame(state.line, function (f2) { return byFen.has(f2) ? byFen.get(f2) : an.entry(f2); },
       { minDepth: MIN_D, depth: reviewDepth(), timeControl: tc, gameId: entry.id, userColor: entry.userColor,
-        terminal: function (f3) { return termByFen.has(f3) ? termByFen.get(f3) : terminalOf(f3); } });
+        terminal: function (f3) { return termByFen.has(f3) ? termByFen.get(f3) : terminalOf(f3); }, threat: threatEntryOf });
     if (!analysis) return;
     savedFor = key;
     entry.analysis = analysis; entry.opening = analysis.opening;
@@ -1705,8 +1876,23 @@
     for (var i = 0; i < cur.fens.length; i++) {
       if (!posInfo(cur.fens[i]).terminal && !an.ready(cur.fens[i], BATCH_D)) return;
     }
-    var analysis = INS.analyzeGame(cur.line, function (f) { return an.entry(f); },
-      { minDepth: BATCH_D, depth: BATCH_D, timeControl: cur.tc, gameId: cur.entry.id, userColor: cur.entry.userColor, terminal: terminalOf });
+    var bopts = { minDepth: BATCH_D, depth: BATCH_D, timeControl: cur.tc, gameId: cur.entry.id, userColor: cur.entry.userColor,
+                  terminal: terminalOf, threat: threatEntryOf };
+    // Zweite Phase: Drohungen vor den eigenen Fehlern analysieren (für die Denkfehler-Diagnose)
+    if (!cur.threatFens) {
+      var first = INS.analyzeGame(cur.line, function (f) { return an.entry(f); }, bopts);
+      cur.threatFens = [];
+      if (first) {
+        first.moves.forEach(function (m, k) {
+          if (!isBadKey(m.key) || (cur.entry.userColor && m.color !== cur.entry.userColor)) return;
+          var nf = threatFenOf(cur.line[k].fenBefore);
+          if (nf && cur.threatFens.indexOf(nf) < 0) cur.threatFens.push(nf);
+        });
+      }
+      if (cur.threatFens.length) { updateEngine(); return; }
+    }
+    for (var j = 0; j < cur.threatFens.length; j++) if (!an.ready(cur.threatFens[j], THREAT_BATCH_D)) return;
+    var analysis = INS.analyzeGame(cur.line, function (f) { return an.entry(f); }, bopts);
     batch.cur = null;
     if (analysis) {
       cur.entry.analysis = analysis; cur.entry.opening = analysis.opening;
@@ -1831,6 +2017,17 @@
       }).join('') + '</ul>';
     }
     html += '</section>';
+    // Denkfehler: warum deine Fehler passieren (neue Analysen); ältere Einträge ohne Ursache zeigen die Fehlermuster
+    var causeKeys = Object.keys(r.causes || {}).sort(function (a, b) { return r.causes[b] - r.causes[a]; });
+    var causeTotal = causeKeys.reduce(function (sum, k) { return sum + r.causes[k]; }, 0);
+    if (causeTotal) {
+      var topC = causeKeys[0];
+      html += '<section class="card ins-causes"><h2>' + t('Deine Denkfehler') + '</h2>' +
+        '<p class="muted small">' + t('Warum deine Fehler passieren – bei {n} Fehlern mit bekannter Ursache.', { n: causeTotal }) + '</p>' +
+        bars(causeKeys.map(function (k) { return { label: CO.causeTitle(k, I.lang()), v: r.causes[k] / causeTotal * 100, max: 100, fmt: function (v) { return Math.round(v) + ' %'; } }; })) +
+        '<div class="cause-focus"><b>' + t('Dein Hebel: {x}', { x: esc(CO.causeTitle(topC, I.lang())) }) + '</b><p>' + esc(CO.causeTip(topC, I.lang())) + '</p></div>' +
+        '</section>';
+    }
     var tagRows = Object.keys(TAG_LABEL).map(function (k) { return { label: t(TAG_LABEL[k]), v: r.tags[k] || 0 }; })
       .filter(function (x) { return x.v; }).sort(function (a, b) { return b.v - a.v; });
     var maxTag = tagRows.reduce(function (m, x) { return Math.max(m, x.v); }, 1);
@@ -2170,6 +2367,8 @@
     $('verdict').addEventListener('click', function (e) {
       var sh = e.target.closest('[data-share]');
       if (sh) { shareMove(); return; }
+      var pvb = e.target.closest('[data-preview]');
+      if (pvb) { openPreview(pvb.dataset.preview, +pvb.dataset.i); return; }
       var b = e.target.closest('[data-act]');
       if (!b || !train) return;
       var a = b.dataset.act;
@@ -2181,6 +2380,15 @@
       else if (a === 'again') { var src = train.source; stopTraining(true); if (src === 'srs') startTrainer(); else startTraining(); }
     });
     $('btnShareReview').onclick = shareReview;
+    $('previewBar').addEventListener('click', function (e) {
+      var b = e.target.closest('[data-pv]');
+      if (!b || !preview) return;
+      var v = b.dataset.pv;
+      if (v === 'close') stopPreview();
+      else if (v === 'prev') previewGo(preview.i - 1);
+      else if (v === 'next') previewGo(preview.i + 1);
+      else previewGo(+v);
+    });
 
     // Bereiche
     $('modeAnalyse').onclick = function () { if (state.mode !== 'analyse') setMode('analyse'); };
@@ -2381,6 +2589,11 @@
       if (e.key === 'Escape' && !$('importBox').hidden) { closeImport(); return; }
       if (e.key === 'Escape' && !$('proBox').hidden) { $('proBox').hidden = true; return; }
       if (e.key === 'Escape' && !$('helpBox').hidden) { closeHelp(); return; }
+      if (preview && !/INPUT|TEXTAREA|SELECT/.test((e.target && e.target.tagName) || '')) {
+        if (e.key === 'Escape') { stopPreview(); return; }
+        if (e.key === 'ArrowLeft') { previewGo(preview.i - 1); e.preventDefault(); return; }
+        if (e.key === 'ArrowRight') { previewGo(preview.i + 1); e.preventDefault(); return; }
+      }
       if (e.target && /INPUT|TEXTAREA|SELECT/.test(e.target.tagName)) return;
       if (!$('importBox').hidden || !$('proBox').hidden || !$('helpBox').hidden) return;
       if (e.key === '?') { openHelp(); return; }

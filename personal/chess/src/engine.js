@@ -239,7 +239,8 @@
   Analyzer.prototype.setQueue = function (items) {
     // depth: Zieltiefe je Eintrag (Standard: Review-Tiefe); batch: gehört zur Serien-Analyse
     this.queue = items.map(function (x) {
-      return { fen: x.fen, key: akey(x.fen, x.hist && x.hist.hk), hist: x.hist || null, legal: x.legal, depth: x.depth || 0, batch: !!x.batch };
+      return { fen: x.fen, key: akey(x.fen, x.hist && x.hist.hk), hist: x.hist || null, legal: x.legal, depth: x.depth || 0,
+               batch: !!x.batch, extra: !!x.extra };
     });
     this.schedule(false);
   };
@@ -293,7 +294,8 @@
 
   Analyzer.prototype.reviewProgress = function () {
     var done = 0, self = this;
-    var items = this.queue.filter(function (q) { return !q.batch; });
+    // Zusatz-Analysen (z. B. Drohungen vor Fehlern) zählen nicht zum sichtbaren Review-Fortschritt
+    var items = this.queue.filter(function (q) { return !q.batch && !q.extra; });
     items.forEach(function (q) {
       var e = self.cache.get(q.key);
       if (e && (e.terminal || e.depth >= (q.depth || self.cfg.reviewDepth))) done++;
