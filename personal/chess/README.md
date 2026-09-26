@@ -44,7 +44,8 @@ blockiert ist). Fehlen die Dateien, lädt die App Stockfish von cdn.jsdelivr.net
   (Elo ≈ 3100 · e^(−ACPL/100), offen dokumentiert).
 - **Insights (Pro):** analysiert deine letzten Partien von chess.com oder lichess im Hintergrund. Du siehst Genauigkeit
   je Partie, Punkte, Patzer pro Partie, Phasen, Fehlermuster, Eröffnungs-Bilanz und deine drei größten Baustellen
-  mit Tipps, dazu Denkfehler-Profil, teuerste Eröffnungs-Abweichungen und Zeitmanagement. Free: letzte 5 Partien.
+  mit Tipps, dazu Denkfehler-Profil mit Verlauf („Wirkt dein Training?“: letzte Partien gegen die davor), teuerste
+  Eröffnungs-Abweichungen und Zeitmanagement. Free: letzte 5 Partien.
 - **Trainer:** Deine Fehler, Patzer und verpassten Chancen werden zu Aufgaben. Gelöste Aufgaben kommen nach
   1, 3, 7, 14, 30, 60 Tagen wieder (Leitner-System). Der Trainingsplan übt gezielt deinen häufigsten Denkfehler
   (Wochenziel 10 Aufgaben). Free: 5 Aufgaben pro Tag.
@@ -112,7 +113,7 @@ personal/chess/
 python3 build.py                  # nach jeder Änderung
 node src/classify.selftest.js     # 66 Tests: Bewertung, Leistung, Eröffnungen, UCI-Parser
 node src/coach.selftest.js        # 79 Tests: Coach, Denkfehler, Zeitmanagement, Phasen, Uhr, Konnektor, PGN-Dateien
-node src/pro.selftest.js          # 85 Tests: Lizenz (beide Anbieter), Test, Bibliothek, Trainer, Insights
+node src/pro.selftest.js          # 91 Tests: Lizenz (beide Anbieter), Test, Bibliothek, Trainer, Insights
 python3 tools/launch_check.py     # alles zusammen + Shop-, Impressums- und Build-Prüfung
 ```
 

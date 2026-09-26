@@ -102,7 +102,7 @@
                 phases: { opening: [], middlegame: [], endgame: [] }, byColor: { w: { n: 0, pts: 0, acc: [] }, b: { n: 0, pts: 0, acc: [] } },
                 perGame: { blunder: 0, mistake: 0, miss: 0, inaccuracy: 0 }, highlights: { brilliant: 0, great: 0 },
                 errors: 0, tags: {}, causes: {}, time: { errors: 0, pressure: 0, fast: 0, withClock: 0 }, openings: [], leaks: [] };
-    var leaks = {}, timeMoves = [];
+    var leaks = {}, timeMoves = [], diagGames = [];
     var accs = [], openings = {};
     games.forEach(function (g) {
       var me = g.userColor, a = g.analysis;
@@ -114,8 +114,11 @@
       var bc = res.byColor[me];
       bc.n++; if (pts != null) bc.pts += pts; if (acc != null) bc.acc.push(acc);
       var hasClock = false;
+      // Nur Analysen mit Denkfehler-Diagnose (Feld „cause“ an jedem Zug) zählen für den Verlauf
+      var gc = a.moves.length && 'cause' in a.moves[0] ? {} : null;
       a.moves.forEach(function (m) {
         if (m.color !== me) return;
+        if (gc && m.cause && /mistake|blunder|miss/.test(m.key)) gc[m.cause] = (gc[m.cause] || 0) + 1;
         if (m.clock != null) hasClock = true;
         if (m.acc != null && res.phases[m.phase]) res.phases[m.phase].push(m.acc);
         if (m.spent != null && m.crit != null) timeMoves.push({ spent: m.spent, crit: m.crit, loss: m.loss });
@@ -133,6 +136,7 @@
         }
       });
       if (hasClock) res.time.withClock++;
+      if (gc) diagGames.push(gc);
       var on = a.opening || '—';
       var ok = on + '|' + me;
       var o = openings[ok] || (openings[ok] = { name: on, color: me, eco: a.eco || null, n: 0, pts: 0, acc: [], exitMoves: [] });
@@ -175,9 +179,29 @@
     // gleitender Trend: Durchschnitt der letzten 5 Partien gegenüber den 5 davor
     var la = accs.slice(-5), pa = accs.slice(-10, -5);
     res.trendDelta = la.length >= 3 && pa.length >= 3 ? mean(la) - mean(pa) : null;
+    res.causeTrend = causeTrend(diagGames);
     res.weaknesses = weaknesses(res);
     res.strengths = strengths(res);
     return res;
+  }
+
+  /* Wirkt das Training? Denkfehler pro Partie: die letzten k Partien gegenüber den k davor (k = 3 … 10).
+     list: pro Partie { Ursache: Anzahl }, älteste zuerst. */
+  function causeTrend(list) {
+    var k = Math.min(10, Math.floor(list.length / 2));
+    if (k < 3) return null;
+    var recent = list.slice(-k), before = list.slice(-2 * k, -k);
+    function sum(arr) {
+      var o = {};
+      arr.forEach(function (g) { Object.keys(g).forEach(function (c) { o[c] = (o[c] || 0) + g[c]; }); });
+      return o;
+    }
+    var a = sum(before), b = sum(recent), total = { before: 0, after: 0 };
+    var rows = Object.keys(Object.assign({}, a, b)).map(function (c) {
+      total.before += a[c] || 0; total.after += b[c] || 0;
+      return { cause: c, before: (a[c] || 0) / k, after: (b[c] || 0) / k };
+    }).sort(function (x, y) { return Math.max(y.before, y.after) - Math.max(x.before, x.after); });
+    return { k: k, rows: rows, before: total.before / k, after: total.after / k };
   }
 
   /* Die wichtigsten Baustellen (id + Kennzahlen); die Oberfläche macht daraus Tipps. */

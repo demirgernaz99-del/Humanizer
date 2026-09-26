@@ -212,7 +212,7 @@ footer a:hover { color: var(--ink); }
       <div class="features">
         <div class="feature"><div class="sym" style="background:#d6453d">?!</div><h3 data-i="u1_t">Denkfehler-Diagnose</h3><p data-i="u1_p">Zu jedem Fehler die Ursache: Drohung übersehen, Figur eingestellt, zu gierig, Taktik übersehen, Endspieltechnik. Dazu, ob Zeitnot oder Hast dahinterstand.</p></div>
         <div class="feature"><div class="sym" style="background:var(--teal)">!?</div><h3 data-i="u2_t">Erst selbst suchen</h3><p data-i="u2_p">Das aktive Review stoppt an den entscheidenden Momenten und fragt: Was hättest du gespielt? Erst danach kommt die Lösung. Was du selbst findest, behältst du.</p></div>
-        <div class="feature"><div class="sym" style="background:#8a5f0f">→</div><h3><span data-i="u3_t">Trainingsplan nach Ursache</span></h3><p data-i="u3_p">Zugradar zählt deine Denkfehler über alle Partien und übt gezielt den häufigsten, mit Stellungen aus deinen eigenen Partien und einem Wochenziel.</p></div>
+        <div class="feature"><div class="sym" style="background:#8a5f0f">→</div><h3><span data-i="u3_t">Trainingsplan nach Ursache</span></h3><p data-i="u3_p">Zugradar zählt deine Denkfehler über alle Partien und übt gezielt den häufigsten, mit Stellungen aus deinen eigenen Partien und einem Wochenziel. Die Insights zeigen danach, ob der Fehler seltener wird.</p></div>
         <div class="feature"><div class="sym" style="background:var(--blue)">e4</div><h3 data-i="u4_t">Eröffnungs-Check</h3><p data-i="u4_p">3.815 Eröffnungen mit deutschen Namen. Du siehst, bei welchem Zug du die Theorie verlassen hast, was die Hauptzüge waren und was dich die Abweichung gekostet hat.</p></div>
         <div class="feature"><div class="sym" style="background:var(--green)">5s</div><h3 data-i="u5_t">Bedenkzeit, wo sie zählt</h3><p data-i="u5_p">Zugradar misst, wie kritisch jede Stellung war, und legt deine Bedenkzeit daneben. So siehst du, ob du in den entscheidenden Momenten nachdenkst oder in ruhigen Zeit verschenkst.</p></div>
         <div class="feature"><div class="sym" style="background:#5d6f7c">∑</div><h3 data-i="u6_t">Turnier- und Vereinspartien</h3><p data-i="u6_p">PGN-Datei öffnen oder ins Fenster ziehen, auch ChessBase-Exporte mit Umlauten. Zugradar listet die Partien, erkennt dich als Spieler und analysiert alle auf einmal.</p></div>
@@ -300,6 +300,7 @@ footer a:hover { color: var(--ink); }
           <div class="alt" id="priceAlt"><span data-i="or">oder</span> {{prices.monthly}} <span data-i="per_month">pro Monat</span> · {{prices.lifetime}} <span data-i="once">einmalig</span></div>
           <ul>
             <li data-i="p_p1">Insights über bis zu 100 Partien</li>
+            <li data-i="p_p6">Denkfehler-Verlauf: Du siehst, ob dein Training wirkt</li>
             <li data-i="p_p2">Trainer ohne Tageslimit, auch gezielt nach Denkfehler</li>
             <li data-i="p_p3">Auto-Import jeder beendeten Partie</li>
             <li data-i="p_p4">Review bis Tiefe 22</li>
@@ -386,7 +387,7 @@ footer a:hover { color: var(--ink); }
     shot4: 'Thinking-error diagnosis: the cause sits next to the move, and you can play through the threat and the refutation on the board.',
     u1_t: 'Thinking-error diagnosis', u1_p: 'Every mistake gets its cause: missed threat, hung piece, too greedy, missed tactic, endgame technique – and whether time trouble or haste was behind it.',
     u2_t: 'Find it yourself first', u2_p: 'Active review stops at the decisive moments and asks: what would you have played? Only then comes the answer. What you find yourself, you keep.',
-    u3_t: 'A training plan by cause', u3_p: 'Zugradar counts your thinking errors across all games and drills the most frequent one – with positions from your own games and a weekly goal.',
+    u3_t: 'A training plan by cause', u3_p: 'Zugradar counts your thinking errors across all games and drills the most frequent one – with positions from your own games and a weekly goal. Insights then show whether that mistake is getting rarer.',
     u4_t: 'Opening check', u4_p: '3,815 named openings. See the exact move where you left theory, what the main moves were and what the deviation cost you.',
     u5_t: 'Thinking time where it counts', u5_p: 'Zugradar measures how critical each position was and puts your thinking time next to it – so you see whether you think in the decisive moments or burn time in quiet ones.',
     u6_t: 'Tournament and club games', u6_p: 'Open a PGN file or drag it into the window – ChessBase exports included. Zugradar lists the games, recognises you as a player and analyses them all at once.',
@@ -415,7 +416,7 @@ footer a:hover { color: var(--ink); }
     p_f1: 'Live analysis with Stockfish 18', p_f2: 'All move ratings including brilliant', p_f3: 'Coach explanations and game reviews without limits',
     p_f4: 'Play the AI at 8 strengths', p_f5: 'Load games from chess.com, lichess and PGN files', p_f7: 'Thinking-error diagnosis, opening check and time analysis in every review', p_f6: 'Insights across 5 games, 5 trainer puzzles a day', p_free_cta: 'Start for free',
     per_year: 'per year', or: 'or', per_month: 'per month', once: 'one-time',
-    p_p1: 'Insights across up to 100 games', p_p2: 'Trainer without a daily limit, also by thinking error', p_p3: 'Auto-import of every finished game',
+    p_p1: 'Insights across up to 100 games', p_p6: 'Thinking-error trend: see whether your training works', p_p2: 'Trainer without a daily limit, also by thinking error', p_p3: 'Auto-import of every finished game',
     p_p4: 'Review up to depth 22', p_p5: 'All board themes, sharing without a watermark', p_pro_cta: 'Get Pro',
     p_key: 'Already bought? Enter your licence key',
     price_fine: 'Payment and invoicing via ' + (SELLER.merchantOfRecord || 'our reseller') + ' as merchant of record, VAT included.',

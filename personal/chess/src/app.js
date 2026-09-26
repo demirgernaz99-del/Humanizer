@@ -2415,7 +2415,7 @@
         bars(causeKeys.map(function (k) { return { label: CO.causeTitle(k, I.lang()), v: r.causes[k] / causeTotal * 100, max: 100, fmt: function (v) { return Math.round(v) + ' %'; } }; })) +
         '<div class="cause-focus"><b>' + t('Dein Hebel: {x}', { x: esc(CO.causeTitle(topC, I.lang())) }) + '</b><p>' + esc(CO.causeTip(topC, I.lang())) + '</p>' +
         (SRS.byCause()[topC] ? '<button type="button" class="btn accent small" data-ins="theme" data-theme="' + topC + '">' + t('Genau das trainieren') + '</button>' : '') + '</div>' +
-        '</section>';
+        causeTrendHtml(r.causeTrend) + '</section>';
     }
     var tagRows = Object.keys(TAG_LABEL).map(function (k) { return { label: t(TAG_LABEL[k]), v: r.tags[k] || 0 }; })
       .filter(function (x) { return x.v; }).sort(function (a, b) { return b.v - a.v; });
@@ -2443,6 +2443,26 @@
   }
   function kpi(label, value, extra) {
     return '<div class="kpi card"><span class="kpi-label">' + label + '</span><span class="kpi-value">' + value + '</span>' + (extra || '') + '</div>';
+  }
+  // Wirkt das Training? Denkfehler pro Partie: letzte k Partien gegenüber den k davor
+  function causeTrendHtml(ct) {
+    if (!ct || !ct.rows.length) return '';
+    function f(v) { return I.num(Math.round(v * 10) / 10, 1); }
+    function dir(a, b) {
+      if (Math.abs(b - a) < 0.15) return ['flat', '→', t('gleich')];
+      return b < a ? ['down', '↓', t('seltener')] : ['up', '↑', t('häufiger')];
+    }
+    var all = dir(ct.before, ct.after);
+    var rows = ct.rows.filter(function (x) { return Math.max(x.before, x.after) >= 0.2; }).slice(0, 4);
+    return '<div class="cause-trend"><h3 class="sub-head">' + t('Wirkt dein Training?') + '</h3>' +
+      '<p class="muted small">' + t('Denkfehler pro Partie: deine letzten {k} Partien gegenüber den {k} davor.', { k: ct.k }) + '</p>' +
+      '<div class="ct-row ct-all ' + all[0] + '"><span>' + t('Alle Denkfehler') + '</span><span class="ct-v">' + f(ct.before) + ' → <b>' + f(ct.after) + '</b></span>' +
+      '<span class="ct-d" title="' + esc(all[2]) + '">' + all[1] + ' ' + esc(all[2]) + '</span></div>' +
+      rows.map(function (x) {
+        var d = dir(x.before, x.after);
+        return '<div class="ct-row ' + d[0] + '"><span>' + esc(CO.causeTitle(x.cause, I.lang())) + '</span><span class="ct-v">' + f(x.before) + ' → <b>' + f(x.after) + '</b></span>' +
+          '<span class="ct-d" title="' + esc(d[2]) + '">' + d[1] + ' ' + esc(d[2]) + '</span></div>';
+      }).join('') + '</div>';
   }
   function bars(rows) {
     return '<div class="hbars">' + rows.map(function (r) {

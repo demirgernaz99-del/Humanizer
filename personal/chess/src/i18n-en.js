@@ -574,6 +574,12 @@
   "Öffnen": "Open",
   "… und {n} weitere. „Alle analysieren“ bezieht sie mit ein.": "… and {n} more. “Analyse all” includes them.",
   "Kostenlos: deine neuesten {n}. Pro wertet bis zu {m} aus.": "Free: your latest {n}. Pro analyses up to {m}.",
-  "Wähle oben, wer du bist – Insights und Trainer werten deine Züge aus.": "Choose above which player you are – Insights and the trainer evaluate your moves."
+  "Wähle oben, wer du bist – Insights und Trainer werten deine Züge aus.": "Choose above which player you are – Insights and the trainer evaluate your moves.",
+  "Wirkt dein Training?": "Is your training working?",
+  "Denkfehler pro Partie: deine letzten {k} Partien gegenüber den {k} davor.": "Thinking errors per game: your last {k} games compared with the {k} before.",
+  "Alle Denkfehler": "All thinking errors",
+  "seltener": "less often",
+  "häufiger": "more often",
+  "gleich": "unchanged"
 };
 })();

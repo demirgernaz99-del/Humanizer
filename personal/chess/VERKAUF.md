@@ -14,7 +14,7 @@ Der Leitfaden ersetzt keine Rechts- oder Steuerberatung. Die markierten Punkte s
 | Denkfehler-Diagnose (warum ein Fehler passierte), Aktives Review, Eröffnungs-Check, Zeitmanagement | ✓ | ✓ |
 | Spiel gegen die KI, PGN-Import/-Export, Teilen-Bilder | ✓ (mit Wasserzeichen) | ✓ (ohne) |
 | Partien von chess.com/lichess laden, PGN-Dateien mit vielen Partien (Turnier, Verein, ChessBase) | ✓ | ✓ |
-| Insights über viele Partien | 5 Partien | 100 Partien |
+| Insights über viele Partien, Denkfehler-Verlauf („Wirkt dein Training?“, ab 6 Partien) | 5 Partien | 100 Partien |
 | Trainer aus eigenen Fehlern (Wiederholung), Trainingsplan nach Denkfehler | 5 Aufgaben/Tag | unbegrenzt |
 | Auto-Import beendeter Partien | – | ✓ |
 | Review-Tiefe | bis 16 | bis 22 |

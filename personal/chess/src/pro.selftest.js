@@ -276,6 +276,25 @@ Promise.resolve()
   eq(r.highlights.brilliant, 1, 'brillante Züge gezählt');
   eq(r.openings[0].name, 'Sizilianische Verteidigung', 'häufigste Eröffnung zuerst');
   eq(r.byColor.w.n, 2, 'Partien mit Weiß');
+  eq(r.causeTrend, null, 'Denkfehler-Verlauf: alte Analysen ohne Diagnose zählen nicht');
+
+  // Denkfehler-Verlauf: 8 Partien, früher oft „Drohung übersehen“, zuletzt kaum noch
+  function dg(i, causes) {
+    var moves = causes.map(function (c) { return { color: 'w', key: c ? 'mistake' : 'best', acc: 80, phase: 'middlegame', tags: [], cause: c }; });
+    moves.push({ color: 'b', key: 'best', acc: 90, phase: 'middlegame', tags: [], cause: null });
+    return { id: 'dg' + i, end: 1000 + i, userColor: 'w', userResult: 'draw', white: { name: 'Ich' }, black: { name: 'X' },
+             analysis: { acc: { w: 80, b: 90 }, opening: '—', moves: moves } };
+  }
+  var tr = INS.aggregate([
+    dg(1, ['threat_missed', 'threat_missed']), dg(2, ['threat_missed', 'greedy']), dg(3, ['threat_missed']), dg(4, ['threat_missed', null]),
+    dg(5, [null]), dg(6, ['greedy']), dg(7, [null, null]), dg(8, ['threat_missed'])
+  ]).causeTrend;
+  ok(tr && tr.k === 4, 'Verlauf über 4 gegen 4 Partien: ' + JSON.stringify(tr));
+  var th = tr.rows.filter(function (x) { return x.cause === 'threat_missed'; })[0];
+  ok(th.before === 1.25 && th.after === 0.25, 'Drohung übersehen: 1,25 → 0,25 pro Partie');
+  ok(tr.before === 1.5 && tr.after === 0.5, 'alle Denkfehler: 1,5 → 0,5 pro Partie');
+  eq(tr.rows[0].cause, 'threat_missed', 'häufigster Denkfehler zuerst');
+  eq(INS.aggregate([dg(1, ['greedy']), dg(2, []), dg(3, [])]).causeTrend, null, 'zu wenige Partien: kein Verlauf');
 
   console.log((fail ? 'FEHLGESCHLAGEN' : 'OK') + ': ' + pass + ' bestanden, ' + fail + ' fehlgeschlagen');
   process.exit(fail ? 1 : 0);
