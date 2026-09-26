@@ -234,6 +234,7 @@
         <select id="insCount" data-t-aria="Anzahl Partien" aria-label="Anzahl Partien">
           <option value="10">10</option><option value="20" selected>20</option><option value="50">50</option><option value="100">100</option>
         </select>
+        <button type="button" class="btn ghost" id="insFile" data-t>PGN-Datei …</button>
         <button type="button" class="btn accent" id="insRun" data-t>Partien analysieren</button>
         <button type="button" class="btn ghost" id="insCancel" hidden data-t>Abbrechen</button>
       </div>
@@ -271,13 +272,34 @@
         <p class="hint small" data-t>Nur beendete Partien, über die öffentlichen Schnittstellen von chess.com und lichess, ohne Login. Laufende Partien liest Zugradar grundsätzlich nicht mit – Engine-Hilfe während einer Partie gegen Menschen ist Betrug.</p>
       </div>
       <div id="panePgn" class="pane" hidden>
-        <p class="hint" data-t>PGN aus chess.com oder lichess (Partie → Teilen → PGN) oder eine FEN einfügen. Du kannst auch einfach irgendwo auf der Seite einfügen (Strg+V).</p>
-        <textarea id="importText" rows="9" spellcheck="false" placeholder="[Event &quot;…&quot;]&#10;1. e4 e5 2. Nf3 …&#10;rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq - 0 1"></textarea>
-        <p class="error" id="importError" hidden></p>
-        <div class="dialog-actions">
-          <button type="button" class="btn ghost" id="btnSample" data-t>Beispiel: Kasparow – Topalow 1999</button>
-          <span class="grow"></span>
-          <button type="button" class="btn accent" id="btnImportGo" data-t>Laden</button>
+        <div id="pgnPaste">
+          <p class="hint" data-t>PGN aus chess.com oder lichess (Partie → Teilen → PGN) oder eine FEN einfügen. Du kannst auch einfach irgendwo auf der Seite einfügen (Strg+V).</p>
+          <textarea id="importText" rows="9" spellcheck="false" placeholder="[Event &quot;…&quot;]&#10;1. e4 e5 2. Nf3 …&#10;rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq - 0 1"></textarea>
+          <div class="pf-open">
+            <button type="button" class="btn ghost" id="btnPgnFile" data-t>PGN-Datei öffnen …</button>
+            <input type="file" id="pgnFileInput" accept=".pgn,.txt,application/x-chess-pgn,application/vnd.chess-pgn,text/plain" hidden>
+            <span class="hint" data-t>Turnier, Verein, ChessBase: auch Dateien mit vielen Partien. Du kannst sie auch ins Fenster ziehen.</span>
+          </div>
+          <p class="error" id="importError" hidden></p>
+          <div class="dialog-actions">
+            <button type="button" class="btn ghost" id="btnSample" data-t>Beispiel: Kasparow – Topalow 1999</button>
+            <span class="grow"></span>
+            <button type="button" class="btn accent" id="btnImportGo" data-t>Laden</button>
+          </div>
+        </div>
+        <div id="pgnFile" class="pgn-file" hidden>
+          <div class="pf-head">
+            <div><strong id="pfTitle"></strong><small id="pfSub"></small></div>
+            <label class="pf-me"><span data-t>Ich bin</span>
+              <select id="pfMe" data-t-aria="Welcher Spieler bist du?" aria-label="Welcher Spieler bist du?"></select></label>
+          </div>
+          <ul class="games" id="pfList"></ul>
+          <p class="error" id="pfError" hidden></p>
+          <div class="dialog-actions">
+            <button type="button" class="btn ghost" id="pfBack" data-t>Andere Datei</button>
+            <span class="grow"></span>
+            <button type="button" class="btn accent" id="pfAnalyze" data-t>Alle analysieren (Insights)</button>
+          </div>
         </div>
       </div>
       <div class="dialog-actions end">
@@ -384,6 +406,9 @@
 </script>
 <script>
 @@LIBRARY@@
+</script>
+<script>
+@@PGNFILE@@
 </script>
 <script>
 @@INSIGHTS@@

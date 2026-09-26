@@ -824,6 +824,24 @@ body.ar-active #sheetCard, body.ar-active #review, body.ar-active .acc-chip, bod
 .tc-legend i.tc-dot { background: var(--c-mistake); border-radius: 50%; }
 .tc-notes { margin: 0; padding-left: 18px; font-size: 13.5px; color: var(--ink-2); line-height: 1.5; }
 
+/* ---------- PGN-Dateien mit vielen Partien ---------- */
+.pf-open { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 12px; margin-top: 10px; }
+.pf-open .hint { margin: 0; flex: 1 1 220px; }
+.pf-head { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 8px 16px; margin-bottom: 10px; }
+.pf-head strong { display: block; font-size: 16px; }
+.pf-head small { display: block; color: var(--muted); font-size: 12.5px; overflow-wrap: anywhere; }
+.pf-me { display: flex; align-items: center; gap: 8px; font-size: 13.5px; font-weight: 600; }
+.pf-me select { max-width: 220px; }
+.pgn-file .games { max-height: 340px; }
+.pgn-file .dialog-actions, .pf-open + .error { margin-top: 12px; }
+.pf-r { font: 600 12px/1 var(--f-mono); color: var(--muted); margin-left: 4px; }
+.pf-more { padding: 8px 10px; color: var(--muted); font-size: 13px; }
+body.dropping::after {
+  content: attr(data-drop); position: fixed; inset: 12px; z-index: 200; display: grid; place-items: center;
+  border: 3px dashed var(--accent); border-radius: 18px; background: color-mix(in srgb, var(--bg) 85%, transparent);
+  font-size: 20px; font-weight: 700; line-height: 1.3; color: var(--ink); pointer-events: none; text-align: center; padding: 24px;
+}
+
 /* Figuren: cburnett-Satz (Colin M.L. Burnett, GPLv2+), entnommen aus lichess chessground (GPLv3). */
 .pc.wp{background-image:url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0NSIgaGVpZ2h0PSI0NSI+PHBhdGggZD0iTTIyLjUgOWMtMi4yMSAwLTQgMS43OS00IDQgMCAuODkuMjkgMS43MS43OCAyLjM4QzE3LjMzIDE2LjUgMTYgMTguNTkgMTYgMjFjMCAyLjAzLjk0IDMuODQgMi40MSA1LjAzLTMgMS4wNi03LjQxIDUuNTUtNy40MSAxMy40N2gyM2MwLTcuOTItNC40MS0xMi40MS03LjQxLTEzLjQ3IDEuNDctMS4xOSAyLjQxLTMgMi40MS01LjAzIDAtMi40MS0xLjMzLTQuNS0zLjI4LTUuNjIuNDktLjY3Ljc4LTEuNDkuNzgtMi4zOCAwLTIuMjEtMS43OS00LTQtNHoiIGZpbGw9IiNmZmYiIHN0cm9rZT0iIzAwMCIgc3Ryb2tlLXdpZHRoPSIxLjUiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPjwvc3ZnPg==')}
 .pc.wb{background-image:url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0NSIgaGVpZ2h0PSI0NSI+PGcgZmlsbD0ibm9uZSIgZmlsbC1ydWxlPSJldmVub2RkIiBzdHJva2U9IiMwMDAiIHN0cm9rZS13aWR0aD0iMS41IiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiPjxnIGZpbGw9IiNmZmYiIHN0cm9rZS1saW5lY2FwPSJidXR0Ij48cGF0aCBkPSJNOSAzNmMzLjM5LS45NyAxMC4xMS40MyAxMy41LTIgMy4zOSAyLjQzIDEwLjExIDEuMDMgMTMuNSAyIDAgMCAxLjY1LjU0IDMgMi0uNjguOTctMS42NS45OS0zIC41LTMuMzktLjk3LTEwLjExLjQ2LTEzLjUtMS0zLjM5IDEuNDYtMTAuMTEuMDMtMTMuNSAxLTEuMzU0LjQ5LTIuMzIzLjQ3LTMtLjUgMS4zNTQtMS45NCAzLTIgMy0yeiIvPjxwYXRoIGQ9Ik0xNSAzMmMyLjUgMi41IDEyLjUgMi41IDE1IDAgLjUtMS41IDAtMiAwLTIgMC0yLjUtMi41LTQtMi41LTQgNS41LTEuNSA2LTExLjUtNS0xNS41LTExIDQtMTAuNSAxNC01IDE1LjUgMCAwLTIuNSAxLjUtMi41IDQgMCAwLS41LjUgMCAyeiIvPjxwYXRoIGQ9Ik0yNSA4YTIuNSAyLjUgMCAxIDEtNSAwIDIuNSAyLjUgMCAxIDEgNSAweiIvPjwvZz48cGF0aCBkPSJNMTcuNSAyNmgxME0xNSAzMGgxNW0tNy41LTE0LjV2NU0yMCAxOGg1IiBzdHJva2UtbGluZWpvaW49Im1pdGVyIi8+PC9nPjwvc3ZnPg==')}
@@ -1065,6 +1083,7 @@ body.ar-active #sheetCard, body.ar-active #review, body.ar-active .acc-chip, bod
         <select id="insCount" data-t-aria="Anzahl Partien" aria-label="Anzahl Partien">
           <option value="10">10</option><option value="20" selected>20</option><option value="50">50</option><option value="100">100</option>
         </select>
+        <button type="button" class="btn ghost" id="insFile" data-t>PGN-Datei …</button>
         <button type="button" class="btn accent" id="insRun" data-t>Partien analysieren</button>
         <button type="button" class="btn ghost" id="insCancel" hidden data-t>Abbrechen</button>
       </div>
@@ -1102,13 +1121,34 @@ body.ar-active #sheetCard, body.ar-active #review, body.ar-active .acc-chip, bod
         <p class="hint small" data-t>Nur beendete Partien, über die öffentlichen Schnittstellen von chess.com und lichess, ohne Login. Laufende Partien liest Zugradar grundsätzlich nicht mit – Engine-Hilfe während einer Partie gegen Menschen ist Betrug.</p>
       </div>
       <div id="panePgn" class="pane" hidden>
-        <p class="hint" data-t>PGN aus chess.com oder lichess (Partie → Teilen → PGN) oder eine FEN einfügen. Du kannst auch einfach irgendwo auf der Seite einfügen (Strg+V).</p>
-        <textarea id="importText" rows="9" spellcheck="false" placeholder="[Event &quot;…&quot;]&#10;1. e4 e5 2. Nf3 …&#10;rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq - 0 1"></textarea>
-        <p class="error" id="importError" hidden></p>
-        <div class="dialog-actions">
-          <button type="button" class="btn ghost" id="btnSample" data-t>Beispiel: Kasparow – Topalow 1999</button>
-          <span class="grow"></span>
-          <button type="button" class="btn accent" id="btnImportGo" data-t>Laden</button>
+        <div id="pgnPaste">
+          <p class="hint" data-t>PGN aus chess.com oder lichess (Partie → Teilen → PGN) oder eine FEN einfügen. Du kannst auch einfach irgendwo auf der Seite einfügen (Strg+V).</p>
+          <textarea id="importText" rows="9" spellcheck="false" placeholder="[Event &quot;…&quot;]&#10;1. e4 e5 2. Nf3 …&#10;rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq - 0 1"></textarea>
+          <div class="pf-open">
+            <button type="button" class="btn ghost" id="btnPgnFile" data-t>PGN-Datei öffnen …</button>
+            <input type="file" id="pgnFileInput" accept=".pgn,.txt,application/x-chess-pgn,application/vnd.chess-pgn,text/plain" hidden>
+            <span class="hint" data-t>Turnier, Verein, ChessBase: auch Dateien mit vielen Partien. Du kannst sie auch ins Fenster ziehen.</span>
+          </div>
+          <p class="error" id="importError" hidden></p>
+          <div class="dialog-actions">
+            <button type="button" class="btn ghost" id="btnSample" data-t>Beispiel: Kasparow – Topalow 1999</button>
+            <span class="grow"></span>
+            <button type="button" class="btn accent" id="btnImportGo" data-t>Laden</button>
+          </div>
+        </div>
+        <div id="pgnFile" class="pgn-file" hidden>
+          <div class="pf-head">
+            <div><strong id="pfTitle"></strong><small id="pfSub"></small></div>
+            <label class="pf-me"><span data-t>Ich bin</span>
+              <select id="pfMe" data-t-aria="Welcher Spieler bist du?" aria-label="Welcher Spieler bist du?"></select></label>
+          </div>
+          <ul class="games" id="pfList"></ul>
+          <p class="error" id="pfError" hidden></p>
+          <div class="dialog-actions">
+            <button type="button" class="btn ghost" id="pfBack" data-t>Andere Datei</button>
+            <span class="grow"></span>
+            <button type="button" class="btn accent" id="pfAnalyze" data-t>Alle analysieren (Insights)</button>
+          </div>
         </div>
       </div>
       <div class="dialog-actions end">
@@ -1180,7 +1220,7 @@ body.ar-active #sheetCard, body.ar-active #review, body.ar-active .acc-chip, bod
 </div>
 
 <script>
-(function(){var r=typeof window!=='undefined'?window:globalThis;r.SK=r.SK||{};r.SK.seller={"_hinweis": "Deine Geschäftsdaten. Nach Änderungen: python3 build.py. Leere Felder erscheinen auf der Website als [bitte ausfüllen].", "brand": "Zugradar", "siteUrl": "https://demirgernaz99-del.github.io/Humanizer/personal/chess/", "checkoutUrl": "", "prices": {"monthly": "4,99 €", "yearly": "34,99 €", "lifetime": "69 €"}, "pricesEn": {"monthly": "€4.99", "yearly": "€34.99", "lifetime": "€69"}, "license": {"provider": "lemonsqueezy", "storeId": null, "productIds": [], "organizationId": "", "benefitIds": [], "api": ""}, "legal": {"name": "", "street": "", "city": "", "country": "Deutschland", "email": "", "phone": "", "vatId": ""}, "merchantOfRecord": "Lemon Squeezy (Lemon Squeezy LLC)", "_hinweis_license": "provider: 'lemonsqueezy' (storeId, productIds) oder 'polar' (organizationId, optional benefitIds). api nur bei Proxy ausfüllen."};r.SK.build={"version": "1.0 (8e5bc21)"};})();
+(function(){var r=typeof window!=='undefined'?window:globalThis;r.SK=r.SK||{};r.SK.seller={"_hinweis": "Deine Geschäftsdaten. Nach Änderungen: python3 build.py. Leere Felder erscheinen auf der Website als [bitte ausfüllen].", "brand": "Zugradar", "siteUrl": "https://demirgernaz99-del.github.io/Humanizer/personal/chess/", "checkoutUrl": "", "prices": {"monthly": "4,99 €", "yearly": "34,99 €", "lifetime": "69 €"}, "pricesEn": {"monthly": "€4.99", "yearly": "€34.99", "lifetime": "€69"}, "license": {"provider": "lemonsqueezy", "storeId": null, "productIds": [], "organizationId": "", "benefitIds": [], "api": ""}, "legal": {"name": "", "street": "", "city": "", "country": "Deutschland", "email": "", "phone": "", "vatId": ""}, "merchantOfRecord": "Lemon Squeezy (Lemon Squeezy LLC)", "_hinweis_license": "provider: 'lemonsqueezy' (storeId, productIds) oder 'polar' (organizationId, optional benefitIds). api nur bei Proxy ausfüllen."};r.SK.build={"version": "1.0 (d2afbd4)"};})();
 </script>
 <script>
 /* SK.i18n – Deutsch/Englisch. Der deutsche Text ist zugleich der Schlüssel (wie gettext):
@@ -1408,7 +1448,6 @@ if (typeof module !== 'undefined') module.exports = (typeof window !== 'undefine
   "Noch keine Daten – starte mit deinen letzten Partien.": "No data yet – start with your recent games.",
   "Analysiere Partie {a} von {b} …": "Analysing game {a} of {b} …",
   "So füllst du deine Insights": "How to fill your insights",
-  "Unter „Partie laden → Meine Partien“ deinen chess.com- oder lichess-Namen eintragen.": "Enter your chess.com or lichess username under “Load game → My games”.",
   "Hier auf „Partien analysieren“ tippen. Stockfish bewertet jede Partie im Hintergrund.": "Tap “Analyse games” here. Stockfish rates every game in the background.",
   "Deine Baustellen erscheinen hier, deine Fehler werden zu Aufgaben im Trainer.": "Your weak spots appear here, and your mistakes become puzzles in the trainer.",
   "Benutzernamen eintragen": "Enter username",
@@ -1814,7 +1853,25 @@ if (typeof module !== 'undefined') module.exports = (typeof window !== 'undefine
   "kritische Stellungen": "critical positions",
   "ruhige Stellungen": "quiet positions",
   "Ø Bedenkzeit – in kritischen Stellungen hilft nur ein Zug, in ruhigen sind mehrere gleich gut.": "Avg. thinking time – in critical positions only one move works, in quiet ones several are equally good.",
-  "Du denkst in kritischen Stellungen kaum länger nach als in ruhigen – genau dort entscheiden sich Partien.": "You barely think longer in critical positions than in quiet ones – yet that's exactly where games are decided."
+  "Du denkst in kritischen Stellungen kaum länger nach als in ruhigen – genau dort entscheiden sich Partien.": "You barely think longer in critical positions than in quiet ones – yet that's exactly where games are decided.",
+  "Unter „Partie laden → Meine Partien“ deinen chess.com- oder lichess-Namen eintragen – oder eine PGN-Datei mit deinen Turnier- und Vereinspartien öffnen.": "Enter your chess.com or lichess username under “Load game → My games” – or open a PGN file with your tournament and club games.",
+  "PGN-Datei öffnen …": "Open PGN file …",
+  "Turnier, Verein, ChessBase: auch Dateien mit vielen Partien. Du kannst sie auch ins Fenster ziehen.": "Tournament, club, ChessBase: files with many games work too. You can also drag them into the window.",
+  "Ich bin": "I am",
+  "Welcher Spieler bist du?": "Which player are you?",
+  "Andere Datei": "Other file",
+  "Alle analysieren (Insights)": "Analyse all (Insights)",
+  "{n} Partien analysieren (Insights)": "Analyse {n} games (Insights)",
+  "PGN-Datei …": "PGN file …",
+  "PGN-Datei hier ablegen": "Drop PGN file here",
+  "Die Datei ist zu groß (höchstens {n} MB).": "The file is too large (max. {n} MB).",
+  "{n} Turniere/Events": "{n} events",
+  "– nur ansehen –": "– just browse –",
+  "Runde {r}": "Round {r}",
+  "Öffnen": "Open",
+  "… und {n} weitere. „Alle analysieren“ bezieht sie mit ein.": "… and {n} more. “Analyse all” includes them.",
+  "Kostenlos: deine neuesten {n}. Pro wertet bis zu {m} aus.": "Free: your latest {n}. Pro analyses up to {m}.",
+  "Wähle oben, wer du bist – Insights und Trainer werten deine Züge aus.": "Choose above which player you are – Insights and the trainer evaluate your moves."
 };
 })();
 
@@ -7054,11 +7111,80 @@ if (typeof module !== 'undefined') module.exports = (typeof window !== 'undefine
   function removePuzzle(id) { savePuzzles(puzzles().filter(function (p) { return p.id !== id; })); }
   function clearPuzzles() { store(SRS, []); }
 
-  root.SK.library = { all: all, get: get, put: put, remove: remove, clear: clear, entryFrom: entryFrom, hash: hash };
+  root.SK.library = { all: all, get: get, put: put, remove: remove, clear: clear, entryFrom: entryFrom, hash: hash, movesOnly: movesOnly };
   root.SK.srs = { INTERVALS: INTERVALS, all: puzzles, add: addPuzzles, due: due, answer: answer, stats: stats,
                   byCause: byCause, forCause: forCause, weekStart: weekStart, remove: removePuzzle, clear: clearPuzzles };
 })();
 if (typeof module !== 'undefined') module.exports = { library: (typeof window !== 'undefined' ? window : globalThis).SK.library, srs: (typeof window !== 'undefined' ? window : globalThis).SK.srs };
+
+</script>
+<script>
+/* SK.pgnFile – PGN-Dateien mit vielen Partien (Turniere, Vereinsabende, ChessBase-Export):
+   in einzelne Partien trennen, Kopfzeilen lesen, Spieler zählen. Reine Textverarbeitung, in Node testbar. */
+(function () {
+  var root = (typeof window !== 'undefined') ? window : globalThis;
+  root.SK = root.SK || {};
+
+  var HEADER = /^\s*\[(\w+)\s+"(.*)"\]\s*$/;
+  var RESULT_END = /(1-0|0-1|1\/2-1\/2|\*)\s*$/;
+
+  // Text → Liste von PGN-Texten (eine je Partie)
+  function split(text) {
+    var lines = String(text || '').replace(/^﻿/, '').replace(/\r\n?/g, '\n').split('\n');
+    var games = [], cur = [], hasMoves = false, ended = false;
+    function push() {
+      var t = cur.join('\n').trim();
+      if (t) games.push(t);
+      cur = []; hasMoves = false; ended = false;
+    }
+    lines.forEach(function (l) {
+      var trimmed = l.trim();
+      if (HEADER.test(l)) {
+        if (hasMoves) push();           // neue Kopfzeilen nach Zügen = neue Partie
+        cur.push(l);
+        return;
+      }
+      if (!trimmed) { if (cur.length) cur.push(l); return; }
+      // Partien ohne Kopfzeilen: nach einem Ergebnis beginnt mit „1.“ die nächste
+      if (ended && /^1\.\s*\S/.test(trimmed)) push();
+      cur.push(l);
+      hasMoves = true;
+      ended = RESULT_END.test(trimmed);
+    });
+    push();
+    return games;
+  }
+
+  function headers(pgn) {
+    var h = {};
+    String(pgn || '').split('\n').forEach(function (l) {
+      var m = HEADER.exec(l);
+      if (m) h[m[1]] = m[2];
+    });
+    return h;
+  }
+
+  // Wer kommt am häufigsten vor? → [{ name, n }] absteigend (das ist meist der Besitzer der Datei)
+  function players(pgns) {
+    var cnt = {};
+    pgns.forEach(function (p) {
+      var h = headers(p);
+      [h.White, h.Black].forEach(function (n) { if (n && n !== '?') cnt[n] = (cnt[n] || 0) + 1; });
+    });
+    return Object.keys(cnt).map(function (n) { return { name: n, n: cnt[n] }; })
+      .sort(function (a, b) { return b.n - a.n || a.name.localeCompare(b.name); });
+  }
+
+  // Datum aus der PGN-Kopfzeile ("2026.09.14", "2026.09.??") → Zeitstempel oder null
+  function dateOf(h) {
+    var m = /^(\d{4})\.(\d{2}|\?\?)\.(\d{2}|\?\?)/.exec((h && h.Date) || '');
+    if (!m) return null;
+    return Date.UTC(+m[1], m[2] === '??' ? 0 : +m[2] - 1, m[3] === '??' ? 1 : +m[3], 12);
+  }
+
+  root.SK.pgnFile = { split: split, headers: headers, players: players, dateOf: dateOf };
+})();
+if (typeof module !== 'undefined') module.exports = (typeof window !== 'undefined' ? window : globalThis).SK.pgnFile;
 
 </script>
 <script>
@@ -8213,7 +8339,7 @@ if (typeof module !== 'undefined') module.exports = (typeof window !== 'undefine
     liveMax: 22, reviewDepth: 16, lines: 3, notation: I.lang() === 'en' ? 'en' : 'de',
     arrowBest: true, arrowAlt: false, arrowBetter: true, badges: true, autoReview: true,
     hints: true, humanColor: 'w', level: 'club', theme: 'club', sound: true,
-    connSite: 'chesscom', connUser: '', connAuto: false, connLast: 0, welcomed: false
+    connSite: 'chesscom', connUser: '', connAuto: false, connLast: 0, welcomed: false, otbName: ''
   };
   var SAMPLE = {
     headers: { Event: 'Hoogovens', Site: 'Wijk aan Zee', Date: '1999.01.20', White: 'Garri Kasparow', Black: 'Wesselin Topalow', Result: '1-0' },
@@ -8713,10 +8839,10 @@ if (typeof module !== 'undefined') module.exports = (typeof window !== 'undefine
 
   // Stimmt der Konnektor-Name mit Weiß oder Schwarz überein? Dann bist das du.
   function inferUser(h) {
-    var u = (state.settings.connUser || '').toLowerCase();
-    if (!u || !h) return null;
-    if ((h.White || '').toLowerCase() === u) return { name: h.White, color: 'w' };
-    if ((h.Black || '').toLowerCase() === u) return { name: h.Black, color: 'b' };
+    if (!h) return null;
+    var names = [state.settings.connUser, state.settings.otbName].filter(Boolean).map(function (x) { return x.toLowerCase(); });
+    if (names.indexOf((h.White || '').toLowerCase()) >= 0) return { name: h.White, color: 'w' };
+    if (names.indexOf((h.Black || '').toLowerCase()) >= 0) return { name: h.Black, color: 'b' };
     return null;
   }
 
@@ -10288,18 +10414,22 @@ if (typeof module !== 'undefined') module.exports = (typeof window !== 'undefine
     render();
     connFetch(want).then(function (games) {
       if (!batch.running) return;
-      var todo = games.filter(function (g) {
-        var e = LIB.get(g.site + ':' + g.id);
-        return !(e && e.analysis && e.analysis.depth >= BATCH_D);
-      });
-      batch.skipped = games.length - todo.length;
-      batch.list = todo;
+      batchQueue(games);
       if (!games.length) batch.msg = t('Keine beendeten Partien gefunden.');
       batchNext();
     }, function (e) {
       batch.running = false; batch.msg = connErrorText(e);
       render();
     });
+  }
+  // Nur Partien, die noch nicht (tief genug) analysiert sind
+  function batchQueue(games) {
+    var todo = games.filter(function (g) {
+      var e = LIB.get(g.site + ':' + g.id);
+      return !(e && e.analysis && e.analysis.depth >= BATCH_D);
+    });
+    batch.skipped = games.length - todo.length;
+    batch.list = todo;
   }
   function batchNext() {
     if (!batch.running) return;
@@ -10363,6 +10493,123 @@ if (typeof module !== 'undefined') module.exports = (typeof window !== 'undefine
     updateEngine(); render();
   }
 
+  /* ---------- PGN-Dateien mit vielen Partien (Turnier, Verein, ChessBase) ---------- */
+
+  var PF = SK.pgnFile, MAX_FILE = 30 * 1024 * 1024, PF_ROWS = 300;
+  var pgnFile = null; // { name, games: [{ pgn, h }], players: [{ name, n }], me }
+
+  // ChessBase und ältere Programme speichern oft Windows-1252 statt UTF-8 („M\u00fcller“ statt „MÃ¼ller“)
+  function decodeText(buf) {
+    try { return new TextDecoder('utf-8', { fatal: true }).decode(buf); }
+    catch (e) { try { return new TextDecoder('windows-1252').decode(buf); } catch (e2) { return new TextDecoder().decode(buf); } }
+  }
+  function readPgnFile(file) {
+    if (!file) return;
+    if (file.size > MAX_FILE) { pgnFileError(t('Die Datei ist zu groß (höchstens {n} MB).', { n: MAX_FILE / 1048576 })); return; }
+    var fr = new FileReader();
+    fr.onload = function () { openPgnText(decodeText(fr.result), file.name); };
+    fr.onerror = function () { pgnFileError(t('Die Datei konnte nicht gelesen werden.')); };
+    fr.readAsArrayBuffer(file);
+  }
+  function pgnFileError(msg) {
+    openImport('pgn');
+    $('importError').textContent = msg; $('importError').hidden = false;
+  }
+  // Text mit einer oder vielen Partien → eine Partie direkt laden, mehrere als Liste zeigen. → Fehlertext oder null
+  function openPgnText(txt, name) {
+    var parts = PF.split(txt);
+    if (parts.length <= 1) {
+      var err = importText(txt);
+      if (err) { $('importText').value = txt; pgnFileError(err); return err; }
+      closeImport();
+      return null;
+    }
+    var players = PF.players(parts), s = state.settings;
+    var known = [s.otbName, s.connUser].filter(Boolean).map(function (x) { return x.toLowerCase(); });
+    var me = players.filter(function (p) { return known.indexOf(p.name.toLowerCase()) >= 0; })[0];
+    // Sonst: wer in (fast) jeder Partie vorkommt, dem gehört die Datei
+    if (!me && players[0] && players[0].n >= Math.max(2, parts.length * 0.6) && !(players[1] && players[1].n === players[0].n)) me = players[0];
+    pgnFile = { name: name || '', games: parts.map(function (p) { return { pgn: p, h: PF.headers(p) }; }), players: players, me: me ? me.name : '' };
+    openImport('pgn');
+    renderPgnFile();
+    return null;
+  }
+  // Partie i als Spiel-Objekt – derselbe Aufbau wie beim Konnektor, damit Bibliothek, Insights und Trainer sie kennen
+  function pfGame(i) {
+    var g = pgnFile.games[i], h = g.h, me = pgnFile.me;
+    var uc = me ? (h.White === me ? 'w' : h.Black === me ? 'b' : null) : null, r = h.Result || '*';
+    var ur = !uc ? null : r === '1/2-1/2' ? 'draw' : r === '1-0' ? (uc === 'w' ? 'win' : 'loss') : r === '0-1' ? (uc === 'b' ? 'win' : 'loss') : null;
+    // Reihenfolge der Datei bleibt erhalten: spätere Partien desselben Tages gelten als neuer
+    var base = PF.dateOf(h) || (pgnFile.t0 || (pgnFile.t0 = Date.now() - pgnFile.games.length * 1000));
+    return {
+      site: 'pgn', id: LIB.hash(LIB.movesOnly(g.pgn)), url: '', pgn: g.pgn, end: base + i * 1000, speed: null,
+      timeControl: h.TimeControl && h.TimeControl !== '?' && h.TimeControl !== '-' ? h.TimeControl : null,
+      white: { name: h.White || '?', rating: +h.WhiteElo || null }, black: { name: h.Black || '?', rating: +h.BlackElo || null },
+      result: r, userColor: uc, userResult: ur
+    };
+  }
+  function renderPgnFile() {
+    var f = pgnFile, n = f.games.length;
+    $('pgnPaste').hidden = true; $('pgnFile').hidden = false; $('pfError').hidden = true;
+    $('pfTitle').textContent = t('{n} Partien', { n: n });
+    var events = {};
+    f.games.forEach(function (g) { if (g.h.Event && g.h.Event !== '?') events[g.h.Event] = 1; });
+    var ev = Object.keys(events);
+    $('pfSub').textContent = [f.name, ev.length === 1 ? ev[0] : ev.length > 1 ? t('{n} Turniere/Events', { n: ev.length }) : ''].filter(Boolean).join(' · ');
+    $('pfMe').innerHTML = '<option value="">' + esc(t('– nur ansehen –')) + '</option>' + f.players.slice(0, 200).map(function (p) {
+      return '<option value="' + esc(p.name) + '"' + (p.name === f.me ? ' selected' : '') + '>' + esc(p.name) + ' (' + p.n + ')</option>';
+    }).join('');
+    var mine = 0, rows = [];
+    for (var i = 0; i < n; i++) {
+      var g = pfGame(i), h = f.games[i].h, me = g.userColor, opp = me === 'b' ? g.white : g.black;
+      if (me) mine++;
+      if (i >= PF_ROWS) continue;
+      var res = g.userResult === 'win' ? [t('S'), 'win', t('Sieg')] : g.userResult === 'loss' ? [t('N'), 'loss', t('Niederlage')] : g.userResult === 'draw' ? [t('R'), 'draw', t('Remis')] : ['·', 'draw', g.result];
+      var rd = h.Round && h.Round !== '?' && h.Round !== '-' ? t('Runde {r}', { r: h.Round }) : '';
+      rows.push('<li><button type="button" class="game" data-pf="' + i + '">' +
+        '<span class="res ' + res[1] + '" title="' + esc(res[2]) + '">' + res[0] + '</span>' +
+        '<span class="g-main"><b>' + (me ? t('vs.') + ' ' + esc(opp.name) + (opp.rating ? ' (' + opp.rating + ')' : '') : esc(g.white.name + ' – ' + g.black.name) + ' <span class="pf-r">' + esc(g.result) + '</span>') + '</b>' +
+        '<small>' + [me ? (me === 'w' ? t('mit Weiß') : t('mit Schwarz')) : '', rd, PF.dateOf(h) ? I.date(PF.dateOf(h)) : '', ev.length > 1 && h.Event !== '?' ? h.Event : ''].filter(Boolean).map(esc).join(' · ') + '</small></span>' +
+        '<span class="g-go">' + t('Öffnen') + '</span></button></li>');
+    }
+    if (n > PF_ROWS) rows.push('<li class="pf-more">' + esc(t('… und {n} weitere. „Alle analysieren“ bezieht sie mit ein.', { n: n - PF_ROWS })) + '</li>');
+    $('pfList').innerHTML = rows.join('');
+    var lim = LIC.limits().insightsGames || 5;
+    $('pfAnalyze').disabled = batch.running;
+    $('pfAnalyze').textContent = !f.me ? t('Alle analysieren (Insights)')
+      : t('{n} Partien analysieren (Insights)', { n: Math.min(mine, lim) });
+    $('pfAnalyze').title = f.me && mine > lim ? t('Kostenlos: deine neuesten {n}. Pro wertet bis zu {m} aus.', { n: lim, m: (CFG.pro || {}).insightsGames || 100 }) : '';
+  }
+  function pfOpen(i) {
+    var g = pfGame(i);
+    var err = importText(g.pgn, { user: g.userColor ? { name: pgnFile.me, color: g.userColor } : null, game: g, ply: 0 });
+    if (err) { $('pfError').textContent = err; $('pfError').hidden = false; return; }
+    closeImport();
+  }
+  function pfAnalyzeAll() {
+    var f = pgnFile;
+    if (!f.me) {
+      $('pfError').textContent = t('Wähle oben, wer du bist – Insights und Trainer werten deine Züge aus.');
+      $('pfError').hidden = false; $('pfMe').focus();
+      return;
+    }
+    var games = f.games.map(function (_, i) { return pfGame(i); }).filter(function (g) { return g.userColor; });
+    games.sort(function (a, b) { return b.end - a.end; });
+    var lim = LIC.limits().insightsGames || 5;
+    closeImport();
+    setMode('insights');
+    if (games.length > lim) { openPro('insights'); games = games.slice(0, lim); }
+    batch = { running: true, list: [], idx: 0, cur: null, done: 0, skipped: 0, msg: '' };
+    batchQueue(games);
+    batchNext();
+    render();
+  }
+  function pfBack() {
+    pgnFile = null;
+    $('pgnFile').hidden = true; $('pgnPaste').hidden = false;
+    $('pgnFileInput').value = '';
+  }
+
   /* ---------- Insights-Ansicht ---------- */
 
   var WEAK = {
@@ -10391,7 +10638,7 @@ if (typeof module !== 'undefined') module.exports = (typeof window !== 'undefine
   function renderInsightsView() {
     var ent = insightsEntries();
     var r = INS.aggregate(ent.shown);
-    var user = state.settings.connUser;
+    var user = state.settings.connUser || state.settings.otbName;
     $('insSub').textContent = ent.total
       ? t('Aus {n} analysierten Partien{u}.', { n: ent.shown.length, u: user ? ' ' + t('von {u}', { u: user }) : '' })
       : t('Noch keine Daten – starte mit deinen letzten Partien.');
@@ -10414,7 +10661,7 @@ if (typeof module !== 'undefined') module.exports = (typeof window !== 'undefine
     if (!r.n) {
       body.innerHTML = '<div class="ins-empty card">' +
         '<h2>' + t('So füllst du deine Insights') + '</h2><ol>' +
-        '<li>' + t('Unter „Partie laden → Meine Partien“ deinen chess.com- oder lichess-Namen eintragen.') + '</li>' +
+        '<li>' + t('Unter „Partie laden → Meine Partien“ deinen chess.com- oder lichess-Namen eintragen – oder eine PGN-Datei mit deinen Turnier- und Vereinspartien öffnen.') + '</li>' +
         '<li>' + t('Hier auf „Partien analysieren“ tippen. Stockfish bewertet jede Partie im Hintergrund.') + '</li>' +
         '<li>' + t('Deine Baustellen erscheinen hier, deine Fehler werden zu Aufgaben im Trainer.') + '</li></ol>' +
         '<button type="button" class="btn accent" data-ins="user">' + t('Benutzernamen eintragen') + '</button></div>';
@@ -10992,16 +11239,44 @@ if (typeof module !== 'undefined') module.exports = (typeof window !== 'undefine
     $('btnImportCancel').onclick = closeImport;
     $('importBox').addEventListener('click', function (e) { if (e.target === $('importBox')) closeImport(); });
     $('btnImportGo').onclick = function () {
-      var err = importText($('importText').value);
+      var txt = $('importText').value;
+      if (PF.split(txt).length > 1) { $('importText').value = ''; openPgnText(txt, ''); return; }
+      var err = importText(txt);
       if (err) { $('importError').textContent = err; $('importError').hidden = false; return; }
       $('importText').value = ''; closeImport();
     };
+    $('btnPgnFile').onclick = function () { $('pgnFileInput').click(); };
+    $('insFile').onclick = function () { $('pgnFileInput').click(); };
+    $('pgnFileInput').onchange = function () { readPgnFile(this.files && this.files[0]); this.value = ''; };
+    $('pfList').addEventListener('click', function (e) {
+      var b = e.target.closest('.game[data-pf]');
+      if (b) pfOpen(+b.dataset.pf);
+    });
+    $('pfMe').onchange = function () {
+      pgnFile.me = this.value;
+      if (this.value) { state.settings.otbName = this.value; save(); }
+      renderPgnFile();
+    };
+    $('pfBack').onclick = pfBack;
+    $('pfAnalyze').onclick = pfAnalyzeAll;
+    // PGN-Datei ins Fenster ziehen
+    var dragDepth = 0;
+    function hasFiles(e) { var ty = e.dataTransfer && e.dataTransfer.types; return !!ty && Array.prototype.indexOf.call(ty, 'Files') >= 0; }
+    document.addEventListener('dragenter', function (e) { if (!hasFiles(e)) return; dragDepth++; document.body.dataset.drop = t('PGN-Datei hier ablegen'); document.body.classList.add('dropping'); });
+    document.addEventListener('dragleave', function (e) { if (!hasFiles(e)) return; if (--dragDepth <= 0) { dragDepth = 0; document.body.classList.remove('dropping'); } });
+    document.addEventListener('dragover', function (e) { if (hasFiles(e)) { e.preventDefault(); e.dataTransfer.dropEffect = 'copy'; } });
+    document.addEventListener('drop', function (e) {
+      if (!hasFiles(e)) return;
+      e.preventDefault(); dragDepth = 0; document.body.classList.remove('dropping');
+      readPgnFile(e.dataTransfer.files[0]);
+    });
     $('btnSample').onclick = function () { closeImport(); loadSample(); };
     document.addEventListener('paste', function (e) {
       var tg = e.target;
       if (tg && (tg.tagName === 'TEXTAREA' || tg.tagName === 'INPUT')) return;
       var txt = (e.clipboardData || window.clipboardData).getData('text');
       if (!txt || txt.length < 8) return;
+      if (PF.split(txt).length > 1) { openPgnText(txt, ''); return; }
       var err = importText(txt);
       if (err) { $('importText').value = txt; openImport('pgn'); $('importError').textContent = err; $('importError').hidden = false; }
     });
@@ -11230,7 +11505,7 @@ if (typeof module !== 'undefined') module.exports = (typeof window !== 'undefine
     $('tabPgn').setAttribute('aria-selected', String(tab === 'pgn'));
     $('paneGames').hidden = tab !== 'games';
     $('panePgn').hidden = tab !== 'pgn';
-    (tab === 'pgn' ? $('importText') : $('connUser')).focus();
+    (tab !== 'pgn' ? $('connUser') : pgnFile ? $('pfMe') : $('importText')).focus();
   }
 
   function retryEngine() { engine.log = []; engineT0 = Date.now(); engine.start(); render(); }

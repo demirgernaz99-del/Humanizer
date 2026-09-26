@@ -806,3 +806,21 @@ body.ar-active #sheetCard, body.ar-active #review, body.ar-active .acc-chip, bod
 .tc-legend i.tc-crit { background: #d6453d; } .tc-legend i.tc-norm { background: var(--muted); opacity: .55; }
 .tc-legend i.tc-dot { background: var(--c-mistake); border-radius: 50%; }
 .tc-notes { margin: 0; padding-left: 18px; font-size: 13.5px; color: var(--ink-2); line-height: 1.5; }
+
+/* ---------- PGN-Dateien mit vielen Partien ---------- */
+.pf-open { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 12px; margin-top: 10px; }
+.pf-open .hint { margin: 0; flex: 1 1 220px; }
+.pf-head { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 8px 16px; margin-bottom: 10px; }
+.pf-head strong { display: block; font-size: 16px; }
+.pf-head small { display: block; color: var(--muted); font-size: 12.5px; overflow-wrap: anywhere; }
+.pf-me { display: flex; align-items: center; gap: 8px; font-size: 13.5px; font-weight: 600; }
+.pf-me select { max-width: 220px; }
+.pgn-file .games { max-height: 340px; }
+.pgn-file .dialog-actions, .pf-open + .error { margin-top: 12px; }
+.pf-r { font: 600 12px/1 var(--f-mono); color: var(--muted); margin-left: 4px; }
+.pf-more { padding: 8px 10px; color: var(--muted); font-size: 13px; }
+body.dropping::after {
+  content: attr(data-drop); position: fixed; inset: 12px; z-index: 200; display: grid; place-items: center;
+  border: 3px dashed var(--accent); border-radius: 18px; background: color-mix(in srgb, var(--bg) 85%, transparent);
+  font-size: 20px; font-weight: 700; line-height: 1.3; color: var(--ink); pointer-events: none; text-align: center; padding: 24px;
+}

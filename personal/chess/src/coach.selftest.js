@@ -131,6 +131,20 @@ eq(tp.fastCritErr, 1, 'davon ein Fehler');
 eq(tp.wasted, 1, 'Zeit in ruhiger Stellung verschwendet (90 s)');
 eq(Math.round(tp.critAvg), Math.round(65 / 3), 'Ø Zeit in kritischen Stellungen');
 
+/* ---------- PGN-Dateien mit vielen Partien ---------- */
+var PF = require(path.join(__dirname, 'pgnfile.js'));
+var FILE = '\uFEFF[Event "Vereinsmeisterschaft"]\r\n[Date "2026.09.14"]\r\n[White "Müller, Anna"]\r\n[Black "Schmidt, Ben"]\r\n[Result "1-0"]\r\n\r\n1. e4 e5 2. Nf3 {Gut} Nc6 1-0\r\n\r\n' +
+  '[Event "Vereinsmeisterschaft"]\n[Date "2026.09.21"]\n[White "Klein, Carl"]\n[Black "Müller, Anna"]\n[Result "0-1"]\n\n1. d4 d5\n2. c4 e6 0-1\n\n' +
+  '1. c4 c5 1/2-1/2\n\n1. f4 e5 0-1\n';
+var parts = PF.split(FILE);
+eq(parts.length, 4, 'PGN-Datei: 4 Partien getrennt (mit und ohne Kopfzeilen)');
+eq(PF.headers(parts[1]).White, 'Klein, Carl', 'Kopfzeilen gelesen');
+ok(/2\. c4 e6 0-1/.test(parts[1]), 'Züge über mehrere Zeilen bleiben zusammen');
+eq(PF.players(parts)[0].name, 'Müller, Anna', 'häufigster Spieler = Besitzer der Datei');
+eq(new Date(PF.dateOf(PF.headers(parts[0]))).toISOString().slice(0, 10), '2026-09-14', 'Datum aus der Kopfzeile');
+eq(PF.dateOf({ Date: '????.??.??' }), null, 'unbekanntes Datum');
+eq(PF.split('1. e4 e5 *').length, 1, 'einzelne Partie');
+
 /* ---------- Phasen ---------- */
 var start = new L.Chess().fen();
 eq(CO.phaseOf(start, true), 'opening', 'Startstellung = Eröffnung');

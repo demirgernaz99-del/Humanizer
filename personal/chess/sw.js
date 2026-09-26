@@ -1,7 +1,7 @@
 /* Zugradar Service Worker – macht die App offline-fähig.
    Die Version setzt build.py (ändert sich bei jedem Build mit neuem Inhalt).
    Die Engine (7 MB) liegt in einem eigenen, beständigen Cache, damit sie nicht bei jedem Update neu geladen wird. */
-var V = 'zugradar-3a31768135';
+var V = 'zugradar-b1bcc04117';
 var ENGINE = 'zugradar-engine-1';
 var ENGINE_FILES = ['engine/stockfish-18-lite-single.js', 'engine/stockfish-18-lite-single.wasm'];
 var CORE = ['./', 'index.html', 'zugradar.html', 'manifest.webmanifest', 'fonts/fonts.css',

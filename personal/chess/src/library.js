@@ -151,7 +151,7 @@
   function removePuzzle(id) { savePuzzles(puzzles().filter(function (p) { return p.id !== id; })); }
   function clearPuzzles() { store(SRS, []); }
 
-  root.SK.library = { all: all, get: get, put: put, remove: remove, clear: clear, entryFrom: entryFrom, hash: hash };
+  root.SK.library = { all: all, get: get, put: put, remove: remove, clear: clear, entryFrom: entryFrom, hash: hash, movesOnly: movesOnly };
   root.SK.srs = { INTERVALS: INTERVALS, all: puzzles, add: addPuzzles, due: due, answer: answer, stats: stats,
                   byCause: byCause, forCause: forCause, weekStart: weekStart, remove: removePuzzle, clear: clearPuzzles };
 })();
