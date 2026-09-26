@@ -345,4 +345,8 @@ EN = {
 "Theorie bis": "Theory until", "Zug {n}": "move {n}", "Wo dich die Eröffnung Punkte kostet": "Where your opening costs you points",
 "Du verlässt die Theorie mit {m} ({n}×) und verlierst dabei im Schnitt {l} % Gewinnchance.": "You leave theory with {m} ({n}×) and lose {l}% winning chances on average.",
 "Theorie ist hier: {t}.": "Theory here: {t}.",
+# Trainingsplan
+"{a} von {b}": "{a} of {b}", "Dein Trainingsplan diese Woche": "Your training plan this week", "größter Hebel": "biggest lever",
+"{d} von {g} diese Woche · {n} fällig": "{d} of {g} this week · {n} due", "Wiederholen": "Repeat", "Üben": "Practise",
+"Genau das trainieren": "Train exactly this",
 }

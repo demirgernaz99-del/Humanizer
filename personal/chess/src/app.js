@@ -1583,15 +1583,20 @@
     var lim = LIC.limits().trainerPerDay;
     return lim === Infinity || lim == null ? Infinity : Math.max(0, lim - LIC.dayCount('trainer'));
   }
-  function startTrainer() {
+  // cause: nur Aufgaben zu diesem Denkfehler (Themen-Training aus dem Trainingsplan)
+  function startTrainer(cause) {
+    if (typeof cause !== 'string') cause = null;
     var rem = trainerRemaining();
     if (rem <= 0) { openPro('trainer'); return; }
-    var due = SRS.due();
-    if (!due.length) { render(); return; }
-    var items = due.slice(0, Math.min(20, rem)).map(function (p) {
-      return { fen: p.fen, played: p.played, cls: { key: p.key, bestUci: p.bestUci, wpBefore: p.wpBefore }, color: p.played.color, srsId: p.id, tags: p.tags || [] };
+    var list = cause ? SRS.forCause(cause, Math.min(20, rem)) : SRS.due().slice(0, Math.min(20, rem));
+    if (!list.length) { render(); return; }
+    var items = list.map(function (p) {
+      return { fen: p.fen, played: p.played, cls: { key: p.key, bestUci: p.bestUci, wpBefore: p.wpBefore }, color: p.played.color,
+               srsId: p.id, tags: p.tags || [], cause: p.cause || null };
     });
     beginTraining(items, 'srs');
+    train.theme = cause;
+    render();
   }
   function stopTraining(silent) {
     if (!train) return;
@@ -1749,9 +1754,12 @@
       }
       var tagTxt = it.tags && it.tags.length ? '<div class="v-hint">' + t('Thema:') + ' ' + it.tags.filter(function (x) { return TAG_TEXT[x]; }).map(function (x) { return t(TAG_TEXT[x]); }).join(', ') + '</div>' : '';
       var checking = tr.status === 'checking' ? t('Stockfish prüft …') : '';
-      var title = tr.source === 'srs' ? t('Taktik-Trainer · {a} von {b}', { a: tr.i + 1, b: tr.items.length }) : t('Fehler-Training · {a} von {b}', { a: tr.i + 1, b: tr.items.length });
+      var title = tr.source === 'srs'
+        ? (tr.theme ? CO.trainTitle(tr.theme, I.lang()) + ' · ' + t('{a} von {b}', { a: tr.i + 1, b: tr.items.length }) : t('Taktik-Trainer · {a} von {b}', { a: tr.i + 1, b: tr.items.length }))
+        : t('Fehler-Training · {a} von {b}', { a: tr.i + 1, b: tr.items.length });
+      var task = it.cause ? '<div class="v-task">' + esc(CO.trainTask(it.cause, I.lang())) + '</div>' : '';
       html = '<div class="v-icon c-' + it.cls.key + '">' + C.CATS[it.cls.key].sym + '</div>' +
-        '<div class="v-title">' + title + '</div>' +
+        '<div class="v-title">' + title + '</div>' + task +
         '<div class="v-text">' + t('In der Partie kam {m} ({k}). Finde einen besseren Zug für {c}.', {
           m: '<b>' + esc(moveLabel(it.played)) + '</b>', k: catLabel(it.cls.key), c: colorName(it.color) }) + '</div>' +
         (tr.msg ? '<div class="v-msg ' + tr.status + '">' + esc(tr.msg) + '</div>' : (checking ? '<div class="v-msg">' + checking + '</div>' : '')) +
@@ -1854,6 +1862,22 @@
     return t('Welche deiner Figuren steht am schlechtesten? Verbessere sie.');
   }
 
+  // Persönlicher Trainingsplan: Themen aus den eigenen Denkfehlern, größter Hebel zuerst, Wochenfortschritt
+  var WEEK_GOAL = 10;
+  function renderPlan2() {
+    var el = $('trPlan'), bc = SRS.byCause();
+    var keys = Object.keys(bc).sort(function (a, b) { return bc[b].total - bc[a].total; }).slice(0, 5);
+    el.hidden = !keys.length;
+    if (!keys.length) return;
+    el.innerHTML = '<div class="eyebrow">' + t('Dein Trainingsplan diese Woche') + '</div><ol class="plan">' + keys.map(function (k, i) {
+      var c = bc[k], goal = Math.min(c.total, WEEK_GOAL), done = Math.min(c.week, goal);
+      return '<li><div class="pl-head"><b>' + esc(CO.trainTitle(k, I.lang())) + '</b>' + (i === 0 ? '<span class="pl-lever">' + t('größter Hebel') + '</span>' : '') + '</div>' +
+        '<div class="pl-bar" role="progressbar" aria-valuemin="0" aria-valuemax="' + goal + '" aria-valuenow="' + done + '"><span style="width:' + Math.round(done / Math.max(1, goal) * 100) + '%"></span></div>' +
+        '<div class="pl-foot"><span>' + t('{d} von {g} diese Woche · {n} fällig', { d: done, g: goal, n: c.due }) + '</span>' +
+        '<button type="button" class="btn ghost small" data-theme="' + k + '">' + (done >= goal ? t('Wiederholen') : t('Üben')) + '</button></div></li>';
+    }).join('') + '</ol>';
+  }
+
   function renderTrainerBox() {
     var box = $('trainerBox');
     box.hidden = state.mode !== 'trainer' || !!train;
@@ -1874,6 +1898,7 @@
     if (rem !== Infinity) txt += ' ' + t('Kostenlos: noch {n} Aufgaben heute.', { n: rem });
     $('trText').textContent = txt;
     $('btnTrainerStart').disabled = !st.due;
+    renderPlan2();
   }
 
   /* ---------- Konnektor: deine beendeten Partien ---------- */
@@ -2230,7 +2255,8 @@
       html += '<section class="card ins-causes"><h2>' + t('Deine Denkfehler') + '</h2>' +
         '<p class="muted small">' + t('Warum deine Fehler passieren – bei {n} Fehlern mit bekannter Ursache.', { n: causeTotal }) + '</p>' +
         bars(causeKeys.map(function (k) { return { label: CO.causeTitle(k, I.lang()), v: r.causes[k] / causeTotal * 100, max: 100, fmt: function (v) { return Math.round(v) + ' %'; } }; })) +
-        '<div class="cause-focus"><b>' + t('Dein Hebel: {x}', { x: esc(CO.causeTitle(topC, I.lang())) }) + '</b><p>' + esc(CO.causeTip(topC, I.lang())) + '</p></div>' +
+        '<div class="cause-focus"><b>' + t('Dein Hebel: {x}', { x: esc(CO.causeTitle(topC, I.lang())) }) + '</b><p>' + esc(CO.causeTip(topC, I.lang())) + '</p>' +
+        (SRS.byCause()[topC] ? '<button type="button" class="btn accent small" data-ins="theme" data-theme="' + topC + '">' + t('Genau das trainieren') + '</button>' : '') + '</div>' +
         '</section>';
     }
     var tagRows = Object.keys(TAG_LABEL).map(function (k) { return { label: t(TAG_LABEL[k]), v: r.tags[k] || 0 }; })
@@ -2587,7 +2613,8 @@
 
     // Fehler-Training und Trainer
     $('btnTrain').onclick = startTraining;
-    $('btnTrainerStart').onclick = startTrainer;
+    $('btnTrainerStart').onclick = function () { startTrainer(); };
+    $('trPlan').addEventListener('click', function (e) { var b = e.target.closest('[data-theme]'); if (b) startTrainer(b.dataset.theme); });
     $('btnTrainerInsights').onclick = function () { setMode('insights'); };
     $('verdict').addEventListener('click', function (e) {
       var sh = e.target.closest('[data-share]');
@@ -2658,6 +2685,7 @@
         if (a === 'user') openImport('games');
         else if (a === 'pro') openPro('insights');
         else if (a === 'trainer') setMode('trainer');
+        else if (a === 'theme') { setMode('trainer'); startTrainer(b.dataset.theme); }
         return;
       }
       var g = e.target.closest('[data-lib]');

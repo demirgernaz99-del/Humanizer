@@ -99,6 +99,7 @@
     var l = puzzles(), p = l.filter(function (x) { return x.id === id; })[0];
     if (!p) return null;
     p.seen++;
+    p.last = now();
     if (correct) {
       p.right++;
       p.box = Math.min(INTERVALS.length - 1, p.box + 1);
@@ -120,11 +121,38 @@
       seen: l.filter(function (p) { return p.seen > 0; }).length
     };
   }
+  // Wochenbeginn (Montag 0:00, lokale Zeit)
+  function weekStart(t) {
+    var d = new Date(t || now());
+    d.setHours(0, 0, 0, 0);
+    d.setDate(d.getDate() - ((d.getDay() + 6) % 7));
+    return d.getTime();
+  }
+  /* Trainingsplan: Aufgaben je Denkfehler → { cause: { total, due, week } } (week = diese Woche geübt) */
+  function byCause(t) {
+    t = t || now();
+    var ws = weekStart(t), out = {};
+    puzzles().forEach(function (p) {
+      if (!p.cause) return;
+      var c = out[p.cause] || (out[p.cause] = { total: 0, due: 0, week: 0 });
+      c.total++;
+      if (p.due <= t) c.due++;
+      if (p.last && p.last >= ws) c.week++;
+    });
+    return out;
+  }
+  // Aufgaben zu einem Denkfehler: fällige zuerst, dann die am wenigsten gelernten
+  function forCause(cause, limit, t) {
+    t = t || now();
+    var list = puzzles().filter(function (p) { return p.cause === cause; });
+    list.sort(function (a, b) { return (a.due <= t ? 0 : 1) - (b.due <= t ? 0 : 1) || a.box - b.box || a.due - b.due; });
+    return list.slice(0, limit || 20);
+  }
   function removePuzzle(id) { savePuzzles(puzzles().filter(function (p) { return p.id !== id; })); }
   function clearPuzzles() { store(SRS, []); }
 
   root.SK.library = { all: all, get: get, put: put, remove: remove, clear: clear, entryFrom: entryFrom, hash: hash };
   root.SK.srs = { INTERVALS: INTERVALS, all: puzzles, add: addPuzzles, due: due, answer: answer, stats: stats,
-                  remove: removePuzzle, clear: clearPuzzles };
+                  byCause: byCause, forCause: forCause, weekStart: weekStart, remove: removePuzzle, clear: clearPuzzles };
 })();
 if (typeof module !== 'undefined') module.exports = { library: (typeof window !== 'undefined' ? window : globalThis).SK.library, srs: (typeof window !== 'undefined' ? window : globalThis).SK.srs };

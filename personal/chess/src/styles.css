@@ -783,3 +783,15 @@ body.ar-active #sheetCard, body.ar-active #review, body.ar-active .acc-chip, bod
 .leaks li { padding: 10px 12px; border-radius: 10px; border: 1px solid var(--line); border-left: 4px solid var(--c-mistake); background: var(--panel-2); }
 .leaks .lk-head { display: flex; align-items: center; gap: 8px; }
 .leaks p { margin: 4px 0 0; font-size: 13.5px; color: var(--ink-2); line-height: 1.5; }
+
+/* ---------- Trainingsplan ---------- */
+.tr-plan { margin: 12px 0; display: grid; gap: 8px; }
+.plan { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+.plan li { padding: 10px 12px; border: 1px solid var(--line); border-radius: 10px; background: var(--panel-2); display: grid; gap: 6px; }
+.pl-head { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.pl-lever { font: 700 10.5px/1 var(--f-body); letter-spacing: .06em; text-transform: uppercase; color: var(--accent-ink); background: var(--accent); border-radius: 5px; padding: 3px 6px; }
+.pl-bar { height: 6px; border-radius: 3px; background: var(--line); overflow: hidden; }
+.pl-bar span { display: block; height: 100%; background: var(--c-best); }
+.pl-foot { display: flex; align-items: center; justify-content: space-between; gap: 8px; font-size: 13px; color: var(--muted); }
+.v-task { margin: 2px 0 4px; font-weight: 600; font-size: 14px; color: var(--ink); }
+.cause-focus .btn { margin-top: 8px; }

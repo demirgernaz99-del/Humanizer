@@ -335,6 +335,31 @@
     else if (d.circumstance === 'time_trouble') parts.push(T.time_trouble);
     return { id: d.cause, title: T[d.cause][0], text: parts.join(' '), tip: T[d.cause][1] };
   }
+  // Übungsthemen zu den Denkfehlern: [Titel, Aufgabenstellung]
+  var TRAIN_TXT = {
+    de: {
+      threat_missed: ['Drohungen erkennen', 'Dein Gegner droht etwas. Finde den Zug, der die Drohung abwehrt – oder etwas noch Besseres.'],
+      mate_blind: ['Mattgefahr sehen', 'Achtung, Mattgefahr! Finde den Zug, der sicher ist.'],
+      greedy: ['Vergiftete Beute erkennen', 'Nicht jedes Geschenk ist eins. Finde den besten Zug.'],
+      hung_piece: ['Figuren sichern', 'Finde einen Zug, nach dem keine Figur ungedeckt herumsteht.'],
+      tactic_allowed: ['Gegnerische Taktik sehen', 'Welche Taktik hätte dein Gegner? Finde den Zug, der sie verhindert.'],
+      tactic_missed: ['Eigene Chancen finden', 'Hier gibt es etwas zu holen. Such nach Schach, Schlagen und Drohungen.'],
+      technique: ['Endspieltechnik', 'Finde den Zug, der das Endspiel richtig führt.'],
+      positional: ['Bessere Pläne finden', 'Kein Taktik-Trick nötig: Finde den Zug, der deine Stellung wirklich verbessert.']
+    },
+    en: {
+      threat_missed: ['Spotting threats', 'Your opponent is threatening something. Find the move that stops it – or something even better.'],
+      mate_blind: ['Seeing mating danger', 'Careful, mate is in the air! Find the safe move.'],
+      greedy: ['Spotting poisoned bait', 'Not every gift is a gift. Find the best move.'],
+      hung_piece: ['Keeping pieces safe', 'Find a move after which no piece is left unprotected.'],
+      tactic_allowed: ['Seeing the opponent\'s tactics', 'What tactic would your opponent have? Find the move that prevents it.'],
+      tactic_missed: ['Finding your chances', 'There is something to win here. Look for checks, captures and threats.'],
+      technique: ['Endgame technique', 'Find the move that handles the endgame correctly.'],
+      positional: ['Finding better plans', 'No trick needed: find the move that really improves your position.']
+    }
+  };
+  function trainTitle(id, l) { var T = TRAIN_TXT[l === 'en' ? 'en' : 'de']; return T[id] ? T[id][0] : id; }
+  function trainTask(id, l) { var T = TRAIN_TXT[l === 'en' ? 'en' : 'de']; return T[id] ? T[id][1] : ''; }
   function causeTitle(id, l) { var T = CAUSE_TXT[l === 'en' ? 'en' : 'de']; return T[id] ? T[id][0] : id; }
   function causeTip(id, l) { var T = CAUSE_TXT[l === 'en' ? 'en' : 'de']; return T[id] ? T[id][1] : ''; }
 
@@ -389,6 +414,7 @@
   root.SK.coach = {
     explain: explain, facts: facts, tagsFor: tagsFor, render: render, motifOf: motifOf, forkTargets: forkTargets, phaseOf: phaseOf, PHASES: PHASES,
     diagnose: diagnose, describeCause: describeCause, causeTitle: causeTitle, causeTip: causeTip, CAUSES: CAUSES, nullFen: nullFen, threatOf: threatOf,
+    trainTitle: trainTitle, trainTask: trainTask,
     parseClk: parseClk, parseTimeControl: parseTimeControl, timeSpent: timeSpent, fmtClock: fmtClock, deSan: deSan
   };
 })();

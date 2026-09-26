@@ -193,6 +193,22 @@ Promise.resolve()
   ok(srs.due().some(function (p) { return p.id === 'g:2'; }), 'falsche Aufgabe kommt nach 10 Min wieder');
   eq(srs.stats().total, 2, 'Statistik');
 
+  /* ---------- Trainingsplan: Themen aus Denkfehlern ---------- */
+  srs.add([{ id: 't:1', fen: 'a', bestUci: 'e2e4', cause: 'threat_missed' }, { id: 't:2', fen: 'b', bestUci: 'e2e4', cause: 'threat_missed' },
+           { id: 't:3', fen: 'c', bestUci: 'e2e4', cause: 'threat_missed' }, { id: 't:4', fen: 'd', bestUci: 'e2e4', cause: 'hung_piece' }]);
+  var bc = srs.byCause();
+  ok(bc.threat_missed.total === 3 && bc.hung_piece.total === 1 && !bc.undefined, 'Aufgaben je Denkfehler gezählt: ' + JSON.stringify(bc));
+  eq(bc.threat_missed.week, 0, 'noch nichts geübt diese Woche');
+  srs.answer('t:1', true);
+  eq(srs.byCause().threat_missed.week, 1, 'Wochenfortschritt zählt');
+  eq(srs.byCause().threat_missed.due, 2, 'gelöste Aufgabe nicht mehr fällig');
+  var fc = srs.forCause('threat_missed', 10);
+  ok(fc.length === 3 && fc[2].id === 't:1', 'Themen-Training: fällige zuerst, gelöste zuletzt');
+  eq(srs.forCause('hung_piece', 10)[0].id, 't:4', 'Themen-Training: nur passende Aufgaben');
+  T += 8 * DAY;
+  eq(srs.byCause().threat_missed.week, 0, 'neue Woche: Fortschritt beginnt bei 0');
+  ['t:1', 't:2', 't:3', 't:4'].forEach(function (id) { srs.remove(id); });
+
   /* ---------- Insights: echte Auswertung einer Partie mit nachgebildeter Engine ---------- */
   var sans = 'e4 e5 Qh5 Nc6 Bc4 Nf6 Qxf7#'.split(' ');
   var c = new L.Chess(), moves = [];

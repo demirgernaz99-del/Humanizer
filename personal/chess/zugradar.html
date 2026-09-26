@@ -801,6 +801,18 @@ body.ar-active #sheetCard, body.ar-active #review, body.ar-active .acc-chip, bod
 .leaks .lk-head { display: flex; align-items: center; gap: 8px; }
 .leaks p { margin: 4px 0 0; font-size: 13.5px; color: var(--ink-2); line-height: 1.5; }
 
+/* ---------- Trainingsplan ---------- */
+.tr-plan { margin: 12px 0; display: grid; gap: 8px; }
+.plan { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+.plan li { padding: 10px 12px; border: 1px solid var(--line); border-radius: 10px; background: var(--panel-2); display: grid; gap: 6px; }
+.pl-head { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.pl-lever { font: 700 10.5px/1 var(--f-body); letter-spacing: .06em; text-transform: uppercase; color: var(--accent-ink); background: var(--accent); border-radius: 5px; padding: 3px 6px; }
+.pl-bar { height: 6px; border-radius: 3px; background: var(--line); overflow: hidden; }
+.pl-bar span { display: block; height: 100%; background: var(--c-best); }
+.pl-foot { display: flex; align-items: center; justify-content: space-between; gap: 8px; font-size: 13px; color: var(--muted); }
+.v-task { margin: 2px 0 4px; font-weight: 600; font-size: 14px; color: var(--ink); }
+.cause-focus .btn { margin-top: 8px; }
+
 /* Figuren: cburnett-Satz (Colin M.L. Burnett, GPLv2+), entnommen aus lichess chessground (GPLv3). */
 .pc.wp{background-image:url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0NSIgaGVpZ2h0PSI0NSI+PHBhdGggZD0iTTIyLjUgOWMtMi4yMSAwLTQgMS43OS00IDQgMCAuODkuMjkgMS43MS43OCAyLjM4QzE3LjMzIDE2LjUgMTYgMTguNTkgMTYgMjFjMCAyLjAzLjk0IDMuODQgMi40MSA1LjAzLTMgMS4wNi03LjQxIDUuNTUtNy40MSAxMy40N2gyM2MwLTcuOTItNC40MS0xMi40MS03LjQxLTEzLjQ3IDEuNDctMS4xOSAyLjQxLTMgMi40MS01LjAzIDAtMi40MS0xLjMzLTQuNS0zLjI4LTUuNjIuNDktLjY3Ljc4LTEuNDkuNzgtMi4zOCAwLTIuMjEtMS43OS00LTQtNHoiIGZpbGw9IiNmZmYiIHN0cm9rZT0iIzAwMCIgc3Ryb2tlLXdpZHRoPSIxLjUiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPjwvc3ZnPg==')}
 .pc.wb{background-image:url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0NSIgaGVpZ2h0PSI0NSI+PGcgZmlsbD0ibm9uZSIgZmlsbC1ydWxlPSJldmVub2RkIiBzdHJva2U9IiMwMDAiIHN0cm9rZS13aWR0aD0iMS41IiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiPjxnIGZpbGw9IiNmZmYiIHN0cm9rZS1saW5lY2FwPSJidXR0Ij48cGF0aCBkPSJNOSAzNmMzLjM5LS45NyAxMC4xMS40MyAxMy41LTIgMy4zOSAyLjQzIDEwLjExIDEuMDMgMTMuNSAyIDAgMCAxLjY1LjU0IDMgMi0uNjguOTctMS42NS45OS0zIC41LTMuMzktLjk3LTEwLjExLjQ2LTEzLjUtMS0zLjM5IDEuNDYtMTAuMTEuMDMtMTMuNSAxLTEuMzU0LjQ5LTIuMzIzLjQ3LTMtLjUgMS4zNTQtMS45NCAzLTIgMy0yeiIvPjxwYXRoIGQ9Ik0xNSAzMmMyLjUgMi41IDEyLjUgMi41IDE1IDAgLjUtMS41IDAtMiAwLTIgMC0yLjUtMi41LTQtMi41LTQgNS41LTEuNSA2LTExLjUtNS0xNS41LTExIDQtMTAuNSAxNC01IDE1LjUgMCAwLTIuNSAxLjUtMi41IDQgMCAwLS41LjUgMCAyeiIvPjxwYXRoIGQ9Ik0yNSA4YTIuNSAyLjUgMCAxIDEtNSAwIDIuNSAyLjUgMCAxIDEgNSAweiIvPjwvZz48cGF0aCBkPSJNMTcuNSAyNmgxME0xNSAzMGgxNW0tNy41LTE0LjV2NU0yMCAxOGg1IiBzdHJva2UtbGluZWpvaW49Im1pdGVyIi8+PC9nPjwvc3ZnPg==')}
@@ -916,6 +928,7 @@ body.ar-active #sheetCard, body.ar-active #review, body.ar-active .acc-chip, bod
         <div class="eyebrow" data-t>Taktik-Trainer</div>
         <div class="tr-stats" id="trStats"></div>
         <p class="tr-text" id="trText"></p>
+        <div class="tr-plan" id="trPlan" hidden></div>
         <div class="play-actions">
           <button type="button" class="btn accent" id="btnTrainerStart" data-t>Training starten</button>
           <button type="button" class="btn ghost" id="btnTrainerInsights" data-t>Aufgaben sammeln</button>
@@ -1155,7 +1168,7 @@ body.ar-active #sheetCard, body.ar-active #review, body.ar-active .acc-chip, bod
 </div>
 
 <script>
-(function(){var r=typeof window!=='undefined'?window:globalThis;r.SK=r.SK||{};r.SK.seller={"_hinweis": "Deine Geschäftsdaten. Nach Änderungen: python3 build.py. Leere Felder erscheinen auf der Website als [bitte ausfüllen].", "brand": "Zugradar", "siteUrl": "https://demirgernaz99-del.github.io/Humanizer/personal/chess/", "checkoutUrl": "", "prices": {"monthly": "4,99 €", "yearly": "34,99 €", "lifetime": "69 €"}, "pricesEn": {"monthly": "€4.99", "yearly": "€34.99", "lifetime": "€69"}, "license": {"provider": "lemonsqueezy", "storeId": null, "productIds": [], "organizationId": "", "benefitIds": [], "api": ""}, "legal": {"name": "", "street": "", "city": "", "country": "Deutschland", "email": "", "phone": "", "vatId": ""}, "merchantOfRecord": "Lemon Squeezy (Lemon Squeezy LLC)", "_hinweis_license": "provider: 'lemonsqueezy' (storeId, productIds) oder 'polar' (organizationId, optional benefitIds). api nur bei Proxy ausfüllen."};r.SK.build={"version": "1.0 (719adf5)"};})();
+(function(){var r=typeof window!=='undefined'?window:globalThis;r.SK=r.SK||{};r.SK.seller={"_hinweis": "Deine Geschäftsdaten. Nach Änderungen: python3 build.py. Leere Felder erscheinen auf der Website als [bitte ausfüllen].", "brand": "Zugradar", "siteUrl": "https://demirgernaz99-del.github.io/Humanizer/personal/chess/", "checkoutUrl": "", "prices": {"monthly": "4,99 €", "yearly": "34,99 €", "lifetime": "69 €"}, "pricesEn": {"monthly": "€4.99", "yearly": "€34.99", "lifetime": "€69"}, "license": {"provider": "lemonsqueezy", "storeId": null, "productIds": [], "organizationId": "", "benefitIds": [], "api": ""}, "legal": {"name": "", "street": "", "city": "", "country": "Deutschland", "email": "", "phone": "", "vatId": ""}, "merchantOfRecord": "Lemon Squeezy (Lemon Squeezy LLC)", "_hinweis_license": "provider: 'lemonsqueezy' (storeId, productIds) oder 'polar' (organizationId, optional benefitIds). api nur bei Proxy ausfüllen."};r.SK.build={"version": "1.0 (c3d5fad)"};})();
 </script>
 <script>
 /* SK.i18n – Deutsch/Englisch. Der deutsche Text ist zugleich der Schlüssel (wie gettext):
@@ -1768,7 +1781,14 @@ if (typeof module !== 'undefined') module.exports = (typeof window !== 'undefine
   "Zug {n}": "move {n}",
   "Wo dich die Eröffnung Punkte kostet": "Where your opening costs you points",
   "Du verlässt die Theorie mit {m} ({n}×) und verlierst dabei im Schnitt {l} % Gewinnchance.": "You leave theory with {m} ({n}×) and lose {l}% winning chances on average.",
-  "Theorie ist hier: {t}.": "Theory here: {t}."
+  "Theorie ist hier: {t}.": "Theory here: {t}.",
+  "{a} von {b}": "{a} of {b}",
+  "Dein Trainingsplan diese Woche": "Your training plan this week",
+  "größter Hebel": "biggest lever",
+  "{d} von {g} diese Woche · {n} fällig": "{d} of {g} this week · {n} due",
+  "Wiederholen": "Repeat",
+  "Üben": "Practise",
+  "Genau das trainieren": "Train exactly this"
 };
 })();
 
@@ -6328,6 +6348,31 @@ if (typeof module !== 'undefined') module.exports = (typeof window !== 'undefine
     else if (d.circumstance === 'time_trouble') parts.push(T.time_trouble);
     return { id: d.cause, title: T[d.cause][0], text: parts.join(' '), tip: T[d.cause][1] };
   }
+  // Übungsthemen zu den Denkfehlern: [Titel, Aufgabenstellung]
+  var TRAIN_TXT = {
+    de: {
+      threat_missed: ['Drohungen erkennen', 'Dein Gegner droht etwas. Finde den Zug, der die Drohung abwehrt – oder etwas noch Besseres.'],
+      mate_blind: ['Mattgefahr sehen', 'Achtung, Mattgefahr! Finde den Zug, der sicher ist.'],
+      greedy: ['Vergiftete Beute erkennen', 'Nicht jedes Geschenk ist eins. Finde den besten Zug.'],
+      hung_piece: ['Figuren sichern', 'Finde einen Zug, nach dem keine Figur ungedeckt herumsteht.'],
+      tactic_allowed: ['Gegnerische Taktik sehen', 'Welche Taktik hätte dein Gegner? Finde den Zug, der sie verhindert.'],
+      tactic_missed: ['Eigene Chancen finden', 'Hier gibt es etwas zu holen. Such nach Schach, Schlagen und Drohungen.'],
+      technique: ['Endspieltechnik', 'Finde den Zug, der das Endspiel richtig führt.'],
+      positional: ['Bessere Pläne finden', 'Kein Taktik-Trick nötig: Finde den Zug, der deine Stellung wirklich verbessert.']
+    },
+    en: {
+      threat_missed: ['Spotting threats', 'Your opponent is threatening something. Find the move that stops it – or something even better.'],
+      mate_blind: ['Seeing mating danger', 'Careful, mate is in the air! Find the safe move.'],
+      greedy: ['Spotting poisoned bait', 'Not every gift is a gift. Find the best move.'],
+      hung_piece: ['Keeping pieces safe', 'Find a move after which no piece is left unprotected.'],
+      tactic_allowed: ['Seeing the opponent\'s tactics', 'What tactic would your opponent have? Find the move that prevents it.'],
+      tactic_missed: ['Finding your chances', 'There is something to win here. Look for checks, captures and threats.'],
+      technique: ['Endgame technique', 'Find the move that handles the endgame correctly.'],
+      positional: ['Finding better plans', 'No trick needed: find the move that really improves your position.']
+    }
+  };
+  function trainTitle(id, l) { var T = TRAIN_TXT[l === 'en' ? 'en' : 'de']; return T[id] ? T[id][0] : id; }
+  function trainTask(id, l) { var T = TRAIN_TXT[l === 'en' ? 'en' : 'de']; return T[id] ? T[id][1] : ''; }
   function causeTitle(id, l) { var T = CAUSE_TXT[l === 'en' ? 'en' : 'de']; return T[id] ? T[id][0] : id; }
   function causeTip(id, l) { var T = CAUSE_TXT[l === 'en' ? 'en' : 'de']; return T[id] ? T[id][1] : ''; }
 
@@ -6382,6 +6427,7 @@ if (typeof module !== 'undefined') module.exports = (typeof window !== 'undefine
   root.SK.coach = {
     explain: explain, facts: facts, tagsFor: tagsFor, render: render, motifOf: motifOf, forkTargets: forkTargets, phaseOf: phaseOf, PHASES: PHASES,
     diagnose: diagnose, describeCause: describeCause, causeTitle: causeTitle, causeTip: causeTip, CAUSES: CAUSES, nullFen: nullFen, threatOf: threatOf,
+    trainTitle: trainTitle, trainTask: trainTask,
     parseClk: parseClk, parseTimeControl: parseTimeControl, timeSpent: timeSpent, fmtClock: fmtClock, deSan: deSan
   };
 })();
@@ -6901,6 +6947,7 @@ if (typeof module !== 'undefined') module.exports = (typeof window !== 'undefine
     var l = puzzles(), p = l.filter(function (x) { return x.id === id; })[0];
     if (!p) return null;
     p.seen++;
+    p.last = now();
     if (correct) {
       p.right++;
       p.box = Math.min(INTERVALS.length - 1, p.box + 1);
@@ -6922,12 +6969,39 @@ if (typeof module !== 'undefined') module.exports = (typeof window !== 'undefine
       seen: l.filter(function (p) { return p.seen > 0; }).length
     };
   }
+  // Wochenbeginn (Montag 0:00, lokale Zeit)
+  function weekStart(t) {
+    var d = new Date(t || now());
+    d.setHours(0, 0, 0, 0);
+    d.setDate(d.getDate() - ((d.getDay() + 6) % 7));
+    return d.getTime();
+  }
+  /* Trainingsplan: Aufgaben je Denkfehler → { cause: { total, due, week } } (week = diese Woche geübt) */
+  function byCause(t) {
+    t = t || now();
+    var ws = weekStart(t), out = {};
+    puzzles().forEach(function (p) {
+      if (!p.cause) return;
+      var c = out[p.cause] || (out[p.cause] = { total: 0, due: 0, week: 0 });
+      c.total++;
+      if (p.due <= t) c.due++;
+      if (p.last && p.last >= ws) c.week++;
+    });
+    return out;
+  }
+  // Aufgaben zu einem Denkfehler: fällige zuerst, dann die am wenigsten gelernten
+  function forCause(cause, limit, t) {
+    t = t || now();
+    var list = puzzles().filter(function (p) { return p.cause === cause; });
+    list.sort(function (a, b) { return (a.due <= t ? 0 : 1) - (b.due <= t ? 0 : 1) || a.box - b.box || a.due - b.due; });
+    return list.slice(0, limit || 20);
+  }
   function removePuzzle(id) { savePuzzles(puzzles().filter(function (p) { return p.id !== id; })); }
   function clearPuzzles() { store(SRS, []); }
 
   root.SK.library = { all: all, get: get, put: put, remove: remove, clear: clear, entryFrom: entryFrom, hash: hash };
   root.SK.srs = { INTERVALS: INTERVALS, all: puzzles, add: addPuzzles, due: due, answer: answer, stats: stats,
-                  remove: removePuzzle, clear: clearPuzzles };
+                  byCause: byCause, forCause: forCause, weekStart: weekStart, remove: removePuzzle, clear: clearPuzzles };
 })();
 if (typeof module !== 'undefined') module.exports = { library: (typeof window !== 'undefined' ? window : globalThis).SK.library, srs: (typeof window !== 'undefined' ? window : globalThis).SK.srs };
 
@@ -9628,15 +9702,20 @@ if (typeof module !== 'undefined') module.exports = (typeof window !== 'undefine
     var lim = LIC.limits().trainerPerDay;
     return lim === Infinity || lim == null ? Infinity : Math.max(0, lim - LIC.dayCount('trainer'));
   }
-  function startTrainer() {
+  // cause: nur Aufgaben zu diesem Denkfehler (Themen-Training aus dem Trainingsplan)
+  function startTrainer(cause) {
+    if (typeof cause !== 'string') cause = null;
     var rem = trainerRemaining();
     if (rem <= 0) { openPro('trainer'); return; }
-    var due = SRS.due();
-    if (!due.length) { render(); return; }
-    var items = due.slice(0, Math.min(20, rem)).map(function (p) {
-      return { fen: p.fen, played: p.played, cls: { key: p.key, bestUci: p.bestUci, wpBefore: p.wpBefore }, color: p.played.color, srsId: p.id, tags: p.tags || [] };
+    var list = cause ? SRS.forCause(cause, Math.min(20, rem)) : SRS.due().slice(0, Math.min(20, rem));
+    if (!list.length) { render(); return; }
+    var items = list.map(function (p) {
+      return { fen: p.fen, played: p.played, cls: { key: p.key, bestUci: p.bestUci, wpBefore: p.wpBefore }, color: p.played.color,
+               srsId: p.id, tags: p.tags || [], cause: p.cause || null };
     });
     beginTraining(items, 'srs');
+    train.theme = cause;
+    render();
   }
   function stopTraining(silent) {
     if (!train) return;
@@ -9794,9 +9873,12 @@ if (typeof module !== 'undefined') module.exports = (typeof window !== 'undefine
       }
       var tagTxt = it.tags && it.tags.length ? '<div class="v-hint">' + t('Thema:') + ' ' + it.tags.filter(function (x) { return TAG_TEXT[x]; }).map(function (x) { return t(TAG_TEXT[x]); }).join(', ') + '</div>' : '';
       var checking = tr.status === 'checking' ? t('Stockfish prüft …') : '';
-      var title = tr.source === 'srs' ? t('Taktik-Trainer · {a} von {b}', { a: tr.i + 1, b: tr.items.length }) : t('Fehler-Training · {a} von {b}', { a: tr.i + 1, b: tr.items.length });
+      var title = tr.source === 'srs'
+        ? (tr.theme ? CO.trainTitle(tr.theme, I.lang()) + ' · ' + t('{a} von {b}', { a: tr.i + 1, b: tr.items.length }) : t('Taktik-Trainer · {a} von {b}', { a: tr.i + 1, b: tr.items.length }))
+        : t('Fehler-Training · {a} von {b}', { a: tr.i + 1, b: tr.items.length });
+      var task = it.cause ? '<div class="v-task">' + esc(CO.trainTask(it.cause, I.lang())) + '</div>' : '';
       html = '<div class="v-icon c-' + it.cls.key + '">' + C.CATS[it.cls.key].sym + '</div>' +
-        '<div class="v-title">' + title + '</div>' +
+        '<div class="v-title">' + title + '</div>' + task +
         '<div class="v-text">' + t('In der Partie kam {m} ({k}). Finde einen besseren Zug für {c}.', {
           m: '<b>' + esc(moveLabel(it.played)) + '</b>', k: catLabel(it.cls.key), c: colorName(it.color) }) + '</div>' +
         (tr.msg ? '<div class="v-msg ' + tr.status + '">' + esc(tr.msg) + '</div>' : (checking ? '<div class="v-msg">' + checking + '</div>' : '')) +
@@ -9899,6 +9981,22 @@ if (typeof module !== 'undefined') module.exports = (typeof window !== 'undefine
     return t('Welche deiner Figuren steht am schlechtesten? Verbessere sie.');
   }
 
+  // Persönlicher Trainingsplan: Themen aus den eigenen Denkfehlern, größter Hebel zuerst, Wochenfortschritt
+  var WEEK_GOAL = 10;
+  function renderPlan2() {
+    var el = $('trPlan'), bc = SRS.byCause();
+    var keys = Object.keys(bc).sort(function (a, b) { return bc[b].total - bc[a].total; }).slice(0, 5);
+    el.hidden = !keys.length;
+    if (!keys.length) return;
+    el.innerHTML = '<div class="eyebrow">' + t('Dein Trainingsplan diese Woche') + '</div><ol class="plan">' + keys.map(function (k, i) {
+      var c = bc[k], goal = Math.min(c.total, WEEK_GOAL), done = Math.min(c.week, goal);
+      return '<li><div class="pl-head"><b>' + esc(CO.trainTitle(k, I.lang())) + '</b>' + (i === 0 ? '<span class="pl-lever">' + t('größter Hebel') + '</span>' : '') + '</div>' +
+        '<div class="pl-bar" role="progressbar" aria-valuemin="0" aria-valuemax="' + goal + '" aria-valuenow="' + done + '"><span style="width:' + Math.round(done / Math.max(1, goal) * 100) + '%"></span></div>' +
+        '<div class="pl-foot"><span>' + t('{d} von {g} diese Woche · {n} fällig', { d: done, g: goal, n: c.due }) + '</span>' +
+        '<button type="button" class="btn ghost small" data-theme="' + k + '">' + (done >= goal ? t('Wiederholen') : t('Üben')) + '</button></div></li>';
+    }).join('') + '</ol>';
+  }
+
   function renderTrainerBox() {
     var box = $('trainerBox');
     box.hidden = state.mode !== 'trainer' || !!train;
@@ -9919,6 +10017,7 @@ if (typeof module !== 'undefined') module.exports = (typeof window !== 'undefine
     if (rem !== Infinity) txt += ' ' + t('Kostenlos: noch {n} Aufgaben heute.', { n: rem });
     $('trText').textContent = txt;
     $('btnTrainerStart').disabled = !st.due;
+    renderPlan2();
   }
 
   /* ---------- Konnektor: deine beendeten Partien ---------- */
@@ -10275,7 +10374,8 @@ if (typeof module !== 'undefined') module.exports = (typeof window !== 'undefine
       html += '<section class="card ins-causes"><h2>' + t('Deine Denkfehler') + '</h2>' +
         '<p class="muted small">' + t('Warum deine Fehler passieren – bei {n} Fehlern mit bekannter Ursache.', { n: causeTotal }) + '</p>' +
         bars(causeKeys.map(function (k) { return { label: CO.causeTitle(k, I.lang()), v: r.causes[k] / causeTotal * 100, max: 100, fmt: function (v) { return Math.round(v) + ' %'; } }; })) +
-        '<div class="cause-focus"><b>' + t('Dein Hebel: {x}', { x: esc(CO.causeTitle(topC, I.lang())) }) + '</b><p>' + esc(CO.causeTip(topC, I.lang())) + '</p></div>' +
+        '<div class="cause-focus"><b>' + t('Dein Hebel: {x}', { x: esc(CO.causeTitle(topC, I.lang())) }) + '</b><p>' + esc(CO.causeTip(topC, I.lang())) + '</p>' +
+        (SRS.byCause()[topC] ? '<button type="button" class="btn accent small" data-ins="theme" data-theme="' + topC + '">' + t('Genau das trainieren') + '</button>' : '') + '</div>' +
         '</section>';
     }
     var tagRows = Object.keys(TAG_LABEL).map(function (k) { return { label: t(TAG_LABEL[k]), v: r.tags[k] || 0 }; })
@@ -10632,7 +10732,8 @@ if (typeof module !== 'undefined') module.exports = (typeof window !== 'undefine
 
     // Fehler-Training und Trainer
     $('btnTrain').onclick = startTraining;
-    $('btnTrainerStart').onclick = startTrainer;
+    $('btnTrainerStart').onclick = function () { startTrainer(); };
+    $('trPlan').addEventListener('click', function (e) { var b = e.target.closest('[data-theme]'); if (b) startTrainer(b.dataset.theme); });
     $('btnTrainerInsights').onclick = function () { setMode('insights'); };
     $('verdict').addEventListener('click', function (e) {
       var sh = e.target.closest('[data-share]');
@@ -10703,6 +10804,7 @@ if (typeof module !== 'undefined') module.exports = (typeof window !== 'undefine
         if (a === 'user') openImport('games');
         else if (a === 'pro') openPro('insights');
         else if (a === 'trainer') setMode('trainer');
+        else if (a === 'theme') { setMode('trainer'); startTrainer(b.dataset.theme); }
         return;
       }
       var g = e.target.closest('[data-lib]');
